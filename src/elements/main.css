@@ -1,0 +1,10 @@
+spatial-canvas {
+  display: block;
+  position: relative;
+}
+
+spatial-geometry {
+  display: block;
+  position: absolute;
+  cursor: pointer;
+}

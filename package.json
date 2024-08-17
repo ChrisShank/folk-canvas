@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "vite demo",
+    "demo:build": "vite build demo",
+    "demo:preview": "pnpm demo:build && vite preview demo"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}
