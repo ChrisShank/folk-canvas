@@ -3,12 +3,12 @@ export type Shape = 'rectangle' | 'circle' | 'triangle';
 // Can we make adding new shapes extensible via a static property?
 const shapes = new Set(['rectangle', 'circle', 'triangle']);
 
-export type Vector = { x: number; y: number };
+export type Vector = { x: number; y: number; movementX: number; movementY: number };
 
 // Should the move event bubble?
 export class MoveEvent extends CustomEvent<Vector> {
   constructor(vector: Vector) {
-    super('move', { detail: vector, bubbles: false });
+    super('move', { detail: vector, cancelable: true, bubbles: false });
   }
 }
 
@@ -40,6 +40,7 @@ export class SpatialGeometry extends HTMLElement {
     this.setAttribute('type', type);
   }
 
+  #previousX = 0;
   #x = 0;
   get x(): number {
     return this.#x;
@@ -49,6 +50,7 @@ export class SpatialGeometry extends HTMLElement {
     this.setAttribute('x', x.toString());
   }
 
+  #previousY = 0;
   #y = 0;
   get y(): number {
     return this.#y;
@@ -60,21 +62,23 @@ export class SpatialGeometry extends HTMLElement {
 
   attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     if (name === 'x') {
+      this.#previousX = this.#x;
       this.#x = Number(newValue);
-      // In the future, when CSS `attr()` is supported we could define this x/y projection in CSS.
-      this.style.left = `${this.#x}px`;
-      this.#emitMoveEvent();
+      this.#requestUpdate('x');
     } else if (name === 'y') {
+      this.#previousY = 0;
       this.#y = Number(newValue);
-      this.style.top = `${this.#y}px`;
-      this.#emitMoveEvent();
+      this.#requestUpdate('y');
     } else if (name === 'type') {
       if (shapes.has(newValue)) {
         this.#type = newValue as Shape;
-        // TODO: Update shape styles. Ideally we could just use clip-path to style the shape.
-        // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
+        this.#requestUpdate('type');
       }
     }
+  }
+
+  disconnectedCallback() {
+    cancelAnimationFrame(this.#rAFId);
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
@@ -111,17 +115,54 @@ export class SpatialGeometry extends HTMLElement {
     }
   }
 
-  #isMoveScheduled = false;
+  #updatedProperties = new Set<string>();
+  #rAFId = -1;
+  #isUpdating = false;
 
-  // Without some form of changes to x and y will cause separate events to be dispatched.
-  // Should we only emit a move event every animation frame or with something like `queueMicrotask`?
-  #emitMoveEvent() {
-    if (this.#isMoveScheduled) return;
+  #requestUpdate(property: string) {
+    this.#updatedProperties.add(property);
 
-    this.#isMoveScheduled = true;
-    requestAnimationFrame(() => {
-      this.dispatchEvent(new MoveEvent({ x: this.#x, y: this.#y }));
-      this.#isMoveScheduled = false;
+    if (this.#isUpdating) return;
+
+    this.#isUpdating = true;
+    this.#rAFId = requestAnimationFrame(() => {
+      this.#isUpdating = false;
+      this.#update(this.#updatedProperties);
+      this.#updatedProperties.clear();
+      this.#rAFId = -1;
     });
+  }
+
+  #update(updatedProperties: Set<string>) {
+    if (updatedProperties.has('type')) {
+      // TODO: Update shape styles. Ideally we could just use clip-path to style the shape.
+      // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
+    }
+
+    if (updatedProperties.has('x') || updatedProperties.has('y')) {
+      const notCancelled = this.dispatchEvent(
+        new MoveEvent({
+          x: this.#x,
+          y: this.#y,
+          movementX: this.#x - this.#previousX,
+          movementY: this.#y - this.#previousY,
+        })
+      );
+
+      if (notCancelled) {
+        if (updatedProperties.has('x')) {
+          // In the future, when CSS `attr()` is supported we could define this x/y projection in CSS.
+          this.style.left = `${this.#x}px`;
+        }
+
+        if (updatedProperties.has('y')) {
+          this.style.top = `${this.#y}px`;
+        }
+      } else {
+        // Revert changes to movement
+        this.#x = this.#previousX;
+        this.#y = this.#previousY;
+      }
+    }
   }
 }

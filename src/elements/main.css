@@ -7,4 +7,5 @@ spatial-geometry {
   display: block;
   position: absolute;
   cursor: pointer;
+  content-visibility: auto;
 }
