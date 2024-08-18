@@ -20,15 +20,13 @@
       }
 
       spatial-geometry {
-        width: 50px;
-        height: 50px;
         border: 2px solid black;
       }
     </style>
   </head>
   <body>
-    <spatial-geometry x="100" y="100">Shape with some text</spatial-geometry>
-    <spatial-geometry x="200" y="200">Shape with some text</spatial-geometry>
+    <spatial-geometry x="100" y="100" width="50" height="50">Shape with some text</spatial-geometry>
+    <spatial-geometry x="200" y="200" width="50" height="50">Shape with some text</spatial-geometry>
 
     <script type="module">
       import { SpatialGeometry } from '../src/elements/spatial-geometry.ts';
@@ -45,20 +43,28 @@
         );
       }
 
-      document.addEventListener('move', (e) => {
+      function handleCollision(e) {
         geometryElements.forEach((el) => {
           if (
             el !== e.target &&
             collisionDetection(
               // TODO: refactor this hack once resizing and the vertices API are figured out
-              DOMRectReadOnly.fromRect({ x: el.x, y: el.y, height: 50, width: 50 }),
-              DOMRectReadOnly.fromRect({ x: e.target.x, y: e.target.y, height: 50, width: 50 })
+              DOMRectReadOnly.fromRect({ x: el.x, y: el.y, height: el.height, width: el.width }),
+              DOMRectReadOnly.fromRect({
+                x: e.target.x,
+                y: e.target.y,
+                height: e.target.height,
+                width: e.target.width,
+              })
             )
           ) {
             e.preventDefault();
           }
         });
-      });
+      }
+
+      document.addEventListener('move', handleCollision);
+      document.addEventListener('resize', handleCollision);
     </script>
   </body>
 </html>

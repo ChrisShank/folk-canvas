@@ -3,12 +3,21 @@ export type Shape = 'rectangle' | 'circle' | 'triangle';
 // Can we make adding new shapes extensible via a static property?
 const shapes = new Set(['rectangle', 'circle', 'triangle']);
 
-export type MoveEventDetail = { x: number; y: number; movementX: number; movementY: number };
+export type MoveEventDetail = { movementX: number; movementY: number };
 
 // Should the move event bubble?
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
-  constructor(vector: MoveEventDetail) {
-    super('move', { detail: vector, cancelable: true, bubbles: true });
+  constructor(detail: MoveEventDetail) {
+    super('move', { detail, cancelable: true, bubbles: true });
+  }
+}
+
+export type ResizeEventDetail = { movementX: number; movementY: number };
+
+// Should the move event bubble?
+export class ResizeEvent extends CustomEvent<MoveEventDetail> {
+  constructor(detail: MoveEventDetail) {
+    super('resize', { detail, cancelable: true, bubbles: true });
   }
 }
 
@@ -135,7 +144,7 @@ export class SpatialGeometry extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  static observedAttributes = ['type', 'x', 'y'];
+  static observedAttributes = ['type', 'x', 'y', 'width', 'height'];
 
   #internals: ElementInternals;
 
@@ -190,6 +199,26 @@ export class SpatialGeometry extends HTMLElement {
     this.setAttribute('y', y.toString());
   }
 
+  #previousWidth = 0;
+  #width = 0;
+  get width(): number {
+    return this.#width;
+  }
+
+  set width(width: number) {
+    this.setAttribute('width', width.toString());
+  }
+
+  #previousHeight = 0;
+  #height = 0;
+  get height(): number {
+    return this.#height;
+  }
+
+  set height(height: number) {
+    this.setAttribute('height', height.toString());
+  }
+
   attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     if (name === 'x') {
       this.#previousX = this.#x;
@@ -199,6 +228,14 @@ export class SpatialGeometry extends HTMLElement {
       this.#previousY = this.#y;
       this.#y = Number(newValue);
       this.#requestUpdate('y');
+    } else if (name === 'width') {
+      this.#previousWidth = this.#width;
+      this.#width = Number(newValue);
+      this.#requestUpdate('width');
+    } else if (name === 'height') {
+      this.#previousHeight = this.#height;
+      this.#height = Number(newValue);
+      this.#requestUpdate('height');
     } else if (name === 'type') {
       if (shapes.has(newValue)) {
         this.#type = newValue as Shape;
@@ -238,8 +275,29 @@ export class SpatialGeometry extends HTMLElement {
         if (event.target === this) {
           this.x += event.movementX;
           this.y += event.movementY;
-        } else if ((event.target as HTMLElement).matches('[resize-handler]')) {
-          console.log('resizing');
+          return;
+        }
+
+        const direction = (event.target as HTMLElement).getAttribute('resize-handler');
+
+        if (direction === null) return;
+
+        if (direction.includes('top')) {
+          this.y += event.movementY;
+          this.height -= event.movementY;
+        }
+
+        if (direction.includes('right')) {
+          this.width += event.movementX;
+        }
+
+        if (direction.includes('bottom')) {
+          this.height += event.movementY;
+        }
+
+        if (direction.includes('left')) {
+          this.x += event.movementX;
+          this.width -= event.movementX;
         }
         return;
       }
@@ -288,8 +346,6 @@ export class SpatialGeometry extends HTMLElement {
       // Although the change in movement isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new MoveEvent({
-          x: this.#x,
-          y: this.#y,
           movementX: this.#x - this.#previousX,
           movementY: this.#y - this.#previousY,
         })
@@ -308,6 +364,30 @@ export class SpatialGeometry extends HTMLElement {
         // Revert changes to movement
         this.#x = this.#previousX;
         this.#y = this.#previousY;
+      }
+    }
+
+    if (updatedProperties.has('width') || updatedProperties.has('height')) {
+      // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
+      const notCancelled = this.dispatchEvent(
+        new ResizeEvent({
+          movementX: this.#width - this.#previousWidth,
+          movementY: this.#height - this.#previousHeight,
+        })
+      );
+
+      if (notCancelled) {
+        if (updatedProperties.has('width')) {
+          this.style.width = `${this.#width}px`;
+        }
+
+        if (updatedProperties.has('height')) {
+          this.style.height = `${this.#height}px`;
+        }
+      } else {
+        // Revert changes to movement
+        this.#height = this.#previousHeight;
+        this.#width = this.#previousWidth;
       }
     }
   }
