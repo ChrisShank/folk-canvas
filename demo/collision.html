@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shapes - Collision</title>
+    <style>
+      @import url('../src/elements/main.css');
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      spatial-geometry {
+        width: 50px;
+        height: 50px;
+        border: 2px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <spatial-geometry x="100" y="100">Shape with some text</spatial-geometry>
+    <spatial-geometry x="200" y="200">Shape with some text</spatial-geometry>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/elements/spatial-geometry.ts';
+
+      SpatialGeometry.register();
+      const geometryElements = document.querySelectorAll('spatial-geometry');
+
+      function collisionDetection(rect1, rect2) {
+        return (
+          rect1.left < rect2.right &&
+          rect1.right > rect2.left &&
+          rect1.top < rect2.bottom &&
+          rect1.bottom > rect2.top
+        );
+      }
+
+      document.addEventListener('move', (e) => {
+        geometryElements.forEach((el) => {
+          if (
+            el !== e.target &&
+            collisionDetection(
+              // TODO: refactor this hack once resizing and the vertices API are figured out
+              DOMRectReadOnly.fromRect({ x: el.x, y: el.y, height: 50, width: 50 }),
+              DOMRectReadOnly.fromRect({ x: e.target.x, y: e.target.y, height: 50, width: 50 })
+            )
+          ) {
+            e.preventDefault();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

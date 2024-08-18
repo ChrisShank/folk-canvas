@@ -8,7 +8,7 @@ export type Vector = { x: number; y: number; movementX: number; movementY: numbe
 // Should the move event bubble?
 export class MoveEvent extends CustomEvent<Vector> {
   constructor(vector: Vector) {
-    super('move', { detail: vector, cancelable: true, bubbles: false });
+    super('move', { detail: vector, cancelable: true, bubbles: true });
   }
 }
 
@@ -66,7 +66,7 @@ export class SpatialGeometry extends HTMLElement {
       this.#x = Number(newValue);
       this.#requestUpdate('x');
     } else if (name === 'y') {
-      this.#previousY = 0;
+      this.#previousY = this.#y;
       this.#y = Number(newValue);
       this.#requestUpdate('y');
     } else if (name === 'type') {
