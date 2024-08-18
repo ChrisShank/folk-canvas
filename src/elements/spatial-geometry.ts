@@ -25,11 +25,11 @@ styles.replaceSync(`
   user-select: none;
 }
 
-:host(:not([selected])) [resize-handler] {
-  display: none;
+:host(:not(:focus, :focus-within, :state(moving))) [resize-handler] {
+  opacity: 0;
 }
 
-:host([selected]) [resize-handler] {
+:is(:host(:focus), :host(:focus-within), :host(:state(moving))) [resize-handler] {
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -147,8 +147,18 @@ export class SpatialGeometry extends HTMLElement {
     this.addEventListener('touchstart', this);
     this.addEventListener('dragstart', this);
 
-    const shadowRoot = this.attachShadow({ mode: 'open' });
+    const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
     shadowRoot.adoptedStyleSheets.push(styles);
+    // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
+    shadowRoot.innerHTML = `
+<button resize-handler="top-left"></button>
+<button resize-handler="top"></button>
+<button resize-handler="top-right"></button>
+<button resize-handler="right"></button>
+<button resize-handler="bottom-right"></button>
+<button resize-handler="bottom"></button>
+<button resize-handler="bottom-left"></button>
+<button resize-handler="left"></button>`;
   }
 
   #type: Shape = 'rectangle';
@@ -220,9 +230,8 @@ export class SpatialGeometry extends HTMLElement {
 
         target.addEventListener('pointermove', this);
         target.setPointerCapture(event.pointerId);
-        this.setAttribute('selected', '');
-        this.#createResizeHandlers();
         this.#internals.states.add('moving');
+        this.focus();
         return;
       }
       case 'pointermove': {
@@ -300,23 +309,6 @@ export class SpatialGeometry extends HTMLElement {
         this.#x = this.#previousX;
         this.#y = this.#previousY;
       }
-    }
-  }
-
-  #firstSelection = true;
-  #createResizeHandlers() {
-    // lazily create resize handlers on first selection
-    if (this.#firstSelection && this.shadowRoot !== null) {
-      this.shadowRoot.innerHTML = `
-        <button resize-handler="top-left"></button>
-        <button resize-handler="top"></button>
-        <button resize-handler="top-right"></button>
-        <button resize-handler="right"></button>
-        <button resize-handler="bottom-right"></button>
-        <button resize-handler="bottom"></button>
-        <button resize-handler="bottom-left"></button>
-        <button resize-handler="left"></button>`;
-      this.#firstSelection = false;
     }
   }
 }
