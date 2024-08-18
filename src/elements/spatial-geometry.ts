@@ -20,6 +20,11 @@ styles.replaceSync(`
   cursor: pointer;
 }
 
+:host(:state(moving)) {
+  cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m19 14h1v1h-1zm1 6h-1v-1h1zm-5-5h-1v-1h1zm0 5h-1v-1h1zm2-10.987-7.985 7.988 5.222 5.221 2.763 2.763 7.984-7.985z' fill='white'/><g fill='black'><path d='m23.5664 16.9971-2.557-2.809v1.829h-4.009-4.001v-1.829l-2.571 2.809 2.572 2.808-.001-1.808h4.001 4.009l-.001 1.808z'/><path d='m17.9873 17h.013v-4.001l1.807.001-2.807-2.571-2.809 2.57h1.809v4.001h.008v4.002l-1.828-.001 2.807 2.577 2.805-2.576h-1.805z'/></g></g></svg>") 16 16, pointer;
+  user-select: none;
+}
+
 :host(:not([selected])) [resize-handler] {
   display: none;
 }
@@ -132,9 +137,11 @@ export class SpatialGeometry extends HTMLElement {
 
   static observedAttributes = ['type', 'x', 'y'];
 
+  #internals: ElementInternals;
+
   constructor() {
     super();
-
+    this.#internals = this.attachInternals();
     this.addEventListener('pointerdown', this);
     this.addEventListener('lostpointercapture', this);
     this.addEventListener('touchstart', this);
@@ -215,7 +222,7 @@ export class SpatialGeometry extends HTMLElement {
         target.setPointerCapture(event.pointerId);
         this.setAttribute('selected', '');
         this.#createResizeHandlers();
-        this.style.userSelect = 'none';
+        this.#internals.states.add('moving');
         return;
       }
       case 'pointermove': {
@@ -228,7 +235,7 @@ export class SpatialGeometry extends HTMLElement {
         return;
       }
       case 'lostpointercapture': {
-        this.style.userSelect = '';
+        this.#internals.states.delete('moving');
         const target = event.composedPath()[0] as HTMLElement;
         target.removeEventListener('pointermove', this);
         return;
