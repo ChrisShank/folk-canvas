@@ -133,13 +133,17 @@ export class SpatialGeometry extends HTMLElement {
     });
   }
 
+  // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
   #update(updatedProperties: Set<string>) {
     if (updatedProperties.has('type')) {
-      // TODO: Update shape styles. Ideally we could just use clip-path to style the shape.
+      // TODO: Update shape styles. For many shapes, we could just use clip-path to style the shape.
+      // If we use relative values in `clip-path: polygon()`, then no JS is needed to style the shape
+      // If `clip-path: path()` is used then we need to update the path in JS.
       // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
     }
 
     if (updatedProperties.has('x') || updatedProperties.has('y')) {
+      // Although the change in movement isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new MoveEvent({
           x: this.#x,
