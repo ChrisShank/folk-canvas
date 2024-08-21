@@ -1,4 +1,6 @@
 {
+  "name": "folk-canvas",
+  "description": "",
   "scripts": {
     "build": "tsc --build",
     "dev": "vite demo",
