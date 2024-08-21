@@ -5,7 +5,6 @@ const shapes = new Set(['rectangle', 'circle', 'triangle']);
 
 export type MoveEventDetail = { movementX: number; movementY: number };
 
-// Should the move event bubble?
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
   constructor(detail: MoveEventDetail) {
     super('move', { detail, cancelable: true, bubbles: true });
@@ -14,10 +13,17 @@ export class MoveEvent extends CustomEvent<MoveEventDetail> {
 
 export type ResizeEventDetail = { movementX: number; movementY: number };
 
-// Should the move event bubble?
 export class ResizeEvent extends CustomEvent<MoveEventDetail> {
   constructor(detail: MoveEventDetail) {
     super('resize', { detail, cancelable: true, bubbles: true });
+  }
+}
+
+export type RotateEventDetail = { rotate: number };
+
+export class RotateEvent extends CustomEvent<RotateEventDetail> {
+  constructor(detail: RotateEventDetail) {
+    super('rotate', { detail, cancelable: true, bubbles: true });
   }
 }
 
@@ -26,19 +32,23 @@ styles.replaceSync(`
 :host {
   display: block;
   position: absolute;
-  cursor: pointer;
+  cursor: var(--fc-grab, grab);;
+}
+
+:host(:hover) {
+  outline: solid 1px hsl(214, 84%, 56%);
 }
 
 :host(:state(moving)) {
-  cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m19 14h1v1h-1zm1 6h-1v-1h1zm-5-5h-1v-1h1zm0 5h-1v-1h1zm2-10.987-7.985 7.988 5.222 5.221 2.763 2.763 7.984-7.985z' fill='white'/><g fill='black'><path d='m23.5664 16.9971-2.557-2.809v1.829h-4.009-4.001v-1.829l-2.571 2.809 2.572 2.808-.001-1.808h4.001 4.009l-.001 1.808z'/><path d='m17.9873 17h.013v-4.001l1.807.001-2.807-2.571-2.809 2.57h1.809v4.001h.008v4.002l-1.828-.001 2.807 2.577 2.805-2.576h-1.805z'/></g></g></svg>") 16 16, pointer;
+  cursor: var(--fc-grabbing, grabbing);
   user-select: none;
 }
 
-:host(:not(:focus, :focus-within, :state(moving))) [resize-handler] {
+:host(:not(:focus-within)) [resize-handler], :host(:not(:focus-within)) [rotation-handler] {
   opacity: 0;
 }
 
-:is(:host(:focus), :host(:focus-within), :host(:state(moving))) [resize-handler] {
+:host(:focus-within) [resize-handler] {
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -54,7 +64,7 @@ styles.replaceSync(`
     transform: translate(-50%, -50%);
     border: 1.5px solid hsl(214, 84%, 56%);
     border-radius: 2px;
-    z-index: 2;
+    z-index: 3;
   }
 
   &[resize-handler="top-left"] {
@@ -78,11 +88,11 @@ styles.replaceSync(`
   }
 
   &[resize-handler="top-left"], &[resize-handler="bottom-right"] {
-    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='-0.9999999999999999' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(90 16 16)' filter='url(%23shadow)'><path d='m19.7432 17.0869-4.072 4.068 2.829 2.828-8.473-.013-.013-8.47 2.841 2.842 4.075-4.068 1.414-1.415-2.844-2.842h8.486v8.484l-2.83-2.827z' fill='%23fff'/><path d='m18.6826 16.7334-4.427 4.424 1.828 1.828-5.056-.016-.014-5.054 1.842 1.841 4.428-4.422 2.474-2.475-1.844-1.843h5.073v5.071l-1.83-1.828z' fill='%23000'/></g></svg>") 16 16, pointer;
+    cursor: var(--fc-nwse-resize, nwse-resize)
   }
-
+    
   &[resize-handler="top-right"], &[resize-handler="bottom-left"] {
-    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m19.7432 17.0869-4.072 4.068 2.829 2.828-8.473-.013-.013-8.47 2.841 2.842 4.075-4.068 1.414-1.415-2.844-2.842h8.486v8.484l-2.83-2.827z' fill='%23fff'/><path d='m18.6826 16.7334-4.427 4.424 1.828 1.828-5.056-.016-.014-5.054 1.842 1.841 4.428-4.422 2.474-2.475-1.844-1.843h5.073v5.071l-1.83-1.828z' fill='%23000'/></g></svg>") 16 16, pointer;
+    cursor: var(--fc-nesw-resize, nesw-resize)
   }
 
   &[resize-handler="top"], 
@@ -92,7 +102,7 @@ styles.replaceSync(`
     background-color: hsl(214, 84%, 56%);
     background-clip: content-box;
     border: unset;
-    z-index: 1;
+    z-index: 2;
   }
 
   &[resize-handler="top"] {
@@ -126,13 +136,58 @@ styles.replaceSync(`
   &[resize-handler="top"], &[resize-handler="bottom"] {
     height: 6px;
     padding: 2px 0;
-    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='-0.9999999999999999' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(90 16 16)' filter='url(%23shadow)'><path d='m9 17.9907v.005l5.997 5.996.001-3.999h1.999 2.02v4l5.98-6.001-5.98-5.999.001 4.019-2.021.002h-2l.001-4.022zm1.411.003 3.587-3.588-.001 2.587h3.5 2.521v-2.585l3.565 3.586-3.564 3.585-.001-2.585h-2.521l-3.499-.001-.001 2.586z' fill='%23fff'/><path d='m17.4971 18.9932h2.521v2.586l3.565-3.586-3.565-3.585v2.605h-2.521-3.5v-2.607l-3.586 3.587 3.586 3.586v-2.587z' fill='%23000'/></g></svg>") 16 16, pointer;
+    cursor: var(--fc-ns-resize, ns-resize)
   }
 
   &[resize-handler="right"], &[resize-handler="left"] {
     width: 6px;
     padding: 0 2px;
-    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='m9 17.9907v.005l5.997 5.996.001-3.999h1.999 2.02v4l5.98-6.001-5.98-5.999.001 4.019-2.021.002h-2l.001-4.022zm1.411.003 3.587-3.588-.001 2.587h3.5 2.521v-2.585l3.565 3.586-3.564 3.585-.001-2.585h-2.521l-3.499-.001-.001 2.586z' fill='%23fff'/><path d='m17.4971 18.9932h2.521v2.586l3.565-3.586-3.565-3.585v2.605h-2.521-3.5v-2.607l-3.586 3.587 3.586 3.586v-2.587z' fill='%23000'/></g></svg>") 16 16, pointer;
+    cursor: var(--fc-ew-resize, ew-resize)	
+  }
+}
+
+:host(:focus-within) [rotation-handler] {
+  display: block;
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0;
+  border: unset;
+  background: unset;
+
+  &[rotation-handler="top-left"], 
+  &[rotation-handler="top-right"], 
+  &[rotation-handler="bottom-right"], 
+  &[rotation-handler="bottom-left"] {
+    width: 13px;
+    aspect-ratio: 1;
+    z-index: 2;
+  }
+
+  &[rotation-handler="top-left"] {
+    top: 0;
+    left: 0;
+    transform: translate(-100%, -100%);
+    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(0 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
+  }
+  
+  &[rotation-handler="top-right"] {
+    top: 0;
+    left: 100%;
+    transform: translate(0, -100%);
+    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='-0.9999999999999999' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(90 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
+  }
+  
+  &[rotation-handler="bottom-right"] {
+    top: 100%;
+    left: 100%;
+    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='-0.9999999999999999' dy='-1.0000000000000002' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(180 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
+  }
+    
+  &[rotation-handler="bottom-left"] {
+    top: 100%;
+    left: 0;
+    transform: translate(-100%, 0);
+    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='-1.0000000000000002' dy='0.9999999999999998' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(270 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
   }
 }`);
 
@@ -144,7 +199,7 @@ export class SpatialGeometry extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  static observedAttributes = ['type', 'x', 'y', 'width', 'height'];
+  static observedAttributes = ['type', 'x', 'y', 'width', 'height', 'rotate'];
 
   #internals: ElementInternals;
 
@@ -159,15 +214,14 @@ export class SpatialGeometry extends HTMLElement {
     const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
     shadowRoot.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
+    // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
+    // I can see it becoming important at scale
     shadowRoot.innerHTML = `
 <button resize-handler="top-left"></button>
-<button resize-handler="top"></button>
+<!-- <button rotation-handler="top"></button> -->
 <button resize-handler="top-right"></button>
-<button resize-handler="right"></button>
 <button resize-handler="bottom-right"></button>
-<button resize-handler="bottom"></button>
-<button resize-handler="bottom-left"></button>
-<button resize-handler="left"></button>`;
+<button resize-handler="bottom-left"></button>`;
   }
 
   #type: Shape = 'rectangle';
@@ -219,6 +273,16 @@ export class SpatialGeometry extends HTMLElement {
     this.setAttribute('height', height.toString());
   }
 
+  #previousRotate = 0;
+  #rotate = 0;
+  get rotate(): number {
+    return this.#rotate;
+  }
+
+  set rotate(rotate: number) {
+    this.setAttribute('rotate', rotate.toString());
+  }
+
   attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     if (name === 'x') {
       this.#previousX = this.#x;
@@ -236,6 +300,10 @@ export class SpatialGeometry extends HTMLElement {
       this.#previousHeight = this.#height;
       this.#height = Number(newValue);
       this.#requestUpdate('height');
+    } else if (name === 'rotate') {
+      this.#previousRotate = this.#rotate;
+      this.#rotate = Number(newValue);
+      this.#requestUpdate('rotate');
     } else if (name === 'type') {
       if (shapes.has(newValue)) {
         this.#type = newValue as Shape;
@@ -278,27 +346,61 @@ export class SpatialGeometry extends HTMLElement {
           return;
         }
 
-        const direction = (event.target as HTMLElement).getAttribute('resize-handler');
+        const resizeDirection = (event.target as HTMLElement).getAttribute('resize-handler');
 
-        if (direction === null) return;
+        if (resizeDirection !== null) {
+          // This triggers a move and resize event :(
+          if (resizeDirection.includes('top')) {
+            this.y += event.movementY;
+            this.height -= event.movementY;
+          }
 
-        if (direction.includes('top')) {
-          this.y += event.movementY;
-          this.height -= event.movementY;
+          if (resizeDirection.includes('right')) {
+            this.width += event.movementX;
+          }
+
+          if (resizeDirection.includes('bottom')) {
+            this.height += event.movementY;
+          }
+
+          if (resizeDirection.includes('left')) {
+            this.x += event.movementX;
+            this.width -= event.movementX;
+          }
+          return;
         }
 
-        if (direction.includes('right')) {
-          this.width += event.movementX;
+        const rotationDirection = (event.target as HTMLElement).getAttribute('rotation-handler');
+
+        if (rotationDirection !== null) {
+          console.log(rotationDirection);
+          const centerX = (this.#x + this.#width) / 2;
+          const centerY = (this.#y + this.#height) / 2;
+          const newAngle =
+            (Math.atan2(centerY - event.clientX, centerX - event.clientY) * 180) / Math.PI;
+          console.log(newAngle - this.#rotate);
+          // this.rotate -= newAngle;
+
+          // When a rotation handler is
+          // newAngle = (Math.atan2(centerY - mouseY, centerX - mouseX) * 180) / Math.PI - currentAngle;
+          // if (rotationDirection.includes('top-left')) {
+
+          // }
+
+          // if (rotationDirection.includes('top-right')) {
+
+          // }
+
+          // if (rotationDirection.includes('bottom-right')) {
+
+          // }
+
+          // if (rotationDirection.includes('bottom-left')) {
+
+          // }
+          return;
         }
 
-        if (direction.includes('bottom')) {
-          this.height += event.movementY;
-        }
-
-        if (direction.includes('left')) {
-          this.x += event.movementX;
-          this.width -= event.movementX;
-        }
         return;
       }
       case 'lostpointercapture': {
@@ -361,7 +463,6 @@ export class SpatialGeometry extends HTMLElement {
           this.style.top = `${this.#y}px`;
         }
       } else {
-        // Revert changes to movement
         this.#x = this.#previousX;
         this.#y = this.#previousY;
       }
@@ -385,9 +486,24 @@ export class SpatialGeometry extends HTMLElement {
           this.style.height = `${this.#height}px`;
         }
       } else {
-        // Revert changes to movement
+        // TODO: Revert changes to position too
         this.#height = this.#previousHeight;
         this.#width = this.#previousWidth;
+      }
+    }
+
+    if (updatedProperties.has('rotate')) {
+      // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
+      const notCancelled = this.dispatchEvent(
+        new RotateEvent({ rotate: this.#rotate - this.#previousRotate })
+      );
+
+      if (notCancelled) {
+        if (updatedProperties.has('rotate')) {
+          this.style.rotate = `${this.#rotate}deg`;
+        }
+      } else {
+        this.#rotate = this.#previousRotate;
       }
     }
   }
