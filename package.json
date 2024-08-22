@@ -1,6 +1,27 @@
 {
   "name": "folk-canvas",
   "description": "",
+  "version": "0.1.0",
+  "type": "module",
+  "sideEffects": false,
+  "author": "Christopher Shank <chris.shank.23@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChrisShank/folk-canvas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ChrisShank/folk-canvas/issues"
+  },
+  "homepage": "https://github.com/ChrisShank/folk-canvas#readme",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "spatial canvas",
+    "custom elements"
+  ],
   "scripts": {
     "build": "tsc --build",
     "dev": "vite demo",
@@ -8,8 +29,12 @@
     "demo:preview": "pnpm demo:build && vite preview demo"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.12",
     "@types/node": "^20.12.7",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
   }
 }

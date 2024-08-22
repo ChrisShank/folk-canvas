@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shapes - Collision</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      leaflet-map {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <spatial-geometry x="25" y="100" width="500" height="300">
+      <leaflet-map coordinates="52.09, 5.12" zoom="13"></leaflet-map>
+    </spatial-geometry>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/elements/spatial-geometry.ts';
+      import { LeafletMap } from '../src/maps';
+      SpatialGeometry.register();
+      LeafletMap.register();
+    </script>
+  </body>
+</html>

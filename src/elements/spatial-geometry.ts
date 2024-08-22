@@ -32,11 +32,23 @@ styles.replaceSync(`
 :host {
   display: block;
   position: absolute;
+  padding: 20px 10px 10px;
   cursor: var(--fc-grab, grab);
+  content-visibility: auto;
 }
 
-:host(:hover),  :host(:focus-within){
+:host > div {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+:host(:focus-within) > div {
   outline: solid 1px hsl(214, 84%, 56%);
+}
+
+:host(:hover) > div {
+  outline: solid 2px hsl(214, 84%, 56%);
 }
 
 :host(:state(moving)) {
@@ -48,12 +60,13 @@ styles.replaceSync(`
   opacity: 0;
 }
 
-:host(:focus-within) [resize-handler] {
+[resize-handler] {
   display: block;
   position: absolute;
   box-sizing: border-box;
   padding: 0;
   background: hsl(210, 20%, 98%);
+  z-index: calc(infinity); /* should the handlers always show?  */
 
   &[resize-handler="top-left"], 
   &[resize-handler="top-right"], 
@@ -64,7 +77,6 @@ styles.replaceSync(`
     transform: translate(-50%, -50%);
     border: 1.5px solid hsl(214, 84%, 56%);
     border-radius: 2px;
-    z-index: 3;
   }
 
   &[resize-handler="top-left"] {
@@ -94,59 +106,9 @@ styles.replaceSync(`
   &[resize-handler="top-right"], &[resize-handler="bottom-left"] {
     cursor: var(--fc-nesw-resize, nesw-resize)
   }
-
-  &[resize-handler="top"], 
-  &[resize-handler="right"], 
-  &[resize-handler="bottom"], 
-  &[resize-handler="left"] {
-    background-color: hsl(214, 84%, 56%);
-    background-clip: content-box;
-    border: unset;
-    z-index: 2;
-  }
-
-  &[resize-handler="top"] {
-    top: 0;
-    left: 0;
-    right: 0;
-    transform: translate(0, -50%);
-  }
-  
-  &[resize-handler="right"] {
-    top: 0;
-    bottom: 0;
-    right: 0;
-    transform: translate(50%, 0);
-  }
-  
-  &[resize-handler="bottom"] {
-    bottom:0;
-    left: 0;
-    right: 0;
-    transform: translate(0, 50%);
-  }
-    
-  &[resize-handler="left"] {
-    top: 0;
-    bottom: 0;
-    left: 0;
-    transform: translate(-50%, 0);
-  }
-
-  &[resize-handler="top"], &[resize-handler="bottom"] {
-    height: 6px;
-    padding: 2px 0;
-    cursor: var(--fc-ns-resize, ns-resize)
-  }
-
-  &[resize-handler="right"], &[resize-handler="left"] {
-    width: 6px;
-    padding: 0 2px;
-    cursor: var(--fc-ew-resize, ew-resize)	
-  }
 }
 
-:host(:focus-within) [rotation-handler] {
+[rotation-handler] {
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -163,7 +125,7 @@ styles.replaceSync(`
   cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
 }
 
-:host(:focus-within) [rotation-handler]::before {
+[rotation-handler]::before {
   box-sizing: border-box;
   display: block;
   position: absolute;
@@ -172,8 +134,7 @@ styles.replaceSync(`
   border: 1px solid hsl(214, 84%, 56%);
   height: 50%;
   width: 1px;
-}
-  `);
+}`);
 
 // TODO: add z coordinate?
 export class SpatialGeometry extends HTMLElement {
@@ -201,11 +162,14 @@ export class SpatialGeometry extends HTMLElement {
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
     shadowRoot.innerHTML = `
-<button rotation-handler="top"></button>
-<button resize-handler="top-left"></button>
-<button resize-handler="top-right"></button>
-<button resize-handler="bottom-right"></button>
-<button resize-handler="bottom-left"></button>`;
+<div>
+  <button rotation-handler="top"></button>
+  <button resize-handler="top-left"></button>
+  <button resize-handler="top-right"></button>
+  <button resize-handler="bottom-right"></button>
+  <button resize-handler="bottom-left"></button>
+  <slot />
+</div>`;
   }
 
   #type: Shape = 'rectangle';
