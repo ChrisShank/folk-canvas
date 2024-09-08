@@ -1,8 +1,5 @@
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
-// Can we make adding new shapes extensible via a static property?
-const shapes = new Set(['rectangle', 'circle', 'triangle']);
-
 export type MoveEventDetail = { movementX: number; movementY: number };
 
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
@@ -33,7 +30,7 @@ styles.replaceSync(`
   display: block;
   position: absolute;
   padding: 20px 10px 10px;
-  cursor: var(--fc-grab, grab);
+  cursor: var(--fc-move, move);
   content-visibility: auto;
 }
 
@@ -52,7 +49,6 @@ styles.replaceSync(`
 }
 
 :host(:state(moving)) {
-  cursor: var(--fc-grabbing, grabbing);
   user-select: none;
 }
 
@@ -144,13 +140,11 @@ export class SpatialGeometry extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  static observedAttributes = ['type', 'x', 'y', 'width', 'height', 'rotate'];
-
-  #internals: ElementInternals;
+  #internals = this.attachInternals();
 
   constructor() {
     super();
-    this.#internals = this.attachInternals();
+
     this.addEventListener('pointerdown', this);
     this.addEventListener('lostpointercapture', this);
     this.addEventListener('touchstart', this);
@@ -188,7 +182,8 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set x(x: number) {
-    this.setAttribute('x', x.toString());
+    this.#x = x;
+    this.#requestUpdate('x');
   }
 
   #previousY = 0;
@@ -198,27 +193,30 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set y(y: number) {
-    this.setAttribute('y', y.toString());
+    this.#y = y;
+    this.#requestUpdate('y');
   }
 
   #previousWidth = 0;
-  #width = 0;
+  #width = 1;
   get width(): number {
     return this.#width;
   }
 
   set width(width: number) {
-    this.setAttribute('width', width.toString());
+    this.#width = width;
+    this.#requestUpdate('width');
   }
 
   #previousHeight = 0;
-  #height = 0;
+  #height = 1;
   get height(): number {
     return this.#height;
   }
 
   set height(height: number) {
-    this.setAttribute('height', height.toString());
+    this.#height = height;
+    this.#requestUpdate('height');
   }
 
   #previousRotate = 0;
@@ -228,36 +226,17 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set rotate(rotate: number) {
-    this.setAttribute('rotate', rotate.toString());
+    this.#rotate = rotate;
+    this.#requestUpdate('rotate');
   }
 
-  attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
-    if (name === 'x') {
-      this.#previousX = this.#x;
-      this.#x = Number(newValue);
-      this.#requestUpdate('x');
-    } else if (name === 'y') {
-      this.#previousY = this.#y;
-      this.#y = Number(newValue);
-      this.#requestUpdate('y');
-    } else if (name === 'width') {
-      this.#previousWidth = this.#width;
-      this.#width = Number(newValue);
-      this.#requestUpdate('width');
-    } else if (name === 'height') {
-      this.#previousHeight = this.#height;
-      this.#height = Number(newValue);
-      this.#requestUpdate('height');
-    } else if (name === 'rotate') {
-      this.#previousRotate = this.#rotate;
-      this.#rotate = Number(newValue);
-      this.#requestUpdate('rotate');
-    } else if (name === 'type') {
-      if (shapes.has(newValue)) {
-        this.#type = newValue as Shape;
-        this.#requestUpdate('type');
-      }
-    }
+  connectedCallback() {
+    this.type = (this.getAttribute('type') || 'rectangle') as Shape;
+    this.x = Number(this.getAttribute('x')) || 0;
+    this.y = Number(this.getAttribute('y')) || 0;
+    this.height = Number(this.getAttribute('height')) || 0;
+    this.width = Number(this.getAttribute('width')) || 0;
+    this.rotate = Number(this.getAttribute('rotate')) || 0;
   }
 
   disconnectedCallback() {

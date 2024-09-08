@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shapes - Collision</title>
+    <title>Maps</title>
     <style>
       * {
         box-sizing: border-box;
@@ -19,15 +19,34 @@
         margin: 0;
       }
 
-      leaflet-map {
+      leaflet-map,
+      geo-wiki {
+        display: block;
         height: 100%;
         width: 100%;
+      }
+
+      geo-wiki {
+        ul {
+          height: 100%;
+          overflow: auto;
+          margin: 0;
+          scroll-padding-block-end: 1rem;
+        }
       }
     </style>
   </head>
   <body>
-    <spatial-geometry x="25" y="100" width="500" height="300">
+    <spatial-geometry x="25" y="100" width="400" height="200">
       <leaflet-map coordinates="52.09, 5.12" zoom="13"></leaflet-map>
+    </spatial-geometry>
+
+    <spatial-geometry x="50" y="550" width="400" height="250">
+      <leaflet-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></leaflet-map>
+    </spatial-geometry>
+
+    <spatial-geometry x="500" y="400" width="500" height="300">
+      <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
     </spatial-geometry>
 
     <script type="module">
@@ -35,6 +54,133 @@
       import { LeafletMap } from '../src/maps';
       SpatialGeometry.register();
       LeafletMap.register();
+
+      function collisionDetection(rect1, rect2) {
+        return (
+          rect1.left < rect2.right &&
+          rect1.right > rect2.left &&
+          rect1.top < rect2.bottom &&
+          rect1.bottom > rect2.top
+        );
+      }
+
+      function proximityDetection(rect1, rect2, distance = 30) {
+        return collisionDetection(
+          DOMRectReadOnly.fromRect({
+            x: rect1.x - distance,
+            y: rect1.y - distance,
+            height: rect1.height + distance * 2,
+            width: rect1.width + distance * 2,
+          }),
+          rect2
+        );
+      }
+
+      const proximityMap = new Map(
+        Array.from(document.querySelectorAll('spatial-geometry')).map((el) => [el, new Set()])
+      );
+
+      function handleProximity(e) {
+        proximityMap.forEach((set, el) => {
+          if (el !== e.target) {
+            const alreadyIntersection = set.has(e.target);
+            // TODO: refactor this hack once resizing and the vertices API are figured out
+            const isNowIntersecting = proximityDetection(
+              DOMRectReadOnly.fromRect({ x: el.x, y: el.y, height: el.height, width: el.width }),
+              DOMRectReadOnly.fromRect({
+                x: e.target.x,
+                y: e.target.y,
+                height: e.target.height,
+                width: e.target.width,
+              })
+            );
+            if (isNowIntersecting && !alreadyIntersection) {
+              set.add(e.target);
+              proximityMap.get(e.target)?.add(el);
+            } else if (alreadyIntersection && !isNowIntersecting) {
+              set.delete(e.target);
+              proximityMap.get(e.target)?.delete(el);
+            }
+          }
+        });
+      }
+
+      document.addEventListener('move', handleProximity);
+      document.addEventListener('resize', handleProximity);
+      document.addEventListener('recenter', (e) => {
+        proximityMap.get(e.target.parentElement)?.forEach((el) => {
+          const content = el.firstElementChild;
+          if (content instanceof GeoWiki) {
+            const { lat, lng } = e.detail;
+            content.coordinates = [lat, lng];
+          }
+        });
+      });
+
+      class GeoWiki extends HTMLElement {
+        static tagName = 'geo-wiki';
+
+        static register() {
+          customElements.define(this.tagName, this);
+        }
+
+        static observedAttributes = ['coordinates'];
+
+        #coordinates = [0, 0];
+        #results = [];
+
+        get coordinates() {
+          return this.#coordinates;
+        }
+
+        set coordinates(coordinates) {
+          this.setAttribute('coordinates', coordinates.join(', '));
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (name === 'coordinates') {
+            this.#coordinates = newValue.split(',').map((str) => Number(str)) || [0, 0];
+            this.searchWiki(this.#coordinates);
+          }
+        }
+
+        async searchWiki([lat, long]) {
+          const params = new URLSearchParams({
+            action: 'query',
+            format: 'json',
+            list: 'geosearch',
+            gscoord: `${lat}|${long}`,
+            gsradius: '1000',
+            gslimit: '50',
+            origin: '*',
+          });
+          // https://www.mediawiki.org/wiki/API:Geosearch
+          this.#results = await fetch(`https://en.wikipedia.org/w/api.php?${params}`)
+            .then((response) => response.json())
+            .then((data) => data?.query?.geosearch ?? []);
+
+          this.#renderResults();
+        }
+
+        #renderResults() {
+          this.firstElementChild?.remove();
+
+          const list = document.createElement('ul');
+
+          for (const result of this.#results) {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = `https://en.wikipedia.org/wiki/${result.title}`;
+            a.textContent = result.title;
+            li.appendChild(a);
+            list.appendChild(li);
+          }
+
+          this.appendChild(list);
+        }
+      }
+
+      GeoWiki.register();
     </script>
   </body>
 </html>

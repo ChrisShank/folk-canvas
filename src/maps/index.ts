@@ -1,4 +1,4 @@
-import { map, Map, tileLayer } from 'leaflet';
+import { LatLng, LatLngExpression, LeafletEvent, map, Map, tileLayer } from 'leaflet';
 
 // @ts-ignore
 // Vite specific import :(
@@ -15,6 +15,12 @@ styles.replaceSync(`${css}
   }  
 `);
 
+export class RecenterEvent extends CustomEvent<LatLng> {
+  constructor(detail: LatLng) {
+    super('recenter', { detail, bubbles: true });
+  }
+}
+
 export class LeafletMap extends HTMLElement {
   static tagName = 'leaflet-map';
 
@@ -27,7 +33,7 @@ export class LeafletMap extends HTMLElement {
 
   constructor() {
     super();
-
+    this.handleEvent = this.handleEvent.bind(this);
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.adoptedStyleSheets.push(styles);
     shadow.appendChild(this.#container);
@@ -41,6 +47,23 @@ export class LeafletMap extends HTMLElement {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       })
     );
-    this.#map.setView([52.09, 5.12], 13);
+    const coordinates = (this.getAttribute('coordinates')
+      ?.split(',')
+      .map((str) => Number(str)) || [0, 0]) as LatLngExpression;
+    const zoom = Number(this.getAttribute('zoom') || 13);
+    this.#map.setView(coordinates, zoom);
+
+    this.#map.on('zoom', this.handleEvent);
+    this.#map.on('moveend', this.handleEvent);
+  }
+
+  handleEvent(event: LeafletEvent) {
+    switch (event.type) {
+      case 'zoom':
+      case 'moveend': {
+        this.dispatchEvent(new RecenterEvent(this.#map.getCenter()));
+        break;
+      }
+    }
   }
 }
