@@ -52,11 +52,11 @@ styles.replaceSync(`
   user-select: none;
 }
 
-:host(:not(:focus-within)) [resize-handler], :host(:not(:focus-within)) [rotation-handler] {
+:host(:not(:focus-within)) [part^="resize"], :host(:not(:focus-within)) [part="rotate"] {
   opacity: 0;
 }
 
-[resize-handler] {
+[part^="resize"] {
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -64,10 +64,10 @@ styles.replaceSync(`
   background: hsl(210, 20%, 98%);
   z-index: calc(infinity); /* should the handlers always show?  */
 
-  &[resize-handler="top-left"], 
-  &[resize-handler="top-right"], 
-  &[resize-handler="bottom-right"], 
-  &[resize-handler="bottom-left"] {
+  &[part="resize-nw"], 
+  &[part="resize-ne"], 
+  &[part="resize-se"], 
+  &[part="resize-sw"] {
     width: 13px;
     aspect-ratio: 1;
     transform: translate(-50%, -50%);
@@ -75,36 +75,36 @@ styles.replaceSync(`
     border-radius: 2px;
   }
 
-  &[resize-handler="top-left"] {
+  &[part="resize-nw"] {
     top: 0;
     left: 0;
   }
   
-  &[resize-handler="top-right"] {
+  &[part="resize-ne"] {
     top: 0;
     left: 100%;
   }
   
-  &[resize-handler="bottom-right"] {
+  &[part="resize-se"] {
     top: 100%;
     left: 100%;
   }
     
-  &[resize-handler="bottom-left"] {
+  &[part="resize-sw"] {
     top: 100%;
     left: 0;
   }
 
-  &[resize-handler="top-left"], &[resize-handler="bottom-right"] {
+  &[part="resize-nw"], &[part="resize-se"] {
     cursor: var(--fc-nwse-resize, nwse-resize)
   }
     
-  &[resize-handler="top-right"], &[resize-handler="bottom-left"] {
+  &[part="resize-ne"], &[part="resize-sw"] {
     cursor: var(--fc-nesw-resize, nesw-resize)
   }
 }
 
-[rotation-handler] {
+[part="rotate"] {
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -121,7 +121,7 @@ styles.replaceSync(`
   cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
 }
 
-[rotation-handler]::before {
+[part="rotate"]::before {
   box-sizing: border-box;
   display: block;
   position: absolute;
@@ -157,11 +157,11 @@ export class SpatialGeometry extends HTMLElement {
     // I can see it becoming important at scale
     shadowRoot.innerHTML = `
 <div>
-  <button rotation-handler="top"></button>
-  <button resize-handler="top-left"></button>
-  <button resize-handler="top-right"></button>
-  <button resize-handler="bottom-right"></button>
-  <button resize-handler="bottom-left"></button>
+  <button part="rotate"></button>
+  <button part="resize-nw"></button>
+  <button part="resize-ne"></button>
+  <button part="resize-se"></button>
+  <button part="resize-sw"></button>
   <slot />
 </div>`;
   }
@@ -258,7 +258,12 @@ export class SpatialGeometry extends HTMLElement {
       case 'pointerdown': {
         if (event.button !== 0 || event.ctrlKey) return;
 
-        const target = event.composedPath()[0] as HTMLElement;
+        let target = event.composedPath()[0] as HTMLElement;
+
+        // if a resize handler isn't interacted with then we should move the element.
+        if (!target.hasAttribute('part')) {
+          target = this;
+        }
 
         target.addEventListener('pointermove', this);
         target.setPointerCapture(event.pointerId);
@@ -277,31 +282,33 @@ export class SpatialGeometry extends HTMLElement {
           return;
         }
 
-        const resizeDirection = target.getAttribute('resize-handler');
+        const part = target.getAttribute('part');
 
-        if (resizeDirection !== null) {
+        if (part === null) return;
+
+        if (part.includes('resize')) {
           // This triggers a move and resize event :(
-          if (resizeDirection.includes('top')) {
+          if (part.includes('-n')) {
             this.y += event.movementY;
             this.height -= event.movementY;
           }
 
-          if (resizeDirection.includes('right')) {
+          if (part.endsWith('e')) {
             this.width += event.movementX;
           }
 
-          if (resizeDirection.includes('bottom')) {
+          if (part.includes('-s')) {
             this.height += event.movementY;
           }
 
-          if (resizeDirection.includes('left')) {
+          if (part.endsWith('w')) {
             this.x += event.movementX;
             this.width -= event.movementX;
           }
           return;
         }
 
-        if (target.hasAttribute('rotation-handler')) {
+        if (part === 'rotate') {
           const centerX = (this.#x + this.#width) / 2;
           const centerY = (this.#y + this.#height) / 2;
           var newAngle =
@@ -310,7 +317,7 @@ export class SpatialGeometry extends HTMLElement {
           console.log(newAngle);
           this.rotate = newAngle;
 
-          // When a rotation handler is
+          // When a rotate handler is
           // newAngle = (Math.atan2(centerY - mouseY, centerX - mouseX) * 180) / Math.PI - currentAngle;
           return;
         }
