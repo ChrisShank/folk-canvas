@@ -34,10 +34,20 @@ styles.replaceSync(`
   content-visibility: auto;
 }
 
+::slotted(*) {
+  cursor: default;
+}
+
 :host > div {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+:host > div > div {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 :host(:focus-within) > div {
@@ -62,7 +72,7 @@ styles.replaceSync(`
   box-sizing: border-box;
   padding: 0;
   background: hsl(210, 20%, 98%);
-  z-index: calc(infinity); /* should the handlers always show?  */
+  z-index: calc(infinity);
 
   &[part="resize-nw"], 
   &[part="resize-ne"], 
@@ -105,6 +115,7 @@ styles.replaceSync(`
 }
 
 [part="rotate"] {
+  z-index: calc(infinity);
   display: block;
   position: absolute;
   box-sizing: border-box;
@@ -117,19 +128,7 @@ styles.replaceSync(`
   top: 0;
   left: 50%;
   translate: -50% -150%;
-  z-index: 2;
   cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
-}
-
-[part="rotate"]::before {
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  translate: -50% -150%;
-  z-index: 2;
-  border: 1px solid hsl(214, 84%, 56%);
-  height: 50%;
-  width: 1px;
 }`);
 
 // TODO: add z coordinate?
@@ -147,8 +146,8 @@ export class SpatialGeometry extends HTMLElement {
 
     this.addEventListener('pointerdown', this);
     this.addEventListener('lostpointercapture', this);
-    this.addEventListener('touchstart', this);
-    this.addEventListener('dragstart', this);
+    // this.addEventListener('touchstart', this);
+    // this.addEventListener('dragstart', this);
 
     const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
     shadowRoot.adoptedStyleSheets.push(styles);
@@ -162,7 +161,7 @@ export class SpatialGeometry extends HTMLElement {
   <button part="resize-ne"></button>
   <button part="resize-se"></button>
   <button part="resize-sw"></button>
-  <slot />
+  <div><slot></slot></div>
 </div>`;
   }
 
@@ -258,12 +257,10 @@ export class SpatialGeometry extends HTMLElement {
       case 'pointerdown': {
         if (event.button !== 0 || event.ctrlKey) return;
 
-        let target = event.composedPath()[0] as HTMLElement;
+        const target = event.composedPath()[0] as HTMLElement;
 
-        // if a resize handler isn't interacted with then we should move the element.
-        if (!target.hasAttribute('part')) {
-          target = this;
-        }
+        // ignore interactions from slotted elements.
+        if (target !== this && !target.hasAttribute('part')) return;
 
         target.addEventListener('pointermove', this);
         target.setPointerCapture(event.pointerId);
@@ -314,11 +311,7 @@ export class SpatialGeometry extends HTMLElement {
           var newAngle =
             ((Math.atan2(event.clientY - centerY, event.clientX - centerX) + Math.PI / 2) * 180) /
             Math.PI;
-          console.log(newAngle);
           this.rotate = newAngle;
-
-          // When a rotate handler is
-          // newAngle = (Math.atan2(centerY - mouseY, centerX - mouseX) * 180) / Math.PI - currentAngle;
           return;
         }
 

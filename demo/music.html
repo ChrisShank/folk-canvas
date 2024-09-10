@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      spatial-geometry:has(record-player) {
+        &::part(resize-nw),
+        &::part(resize-ne),
+        &::part(resize-se),
+        &::part(resize-sw) {
+          display: none;
+        }
+      }
+
+      spatial-geometry > video {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 
+      sips -c 326 276 --cropOffset 1 1 *.png --out pngs/
+      ffmpeg -framerate 25 -pattern_type glob -i '*.png' -c:v prores -pix_fmt yuva444p10le dancing-flower.mov
+      ffmpeg -framerate 25 -f image2 -pattern_type glob -i '*.png' -c:v libvpx-vp9 -pix_fmt yuva420p dancing-flowers.webm
+    -->
+    <spatial-geometry x="100" y="75" width="330" height="198">
+      <record-player>
+        <audio src="/Feather.mp3"></audio>
+      </record-player>
+    </spatial-geometry>
+
+    <spatial-geometry x="25" y="300" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="155" y="315" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="280" y="305" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="415" y="295" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="20" y="525" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="160" y="545" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="290" y="530" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <spatial-geometry x="420" y="520" width="166" height="200">
+      <video loop>
+        <source src="/dancing-flower.mov" type="video/quicktime" />
+        <source src="/dancing-flower.webm" type="video/webm" />
+      </video>
+    </spatial-geometry>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { RecordPlayer } from '../src/music/record-player.ts';
+
+      SpatialGeometry.register();
+      RecordPlayer.register();
+
+      const flowers = Array.from(document.querySelectorAll('video'));
+      const audio = document.querySelector('audio');
+
+      function setPlayback(e) {
+        e.target.playbackRate = (91 / 60) * e.target.duration;
+        e.target.removeEventListener('canplay', setPlayback);
+      }
+
+      flowers.forEach((el) => {
+        el.addEventListener('canplay', setPlayback);
+      });
+
+      audio.addEventListener('play', () => {
+        setTimeout(() => flowers.forEach((el) => el.play()), 1200);
+      });
+
+      audio.addEventListener('pause', () => {
+        flowers.forEach((el) => {
+          el.pause();
+          el.currentTime = 0;
+        });
+      });
+    </script>
+  </body>
+</html>
