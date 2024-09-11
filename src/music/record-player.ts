@@ -74,6 +74,10 @@ styles.replaceSync(`
   top: 25px;
   right: 95px;
   transform-origin: top;
+
+   --move-time: 3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
 }
 
 .control {
@@ -150,20 +154,17 @@ styles.replaceSync(`
 }
 
 :host(:state(playing)) .tone-arm {
-  --move-time: 3s;
-  animation-fill-mode: forwards;
-  animation-timing-function: linear;
   animation: 
-    position-arm var(--move-time), 
+    ready-arm var(--move-time), 
     move-arm var(--duration) var(--move-time), 
     reset-arm var(--move-time) calc(var(--duration) + var(--move-time));
-}
+}  
 
 :host(:state(playing)) .record {
   animation-play-state: running;
 }
 
-@keyframes position-arm {
+@keyframes ready-arm {
   20% {
     transform: rotateX(20deg);
   }
@@ -184,14 +185,18 @@ styles.replaceSync(`
   }
 
   to {
-    rotate: 43deg;
+    rotate: 42deg;
   }
 }
 
 @keyframes reset-arm {
+  0% {
+    rotate: 42deg;
+  }
+
   20% {
     transform: rotateX(20deg);
-    rotate: 43deg;
+    rotate: 42deg;
   }
 
   80% {
@@ -225,6 +230,8 @@ export class RecordPlayer extends HTMLElement {
     super();
 
     this.addEventListener('click', this);
+
+    this.#audio.volume = 0.5;
     this.#audio.addEventListener('ended', this);
 
     const shadow = this.attachShadow({ mode: 'open' });
@@ -239,7 +246,7 @@ export class RecordPlayer extends HTMLElement {
       <div class="control"></div>
   </div>
   <button class="btn"></button>
-  <input type="range" class="slider" min="0" max="1" step="0.05" value="0.75">
+  <input type="range" class="slider" min="0" max="1" step="0.05" value="0.5">
 </div>
 <slot></slot>`;
 
@@ -251,6 +258,10 @@ export class RecordPlayer extends HTMLElement {
     return this.#audio.paused;
   }
 
+  get volume() {
+    return this.#audio.volume;
+  }
+
   #playTimeout: number = -1;
 
   play() {
@@ -259,7 +270,10 @@ export class RecordPlayer extends HTMLElement {
     this.#audio.volume = this.#volumeInput.valueAsNumber;
     this.style.setProperty('--duration', `${this.#audio.duration}s`);
     this.#internals.states.add('playing');
-    this.#playTimeout = window.setTimeout(() => this.#audio.play(), 3000);
+    this.#playTimeout = window.setTimeout(() => {
+      this.#audio.play();
+      this.dispatchEvent(new Event('playing', { bubbles: true }));
+    }, 3000);
   }
 
   stop() {
@@ -269,6 +283,7 @@ export class RecordPlayer extends HTMLElement {
     this.#internals.states.delete('playing');
     this.#audio.pause();
     this.#audio.currentTime = 0;
+    this.dispatchEvent(new Event('stopped', { bubbles: true }));
   }
 
   handleEvent(event: Event) {
@@ -283,7 +298,9 @@ export class RecordPlayer extends HTMLElement {
       }
 
       case 'input': {
+        event.stopPropagation();
         this.#audio.volume = this.#volumeInput.valueAsNumber;
+        this.dispatchEvent(new Event('volume', { bubbles: true }));
         return;
       }
 

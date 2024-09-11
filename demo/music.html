@@ -62,41 +62,6 @@
       </video>
     </spatial-geometry>
 
-    <spatial-geometry x="415" y="295" width="166" height="200">
-      <video loop>
-        <source src="/dancing-flower.mov" type="video/quicktime" />
-        <source src="/dancing-flower.webm" type="video/webm" />
-      </video>
-    </spatial-geometry>
-
-    <spatial-geometry x="20" y="525" width="166" height="200">
-      <video loop>
-        <source src="/dancing-flower.mov" type="video/quicktime" />
-        <source src="/dancing-flower.webm" type="video/webm" />
-      </video>
-    </spatial-geometry>
-
-    <spatial-geometry x="160" y="545" width="166" height="200">
-      <video loop>
-        <source src="/dancing-flower.mov" type="video/quicktime" />
-        <source src="/dancing-flower.webm" type="video/webm" />
-      </video>
-    </spatial-geometry>
-
-    <spatial-geometry x="290" y="530" width="166" height="200">
-      <video loop>
-        <source src="/dancing-flower.mov" type="video/quicktime" />
-        <source src="/dancing-flower.webm" type="video/webm" />
-      </video>
-    </spatial-geometry>
-
-    <spatial-geometry x="420" y="520" width="166" height="200">
-      <video loop>
-        <source src="/dancing-flower.mov" type="video/quicktime" />
-        <source src="/dancing-flower.webm" type="video/webm" />
-      </video>
-    </spatial-geometry>
-
     <script type="module">
       import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
       import { RecordPlayer } from '../src/music/record-player.ts';
@@ -104,28 +69,112 @@
       SpatialGeometry.register();
       RecordPlayer.register();
 
-      const flowers = Array.from(document.querySelectorAll('video'));
-      const audio = document.querySelector('audio');
-
+      let proximityDistance = 200;
+      const proximitySet = new Set();
+      const recordPlayerGeometry = document.querySelector('spatial-geometry:has(record-player)');
+      const recordPlayer = recordPlayerGeometry.firstElementChild;
+      const flowers = document.querySelectorAll('spatial-geometry:has(video)');
+      // set playback rate when video is ready
       function setPlayback(e) {
         e.target.playbackRate = (91 / 60) * e.target.duration;
         e.target.removeEventListener('canplay', setPlayback);
       }
 
       flowers.forEach((el) => {
-        el.addEventListener('canplay', setPlayback);
+        el.firstElementChild.addEventListener('canplay', setPlayback);
       });
 
-      audio.addEventListener('play', () => {
-        setTimeout(() => flowers.forEach((el) => el.play()), 1200);
+      function collisionDetection(rect1, rect2) {
+        return (
+          rect1.left < rect2.right &&
+          rect1.right > rect2.left &&
+          rect1.top < rect2.bottom &&
+          rect1.bottom > rect2.top
+        );
+      }
+
+      function proximityDetection(rect1, rect2, distance = 30) {
+        return collisionDetection(
+          DOMRectReadOnly.fromRect({
+            x: rect1.x - distance,
+            y: rect1.y - distance,
+            height: rect1.height + distance * 2,
+            width: rect1.width + distance * 2,
+          }),
+          rect2
+        );
+      }
+
+      function updateFlowerProximity(flower) {
+        const alreadyIntersection = proximitySet.has(flower);
+        // TODO: refactor this hack once resizing and the vertices API are figured out
+        const isNowIntersecting = proximityDetection(
+          DOMRectReadOnly.fromRect({
+            x: recordPlayerGeometry.x,
+            y: recordPlayerGeometry.y,
+            height: recordPlayerGeometry.height,
+            width: recordPlayerGeometry.width,
+          }),
+          DOMRectReadOnly.fromRect({
+            x: flower.x,
+            y: flower.y,
+            height: flower.height,
+            width: flower.width,
+          }),
+          proximityDistance
+        );
+
+        const video = flower.firstElementChild;
+        if (isNowIntersecting && !alreadyIntersection) {
+          proximitySet.add(flower);
+          if (!recordPlayer.paused) {
+            video.play();
+          }
+        } else if (alreadyIntersection && !isNowIntersecting) {
+          proximitySet.delete(flower);
+          video.pause();
+        }
+      }
+
+      function updateRecordPlayerProximity() {
+        proximitySet.forEach((el) => el.firstElementChild.pause?.());
+        proximitySet.clear();
+
+        for (const flower of flowers) {
+          updateFlowerProximity(flower);
+        }
+      }
+
+      function handleProximity(e) {
+        if (e.target === recordPlayerGeometry) {
+          updateRecordPlayerProximity();
+        } else {
+          updateFlowerProximity(e.target);
+        }
+      }
+
+      document.addEventListener('move', handleProximity);
+      document.addEventListener('resize', handleProximity);
+
+      document.addEventListener('playing', (e) => {
+        proximitySet.forEach((el) => el.firstElementChild.play?.());
       });
 
-      audio.addEventListener('pause', () => {
-        flowers.forEach((el) => {
-          el.pause();
-          el.currentTime = 0;
+      document.addEventListener('stopped', (e) => {
+        proximitySet.forEach((el) => {
+          el.firstElementChild.pause?.();
+          el.firstElementChild.currentTime = 0;
         });
       });
+
+      function updateVolume() {
+        proximityDistance = recordPlayer.volume * 500;
+        updateRecordPlayerProximity();
+      }
+
+      updateVolume();
+
+      document.addEventListener('volume', updateVolume);
     </script>
   </body>
 </html>
