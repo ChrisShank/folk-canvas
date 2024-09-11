@@ -279,11 +279,33 @@ export class RecordPlayer extends HTMLElement {
   stop() {
     if (this.paused) return;
 
+    const arm = this.shadowRoot!.querySelector('.tone-arm') as HTMLElement;
+    const animation = arm.getAnimations()[0];
+
+    if (animation) {
+      animation.commitStyles();
+      animation.cancel();
+      const rotate = arm.style.rotate;
+      arm.style.rotate = '';
+      arm.animate(
+        [
+          { rotate },
+          { rotate, transform: 'rotateX(20deg)', offset: 0.2 },
+          { transform: 'rotateX(20deg)', offset: 0.8 },
+        ],
+        {
+          duration: 3000,
+        }
+      );
+    }
+
     clearTimeout(this.#playTimeout);
     this.#internals.states.delete('playing');
     this.#audio.pause();
     this.#audio.currentTime = 0;
     this.dispatchEvent(new Event('stopped', { bubbles: true }));
+
+    // console.log(a);
   }
 
   handleEvent(event: Event) {
