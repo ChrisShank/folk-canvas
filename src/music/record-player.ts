@@ -280,6 +280,7 @@ export class RecordPlayer extends HTMLElement {
     if (this.paused) return;
 
     const arm = this.shadowRoot!.querySelector('.tone-arm') as HTMLElement;
+
     const animation = arm.getAnimations()[0];
 
     if (animation) {
@@ -289,13 +290,11 @@ export class RecordPlayer extends HTMLElement {
       arm.style.rotate = '';
       arm.animate(
         [
-          { rotate },
-          { rotate, transform: 'rotateX(20deg)', offset: 0.2 },
-          { transform: 'rotateX(20deg)', offset: 0.8 },
+          { offset: 0, rotate },
+          { offset: 0.2, rotate, transform: 'rotateX(20deg)' },
+          { offset: 0.8, transform: 'rotateX(20deg)' },
         ],
-        {
-          duration: 3000,
-        }
+        { duration: 3000 }
       );
     }
 
