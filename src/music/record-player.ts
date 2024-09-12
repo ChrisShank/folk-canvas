@@ -281,22 +281,7 @@ export class RecordPlayer extends HTMLElement {
 
     const arm = this.shadowRoot!.querySelector('.tone-arm') as HTMLElement;
 
-    const animation = arm.getAnimations()[0];
-
-    if (animation) {
-      animation.commitStyles();
-      animation.cancel();
-      const rotate = arm.style.rotate;
-      arm.style.rotate = '';
-      arm.animate(
-        [
-          { offset: 0, rotate },
-          { offset: 0.2, rotate, transform: 'rotateX(20deg)' },
-          { offset: 0.8, transform: 'rotateX(20deg)' },
-        ],
-        { duration: 3000 }
-      );
-    }
+    reverseAnimation(arm);
 
     clearTimeout(this.#playTimeout);
     this.#internals.states.delete('playing');
@@ -331,4 +316,73 @@ export class RecordPlayer extends HTMLElement {
       }
     }
   }
+}
+
+function reverseAnimation(el: HTMLElement) {
+  const animation = el.getAnimations()[0];
+
+  if (!animation || !(animation.effect instanceof KeyframeEffect)) return;
+
+  const originalStyles = createStyleMap(el.getAttribute('style') || '');
+
+  animation.commitStyles();
+  animation.cancel();
+
+  const animationStyles = createStyleMap(el.getAttribute('style') || '');
+
+  const changedProperties = diffStyles(originalStyles, animationStyles);
+
+  // reset styles
+  for (const property of changedProperties) {
+    el.style.setProperty(property, originalStyles.get(property) || '');
+  }
+
+  // reverse current animation
+  const { progress = 0 } = animation.effect.getComputedTiming();
+  const keyframes = animation.effect.getKeyframes();
+
+  const rotate = animationStyles.get('rotate') || 0;
+
+  // TODO: dont hard code this
+  el.animate(
+    [
+      { offset: 0, rotate },
+      { offset: 0.2, rotate, transform: 'rotateX(20deg)' },
+      { offset: 0.8, transform: 'rotateX(20deg)' },
+    ],
+    { duration: 3000 }
+  );
+}
+
+function createStyleMap(style: string): Map<string, string> {
+  const stylesMaps = new Map<string, string>();
+
+  for (const declaration of style.split(';')) {
+    if (declaration.length > 0) {
+      const [property, value] = declaration.split(':');
+      stylesMaps.set(property.trim(), value.trim());
+    }
+  }
+
+  return stylesMaps;
+}
+
+function diffStyles(stylesA: Map<string, string>, stylesB: Map<string, string>): Set<string> {
+  const changedProperties = new Set<string>();
+
+  stylesA.forEach((valueA, property) => {
+    const valueB = stylesB.get(property);
+
+    if (valueB === undefined || valueA !== valueB) {
+      changedProperties.add(property);
+    }
+  });
+
+  stylesB.forEach((_, property) => {
+    if (!changedProperties.has(property)) {
+      changedProperties.add(property);
+    }
+  });
+
+  return changedProperties;
 }
