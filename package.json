@@ -35,6 +35,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "perfect-freehand": "^1.1.0"
   }
 }
