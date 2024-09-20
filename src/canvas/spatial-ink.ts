@@ -4,6 +4,8 @@ export type Point = [x: number, y: number, pressure: number];
 
 export type Stroke = number[][];
 
+// TODO: look into any-pointer media queries to tell if the user has a mouse or touch screen
+// https://developer.mozilla.org/en-US/docs/Web/CSS/@media/any-pointer
 const styles = new CSSStyleSheet();
 styles.replaceSync(`
   svg {
@@ -12,7 +14,8 @@ styles.replaceSync(`
     touch-action: none;
   }
 
-  :host(:state(tracing)) svg {
+  :host(:state(tracing)) {
+    cursor: var(--tracing-cursor, crosshair);
     position: fixed;
     inset: 0 0 0 0;
     z-index: calc(infinity);
@@ -34,7 +37,7 @@ export class SpatialInk extends HTMLElement {
 
   #d = '';
 
-  #size = Number(this.getAttribute('size') || 32);
+  #size = Number(this.getAttribute('size') || 16);
 
   get size() {
     return this.#size;
@@ -114,6 +117,7 @@ export class SpatialInk extends HTMLElement {
     this.#update();
   }
 
+  // TODO: cancel trace?
   trace() {
     this.points = [];
     this.#internals.states.add('tracing');
@@ -160,7 +164,7 @@ export class SpatialInk extends HTMLElement {
       // TODO: figure out how to expose these as attributes
       easing: (t) => t,
       start: {
-        taper: 0,
+        taper: 100,
         easing: (t) => t,
         cap: true,
       },
