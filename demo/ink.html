@@ -13,15 +13,14 @@
         min-height: 100%;
         position: relative;
         margin: 0;
-      }
-
-      spatial-ink {
-        position: absolute;
-        inset: 0 0 0 0;
+        padding: 0;
       }
     </style>
   </head>
   <body>
+    <nav>
+      <button on:click="DRAW">Draw</button>
+    </nav>
     <script type="module">
       import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
       import { SpatialInk } from '../src/canvas/spatial-ink.ts';
@@ -29,15 +28,50 @@
       SpatialGeometry.register();
       SpatialInk.register();
 
-      function trace() {
+      const drawButton = document.querySelector('button');
+
+      async function draw(e) {
+        if (e.target === drawButton) return;
+
         const ink = document.createElement('spatial-ink');
-        document.body.append(ink);
-        ink.trace();
+        ink.style.cursor = 'var(--tracing-cursor, crosshair)';
+        ink.style.position = 'fixed';
+        ink.style.inset = '0 0 0 0';
+        ink.style.zIndex = 'calc(infinity)';
+
+        document.body.appendChild(ink);
+
+        const rect = await ink.draw(e);
+        const geometry = document.createElement('spatial-geometry');
+        geometry.x = rect.x;
+        geometry.y = rect.y;
+        geometry.height = rect.height;
+        geometry.width = rect.width;
+
+        ink.points = ink.points.map(([x, y, p]) => [x - rect.x, y - rect.y, p]);
+        ink.style.cursor = '';
+        ink.style.position = '';
+        ink.style.inset = '';
+        ink.style.zIndex = '';
+        geometry.appendChild(ink);
+
+        document.body.appendChild(geometry);
       }
 
-      document.addEventListener('pointerdown', trace);
+      let isDrawing = false;
+      document.addEventListener('click', (e) => {
+        if (e.target !== drawButton) return;
 
-      trace();
+        isDrawing = !isDrawing;
+
+        if (isDrawing) {
+          document.addEventListener('pointerdown', draw);
+          drawButton.textContent = 'Drawing';
+        } else {
+          document.removeEventListener('pointerdown', draw);
+          drawButton.textContent = 'Draw';
+        }
+      });
     </script>
   </body>
 </html>

@@ -8,17 +8,11 @@ export type Stroke = number[][];
 // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/any-pointer
 const styles = new CSSStyleSheet();
 styles.replaceSync(`
-  svg {
+  :host, svg {
+    display: block;
     height: 100%;
     width: 100%;
     touch-action: none;
-  }
-
-  :host(:state(tracing)) {
-    cursor: var(--tracing-cursor, crosshair);
-    position: fixed;
-    inset: 0 0 0 0;
-    z-index: calc(infinity);
   }
 `);
 
@@ -117,12 +111,19 @@ export class SpatialInk extends HTMLElement {
     this.#update();
   }
 
+  #tracingPromise: PromiseWithResolvers<DOMRectReadOnly | undefined> | null = null;
+
   // TODO: cancel trace?
-  trace() {
+  async draw(event: PointerEvent): Promise<DOMRectReadOnly | undefined> {
+    if (event.button !== 0 || event.ctrlKey) return;
+
     this.points = [];
-    this.#internals.states.add('tracing');
-    this.addEventListener('pointerdown', this);
+    this.addPoint([event.pageX, event.pageY, event.pressure]);
     this.addEventListener('lostpointercapture', this);
+    this.addEventListener('pointermove', this);
+    this.setPointerCapture(event.pointerId);
+    this.#tracingPromise = Promise.withResolvers<DOMRectReadOnly | undefined>();
+    return this.#tracingPromise.promise;
   }
 
   addPoint(point: Point) {
@@ -132,23 +133,16 @@ export class SpatialInk extends HTMLElement {
 
   handleEvent(event: PointerEvent) {
     switch (event.type) {
-      case 'pointerdown': {
-        if (event.button !== 0 || event.ctrlKey) return;
-
-        this.addEventListener('pointermove', this);
-        this.setPointerCapture(event.pointerId);
-        this.addPoint([event.pageX, event.pageY, event.pressure]);
-        return;
-      }
       case 'pointermove': {
         this.addPoint([event.pageX, event.pageY, event.pressure]);
         return;
       }
       case 'lostpointercapture': {
-        this.#internals.states.delete('tracing');
         this.removeEventListener('pointermove', this);
         this.removeEventListener('pointerdown', this);
         this.removeEventListener('lostpointercapture', this);
+        this.#tracingPromise?.resolve(this.#path.getBoundingClientRect());
+        this.#tracingPromise = null;
         return;
       }
     }

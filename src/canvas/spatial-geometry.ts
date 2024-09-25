@@ -29,32 +29,18 @@ styles.replaceSync(`
 :host {
   display: block;
   position: absolute;
-  padding: 20px 10px 10px;
   cursor: var(--fc-move, move);
-  content-visibility: auto;
 }
 
 ::slotted(*) {
   cursor: default;
 }
 
-:host > div {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-:host > div > div {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-:host(:focus-within) > div {
+:host(:focus-within) {
   outline: solid 1px hsl(214, 84%, 56%);
 }
 
-:host(:hover) > div {
+:host(:hover) {
   outline: solid 2px hsl(214, 84%, 56%);
 }
 
@@ -155,17 +141,15 @@ export class SpatialGeometry extends HTMLElement {
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
     shadowRoot.innerHTML = `
-<div>
   <button part="rotate"></button>
   <button part="resize-nw"></button>
   <button part="resize-ne"></button>
   <button part="resize-se"></button>
   <button part="resize-sw"></button>
-  <div><slot></slot></div>
-</div>`;
+  <slot></slot>`;
   }
 
-  #type: Shape = 'rectangle';
+  #type = (this.getAttribute('type') || 'rectangle') as Shape;
   get type(): Shape {
     return this.#type;
   }
@@ -175,7 +159,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #previousX = 0;
-  #x = 0;
+  #x = Number(this.getAttribute('x')) || 0;
   get x(): number {
     return this.#x;
   }
@@ -186,7 +170,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #previousY = 0;
-  #y = 0;
+  #y = Number(this.getAttribute('y')) || 0;
   get y(): number {
     return this.#y;
   }
@@ -197,7 +181,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #previousWidth = 0;
-  #width = 1;
+  #width = Number(this.getAttribute('width')) || 1;
   get width(): number {
     return this.#width;
   }
@@ -208,7 +192,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #previousHeight = 0;
-  #height = 1;
+  #height = Number(this.getAttribute('height')) || 1;
   get height(): number {
     return this.#height;
   }
@@ -219,7 +203,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #previousRotate = 0;
-  #rotate = 0;
+  #rotate = Number(this.getAttribute('rotate')) || 0;
   get rotate(): number {
     return this.#rotate;
   }
@@ -227,15 +211,6 @@ export class SpatialGeometry extends HTMLElement {
   set rotate(rotate: number) {
     this.#rotate = rotate;
     this.#requestUpdate('rotate');
-  }
-
-  connectedCallback() {
-    this.type = (this.getAttribute('type') || 'rectangle') as Shape;
-    this.x = Number(this.getAttribute('x')) || 0;
-    this.y = Number(this.getAttribute('y')) || 0;
-    this.height = Number(this.getAttribute('height')) || 0;
-    this.width = Number(this.getAttribute('width')) || 0;
-    this.rotate = Number(this.getAttribute('rotate')) || 0;
   }
 
   disconnectedCallback() {
