@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
+    "perfect-arrows": "^0.3.7",
     "perfect-freehand": "^1.1.0"
   }
 }
