@@ -32,11 +32,18 @@ styles.replaceSync(`
   cursor: var(--fc-move, move);
 }
 
+:host::before {
+  content: '';
+  position: absolute;
+  inset: -10px -10px -10px -10px;
+}
+
 ::slotted(*) {
   cursor: default;
 }
 
 :host(:focus-within) {
+  z-index: calc(infinity - 1);
   outline: solid 1px hsl(214, 84%, 56%);
 }
 
@@ -59,6 +66,7 @@ styles.replaceSync(`
   padding: 0;
   background: hsl(210, 20%, 98%);
   z-index: calc(infinity);
+
 
   &[part="resize-nw"], 
   &[part="resize-ne"], 
@@ -165,6 +173,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set x(x: number) {
+    this.#previousX = this.#x;
     this.#x = x;
     this.#requestUpdate('x');
   }
@@ -176,6 +185,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set y(y: number) {
+    this.#previousY = this.#y;
     this.#y = y;
     this.#requestUpdate('y');
   }
@@ -187,6 +197,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set width(width: number) {
+    this.#previousWidth = this.#width;
     this.#width = width;
     this.#requestUpdate('width');
   }
@@ -198,6 +209,7 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set height(height: number) {
+    this.#previousHeight = this.#height;
     this.#height = height;
     this.#requestUpdate('height');
   }
@@ -209,8 +221,13 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   set rotate(rotate: number) {
+    this.#previousRotate = this.#rotate;
     this.#rotate = rotate;
     this.#requestUpdate('rotate');
+  }
+
+  connectedCallback() {
+    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
   }
 
   disconnectedCallback() {
@@ -283,9 +300,7 @@ export class SpatialGeometry extends HTMLElement {
         if (part === 'rotate') {
           const centerX = (this.#x + this.#width) / 2;
           const centerY = (this.#y + this.#height) / 2;
-          var newAngle =
-            ((Math.atan2(event.clientY - centerY, event.clientX - centerX) + Math.PI / 2) * 180) /
-            Math.PI;
+          var newAngle = ((Math.atan2(event.clientY - centerY, event.clientX - centerX) + Math.PI / 2) * 180) / Math.PI;
           this.rotate = newAngle;
           return;
         }
@@ -365,7 +380,6 @@ export class SpatialGeometry extends HTMLElement {
           movementY: this.#height - this.#previousHeight,
         })
       );
-
       if (notCancelled) {
         if (updatedProperties.has('width')) {
           this.style.width = `${this.#width}px`;
@@ -383,9 +397,7 @@ export class SpatialGeometry extends HTMLElement {
 
     if (updatedProperties.has('rotate')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(
-        new RotateEvent({ rotate: this.#rotate - this.#previousRotate })
-      );
+      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotate - this.#previousRotate }));
 
       if (notCancelled) {
         if (updatedProperties.has('rotate')) {

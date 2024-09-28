@@ -57,14 +57,11 @@
 
       function collisionDetection(rect1, rect2) {
         return (
-          rect1.left < rect2.right &&
-          rect1.right > rect2.left &&
-          rect1.top < rect2.bottom &&
-          rect1.bottom > rect2.top
+          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
         );
       }
 
-      function proximityDetection(rect1, rect2, distance = 30) {
+      function proximityDetection(rect1, rect2, distance = 100) {
         return collisionDetection(
           DOMRectReadOnly.fromRect({
             x: rect1.x - distance,
