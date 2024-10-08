@@ -13,7 +13,6 @@
         min-height: 100%;
         position: relative;
         margin: 0;
-        padding: 0;
       }
     </style>
   </head>
@@ -33,26 +32,24 @@
       async function draw(e) {
         if (e.target === drawButton) return;
 
+        // Stop the default focus and pointer capture of geometry elements
+        e.preventDefault();
+        e.stopPropagation();
+
         const ink = document.createElement('spatial-ink');
-        ink.style.cursor = 'var(--tracing-cursor, crosshair)';
-        ink.style.position = 'fixed';
-        ink.style.inset = '0 0 0 0';
-        ink.style.zIndex = 'calc(infinity)';
 
         document.body.appendChild(ink);
 
-        const rect = await ink.draw(e);
+        await ink.draw(e);
+        const rect = ink.getPathBox();
+
+        ink.points = ink.points.map(([x, y, p]) => [x - rect.x, y - rect.y, p]);
+
         const geometry = document.createElement('spatial-geometry');
         geometry.x = rect.x;
         geometry.y = rect.y;
         geometry.height = rect.height;
         geometry.width = rect.width;
-
-        ink.points = ink.points.map(([x, y, p]) => [x - rect.x, y - rect.y, p]);
-        ink.style.cursor = '';
-        ink.style.position = '';
-        ink.style.inset = '';
-        ink.style.zIndex = '';
         geometry.appendChild(ink);
 
         document.body.appendChild(geometry);
@@ -65,10 +62,10 @@
         isDrawing = !isDrawing;
 
         if (isDrawing) {
-          document.addEventListener('pointerdown', draw);
+          document.addEventListener('pointerdown', draw, { capture: true });
           drawButton.textContent = 'Drawing';
         } else {
-          document.removeEventListener('pointerdown', draw);
+          document.removeEventListener('pointerdown', draw, { capture: true });
           drawButton.textContent = 'Draw';
         }
       });

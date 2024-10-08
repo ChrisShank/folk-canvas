@@ -51,7 +51,12 @@ styles.replaceSync(`
   outline: solid 2px hsl(214, 84%, 56%);
 }
 
-:host(:state(moving)) {
+:host(:state(move)),
+:host(:state(rotate)),
+:host(:state(resize-nw)),
+:host(:state(resize-ne)),
+:host(:state(resize-se)),
+:host(:state(resize-sw)), {
   user-select: none;
 }
 
@@ -139,9 +144,6 @@ export class SpatialGeometry extends HTMLElement {
     super();
 
     this.addEventListener('pointerdown', this);
-    this.addEventListener('lostpointercapture', this);
-    // this.addEventListener('touchstart', this);
-    // this.addEventListener('dragstart', this);
 
     const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
     shadowRoot.adoptedStyleSheets.push(styles);
@@ -255,8 +257,12 @@ export class SpatialGeometry extends HTMLElement {
         if (target !== this && !target.hasAttribute('part')) return;
 
         target.addEventListener('pointermove', this);
+        this.addEventListener('lostpointercapture', this);
         target.setPointerCapture(event.pointerId);
-        this.#internals.states.add('moving');
+
+        const interaction = target.getAttribute('part') || 'move';
+        this.#internals.states.add(interaction);
+
         this.focus();
         return;
       }
@@ -308,14 +314,11 @@ export class SpatialGeometry extends HTMLElement {
         return;
       }
       case 'lostpointercapture': {
-        this.#internals.states.delete('moving');
         const target = event.composedPath()[0] as HTMLElement;
+        const interaction = target.getAttribute('part') || 'move';
+        this.#internals.states.delete(interaction);
         target.removeEventListener('pointermove', this);
-        return;
-      }
-      case 'touchstart':
-      case 'dragstart': {
-        event.preventDefault();
+        this.removeEventListener('lostpointercapture', this);
         return;
       }
     }

@@ -13,6 +13,13 @@ styles.replaceSync(`
     height: 100%;
     width: 100%;
     touch-action: none;
+    pointer-events: none;
+  }
+
+  :host(:state(drawing)) { 
+    position: fixed;
+    inset: 0 0 0 0;
+    cursor: var(--tracing-cursor, crosshair);
   }
 `);
 
@@ -25,18 +32,14 @@ export class SpatialInk extends HTMLElement {
 
   #internals = this.attachInternals();
 
+  #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-  #stroke: Stroke = [];
-
-  #d = '';
 
   #size = Number(this.getAttribute('size') || 16);
 
   get size() {
     return this.#size;
   }
-
   set size(size) {
     this.#size = size;
     this.#update();
@@ -47,7 +50,6 @@ export class SpatialInk extends HTMLElement {
   get thinning() {
     return this.#thinning;
   }
-
   set thinning(thinning) {
     this.#thinning = thinning;
     this.#update();
@@ -58,7 +60,6 @@ export class SpatialInk extends HTMLElement {
   get smoothing() {
     return this.#smoothing;
   }
-
   set smoothing(smoothing) {
     this.#smoothing = smoothing;
     this.#update();
@@ -69,7 +70,6 @@ export class SpatialInk extends HTMLElement {
   get streamline() {
     return this.#streamline;
   }
-
   set streamline(streamline) {
     this.#streamline = streamline;
     this.#update();
@@ -80,7 +80,6 @@ export class SpatialInk extends HTMLElement {
   get simulatePressure() {
     return this.#simulatePressure;
   }
-
   set simulatePressure(simulatePressure) {
     this.#simulatePressure = simulatePressure;
     this.#update();
@@ -91,7 +90,6 @@ export class SpatialInk extends HTMLElement {
   get points() {
     return this.#points;
   }
-
   set points(points) {
     this.#points = points;
     this.#update();
@@ -102,27 +100,32 @@ export class SpatialInk extends HTMLElement {
 
     const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
     shadowRoot.adoptedStyleSheets.push(styles);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.appendChild(this.#path);
-    shadowRoot.appendChild(svg);
+    this.#svg.appendChild(this.#path);
+    shadowRoot.appendChild(this.#svg);
   }
 
   connectedCallback() {
     this.#update();
   }
 
-  #tracingPromise: PromiseWithResolvers<DOMRectReadOnly | undefined> | null = null;
+  getPathBox() {
+    return this.#path.getBBox();
+  }
+
+  setViewBox() {
+    this.#svg.viewBox;
+  }
+
+  #tracingPromise: PromiseWithResolvers<void> | null = null;
 
   // TODO: cancel trace?
-  async draw(event: PointerEvent): Promise<DOMRectReadOnly | undefined> {
-    if (event.button !== 0 || event.ctrlKey) return;
-
-    this.points = [];
-    this.addPoint([event.pageX, event.pageY, event.pressure]);
-    this.addEventListener('lostpointercapture', this);
-    this.addEventListener('pointermove', this);
-    this.setPointerCapture(event.pointerId);
-    this.#tracingPromise = Promise.withResolvers<DOMRectReadOnly | undefined>();
+  draw(event?: PointerEvent) {
+    if (event?.type === 'pointerdown') {
+      this.handleEvent(event);
+    } else {
+      this.addEventListener('pointerdown', this);
+    }
+    this.#tracingPromise = Promise.withResolvers();
     return this.#tracingPromise.promise;
   }
 
@@ -133,15 +136,27 @@ export class SpatialInk extends HTMLElement {
 
   handleEvent(event: PointerEvent) {
     switch (event.type) {
+      case 'pointerdown': {
+        if (event.button !== 0 || event.ctrlKey) return;
+
+        this.points = [];
+        this.addPoint([event.offsetX, event.offsetY, event.pressure]);
+        this.addEventListener('lostpointercapture', this);
+        this.addEventListener('pointermove', this);
+        this.setPointerCapture(event.pointerId);
+        this.#internals.states.add('drawing');
+        return;
+      }
       case 'pointermove': {
-        this.addPoint([event.pageX, event.pageY, event.pressure]);
+        this.addPoint([event.offsetX, event.offsetY, event.pressure]);
         return;
       }
       case 'lostpointercapture': {
-        this.removeEventListener('pointermove', this);
         this.removeEventListener('pointerdown', this);
+        this.removeEventListener('pointermove', this);
         this.removeEventListener('lostpointercapture', this);
-        this.#tracingPromise?.resolve(this.#path.getBoundingClientRect());
+        this.#internals.states.delete('drawing');
+        this.#tracingPromise?.resolve();
         this.#tracingPromise = null;
         return;
       }
@@ -168,10 +183,7 @@ export class SpatialInk extends HTMLElement {
         cap: true,
       },
     };
-
-    this.#stroke = getStroke(this.#points, options);
-    this.#d = this.#getSvgPathFromStroke(this.#stroke);
-    this.#path.setAttribute('d', this.#d);
+    this.#path.setAttribute('d', this.#getSvgPathFromStroke(getStroke(this.#points, options)));
   }
 
   #getSvgPathFromStroke(stroke: Stroke): string {
