@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spreadsheet</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      s-table {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <spatial-geometry x="50" y="50" height="800" width="700">
+      <s-table></s-table>
+    </spatial-geometry>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { SpreadsheetTable, SpreadsheetCell } from '../src/spreadsheet/spreadsheet.ts';
+
+      SpatialGeometry.register();
+      SpreadsheetTable.register();
+      SpreadsheetCell.register();
+
+      document.querySelector(`s-cell[column="A"][row="1"]`).expression = '1';
+      document.querySelector(`s-cell[column="A"][row="2"]`).expression = '$A1 * 2';
+    </script>
+  </body>
+</html>
