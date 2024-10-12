@@ -16,8 +16,14 @@ styles.replaceSync(`
   scroll-padding-left: 50px;
 }
 
+textarea {
+  background-color: rgba(255, 255, 255, 0.6);
+  grid-column: var(--text-column, 0);
+  grid-row: var(--text-row, 0);
+}
+
 s-columns {
-  box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.4);
+  box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.6);
   display: grid;
   grid-column: 2 / -1;
   grid-row: 1;
@@ -60,10 +66,15 @@ s-header {
     left: 0;
     z-index: 3;
   }
+
+  &:state(selected) {
+    background-color: #d3e2fd;
+    font-weight: bold;
+  }
 }
 
 s-body {
-  background-color: #f8f9fa;
+  background-color: rgb(255, 255, 255);
   display: grid;
   grid-column: 2 / -1;
   grid-row: 2 / -1;
@@ -80,7 +91,7 @@ s-body {
   scroll-snap-align: start;
 }
 
-::slotted(s-cell[type="number"]) {
+::slotted(s-cell[type='number']) {
   justify-content: end;
 }
 
@@ -96,6 +107,10 @@ function getColumnName(index: number) {
   return alphabet[index % alphabet.length];
 }
 
+function getColumnIndex(name: string) {
+  return alphabet.indexOf(name);
+}
+
 function relativeColumnName(name: string, num: number) {
   const index = alphabet.indexOf(name);
   return alphabet[index + num];
@@ -108,28 +123,46 @@ export class SpreadsheetTable extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
+  #shadow = this.attachShadow({ mode: 'open' });
+
+  #textarea;
+
+  #editedCell: SpreadsheetCell | null = null;
+
   constructor() {
     super();
 
     this.addEventListener('click', this);
+    this.addEventListener('dblclick', this);
     this.addEventListener('keydown', this);
+    this.addEventListener('focusin', this);
+    this.addEventListener('focusout', this);
 
-    const shadow = this.attachShadow({ mode: 'open' });
-    shadow.adoptedStyleSheets.push(styles);
-
+    this.#shadow.adoptedStyleSheets.push(styles);
     const columnHeaders = Array.from({ length: 26 })
-      .map((_, i) => `<s-header type="column" data-index="${i}">${getColumnName(i)}</s-header>`)
+      .map((_, i) => `<s-header column="${getColumnName(i)}">${getColumnName(i)}</s-header>`)
       .join('');
     const columnRows = Array.from({ length: 100 })
-      .map((_, i) => `<s-header type="row" data-index="${i + 1}">${i + 1}</s-header>`)
+      .map((_, i) => `<s-header row="${i + 1}">${i + 1}</s-header>`)
       .join('');
 
-    shadow.innerHTML = `
+    this.#shadow.innerHTML = `
       <s-header empty></s-header>
       <s-columns>${columnHeaders}</s-columns>
       <s-rows>${columnRows}</s-rows>
       <s-body><slot></slot></s-body>
+      <textarea hidden></textarea>
     `;
+
+    this.#textarea = this.#shadow.querySelector('textarea')!;
+  }
+
+  #range = '';
+  get range() {
+    return this.#range;
+  }
+  set range(range) {
+    this.#range = range;
   }
 
   connectedCallback() {
@@ -147,29 +180,126 @@ export class SpreadsheetTable extends HTMLElement {
   handleEvent(event: Event) {
     switch (event.type) {
       case 'keydown': {
-        if (event.target instanceof SpreadsheetCell && event instanceof KeyboardEvent) {
+        if (!(event instanceof KeyboardEvent)) return;
+
+        const { target } = event;
+
+        if (target instanceof SpreadsheetCell) {
           event.preventDefault(); // dont scroll as we change focus
+
           switch (event.code) {
             case 'ArrowUp': {
-              event.target.cellAbove?.focus();
+              target.cellAbove?.focus();
               return;
             }
             case 'ArrowDown': {
-              event.target.cellBelow?.focus();
+              target.cellBelow?.focus();
               return;
             }
             case 'ArrowLeft': {
-              event.target.cellToTheLeft?.focus();
+              target.cellToTheLeft?.focus();
               return;
             }
             case 'ArrowRight': {
-              event.target.cellToTheRight?.focus();
+              target.cellToTheRight?.focus();
               return;
             }
+            case 'Enter': {
+              this.#focusTextarea(target);
+              return;
+            }
+          }
+          return;
+        }
+
+        const composedTarget = event.composedPath()[0];
+        if (composedTarget === this.#textarea) {
+          if (event.code === 'Escape' || (event.code === 'Enter' && event.shiftKey)) {
+            this.#resetTextarea();
           }
         }
         return;
       }
+      case 'dblclick': {
+        if (event.target instanceof SpreadsheetCell) {
+          this.#focusTextarea(event.target);
+        }
+        return;
+      }
+      case 'focusin': {
+        if (event.target instanceof SpreadsheetCell) {
+          this.#getHeader('column', event.target.column).selected = true;
+          this.#getHeader('row', event.target.row).selected = true;
+          this.range = event.target.name;
+        }
+
+        return;
+      }
+      case 'focusout': {
+        if (event.target instanceof SpreadsheetCell) {
+          this.#getHeader('column', event.target.column).selected = false;
+          this.#getHeader('row', event.target.row).selected = false;
+          this.range = event.target.name;
+          return;
+        }
+
+        const composedTarget = event.composedPath()[0];
+        if (composedTarget === this.#textarea) {
+          this.#resetTextarea();
+        }
+
+        return;
+      }
+    }
+  }
+
+  #getHeader(type: 'row' | 'column', value: string | number): SpreadsheetHeader {
+    return this.#shadow.querySelector(`s-header[${type}="${value}"]`)!;
+  }
+
+  #focusTextarea(cell: SpreadsheetCell) {
+    this.#editedCell = cell;
+    const gridColumn = getColumnIndex(cell.column) + 2;
+    const gridRow = cell.row + 1;
+    this.#textarea.style.setProperty('--text-column', `${gridColumn} / ${gridColumn + 3}`);
+    this.#textarea.style.setProperty('--text-row', `${gridRow} / ${gridRow + 3}`);
+    this.#textarea.value = cell.expression;
+    this.#textarea.hidden = false;
+    this.#textarea.focus();
+    console.log();
+  }
+
+  #resetTextarea() {
+    if (this.#editedCell === null) return;
+    this.#textarea.style.setProperty('--text-column', '0');
+    this.#textarea.style.setProperty('--text-row', '0');
+    this.#editedCell.expression = this.#textarea.value;
+    this.#editedCell.focus();
+    this.#textarea.hidden = true;
+    this.#editedCell = null;
+  }
+}
+
+export class SpreadsheetHeader extends HTMLElement {
+  static tagName = 's-header';
+
+  static register() {
+    customElements.define(this.tagName, this);
+  }
+
+  #internals = this.attachInternals();
+
+  #selected = false;
+  get selected() {
+    return this.#selected;
+  }
+  set selected(selected) {
+    this.#selected = selected;
+
+    if (this.#selected) {
+      this.#internals.states.add('selected');
+    } else {
+      this.#internals.states.delete('selected');
     }
   }
 }
@@ -218,19 +348,17 @@ export class SpreadsheetCell extends HTMLElement {
   }
   set expression(expression) {
     expression = expression.trim();
+    this.#expression = expression;
 
     this.#dependencies.forEach((dep) => dep.removeEventListener('propagate', this));
 
     if (expression === '') {
-      this.#expression = expression;
       return;
     }
 
     if (!expression.includes('return ')) {
       expression = `return ${expression}`;
     }
-
-    this.#expression = expression;
 
     const argNames: string[] = expression.match(/\$[A-Z]+\d+/g) ?? [];
 
