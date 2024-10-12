@@ -13,7 +13,7 @@ styles.replaceSync(`
   overflow: scroll;
   scroll-snap-type: both mandatory;
   scroll-padding-top: var(--cell-height);
-  scroll-padding-left: var(--cell-width);
+  scroll-padding-left: 50px;
 }
 
 s-columns {
@@ -25,6 +25,7 @@ s-columns {
   grid-template-rows: subgrid;
   position: sticky;
   top: 0;
+  z-index: 2;
 }
 
 s-rows {
@@ -36,6 +37,7 @@ s-rows {
   grid-template-rows: subgrid;
   position: sticky;
   left: 0;
+  z-index: 2;
 
   s-header {
     font-size: 0.75rem;
@@ -51,17 +53,17 @@ s-header {
   justify-content: center;
 
   &[empty] {
-    background-color: #f8f9fa;
     box-shadow: 3px 3px 3px 0px rgba(173, 168, 168, 0.4);
     grid-area: 1;
     position: sticky;
     top: 0;
     left: 0;
-    z-index: 2;
+    z-index: 3;
   }
 }
 
 s-body {
+  background-color: #f8f9fa;
   display: grid;
   grid-column: 2 / -1;
   grid-row: 2 / -1;
@@ -84,6 +86,7 @@ s-body {
 
 ::slotted(s-cell:focus) {
   border: 2px solid #1b73e8;
+  outline: none;
 }
 `);
 
@@ -179,6 +182,7 @@ export class SpreadsheetCell extends HTMLElement {
   }
 
   connectedCallback() {
+    // this should run after all of the other cells have run
     this.expression = this.getAttribute('expression') || '';
   }
 
