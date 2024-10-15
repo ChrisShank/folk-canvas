@@ -17,7 +17,7 @@ styles.replaceSync(`
 }
 
 textarea {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.75);
   grid-column: var(--text-column, 0);
   grid-row: var(--text-row, 0);
 }
@@ -215,7 +215,8 @@ export class SpreadsheetTable extends HTMLElement {
         const composedTarget = event.composedPath()[0];
         if (composedTarget === this.#textarea) {
           if (event.code === 'Escape' || (event.code === 'Enter' && event.shiftKey)) {
-            this.#resetTextarea();
+            // Focusing out of the textarea will clean it up.
+            this.#textarea.blur();
           }
         }
         return;
@@ -266,7 +267,6 @@ export class SpreadsheetTable extends HTMLElement {
     this.#textarea.value = cell.expression;
     this.#textarea.hidden = false;
     this.#textarea.focus();
-    console.log();
   }
 
   #resetTextarea() {
@@ -274,6 +274,7 @@ export class SpreadsheetTable extends HTMLElement {
     this.#textarea.style.setProperty('--text-column', '0');
     this.#textarea.style.setProperty('--text-row', '0');
     this.#editedCell.expression = this.#textarea.value;
+    this.#textarea.value = '';
     this.#editedCell.focus();
     this.#textarea.hidden = true;
     this.#editedCell = null;
@@ -352,9 +353,7 @@ export class SpreadsheetCell extends HTMLElement {
 
     this.#dependencies.forEach((dep) => dep.removeEventListener('propagate', this));
 
-    if (expression === '') {
-      return;
-    }
+    if (expression === '') return;
 
     if (!expression.includes('return ')) {
       expression = `return ${expression}`;
@@ -404,6 +403,7 @@ export class SpreadsheetCell extends HTMLElement {
 
   #evaluate() {
     try {
+      this.#invalidated = false;
       const args = this.#dependencies.map((dep) => dep.value);
 
       const value = this.#function.apply(null, args);
@@ -419,10 +419,15 @@ export class SpreadsheetCell extends HTMLElement {
     }
   }
 
+  #invalidated = false;
+
   handleEvent(event: Event) {
     switch (event.type) {
       case 'propagate': {
-        this.#evaluate();
+        // This deduplicates call similar to a topological sort algorithm.
+        if (this.#invalidated) return;
+        this.#invalidated = true;
+        queueMicrotask(() => this.#evaluate());
         return;
       }
     }
