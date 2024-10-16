@@ -24,7 +24,7 @@ styles.replaceSync(`
 `);
 
 export class SpatialInk extends HTMLElement {
-  static tagName = 'spatial-ink';
+  static tagName = 'spatial-ink' as const;
 
   static register() {
     customElements.define(this.tagName, this);
@@ -200,5 +200,11 @@ export class SpatialInk extends HTMLElement {
 
     d.push('Z');
     return d.join(' ');
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [SpatialInk.tagName]: SpatialInk;
   }
 }

@@ -36,6 +36,7 @@ styles.replaceSync(`
   content: '';
   position: absolute;
   inset: -10px -10px -10px -10px;
+  z-index: -1;
 }
 
 ::slotted(*) {
@@ -132,7 +133,7 @@ styles.replaceSync(`
 
 // TODO: add z coordinate?
 export class SpatialGeometry extends HTMLElement {
-  static tagName = 'spatial-geometry';
+  static tagName = 'spatial-geometry' as const;
 
   static register() {
     customElements.define(this.tagName, this);
@@ -410,5 +411,11 @@ export class SpatialGeometry extends HTMLElement {
         this.#rotate = this.#previousRotate;
       }
     }
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [SpatialGeometry.tagName]: SpatialGeometry;
   }
 }

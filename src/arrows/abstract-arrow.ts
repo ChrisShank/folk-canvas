@@ -23,6 +23,11 @@ export class AbstractArrow extends HTMLElement {
 
   #sourceRect!: DOMRectReadOnly;
   #sourceElement: Element | null = null;
+
+  get sourceElement() {
+    return this.#sourceElement;
+  }
+
   #sourceCallback = (entry: VisualObserverEntry) => {
     this.#sourceRect = entry.contentRect;
     this.update();
@@ -40,6 +45,11 @@ export class AbstractArrow extends HTMLElement {
 
   #targetRect!: DOMRectReadOnly;
   #targetElement: Element | null = null;
+
+  get targetElement() {
+    return this.#targetElement;
+  }
+
   #targetCallback = (entry: VisualObserverEntry) => {
     this.#targetRect = entry.contentRect;
     this.update();

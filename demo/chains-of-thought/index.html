@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chains of Thought</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      spatial-connection {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+      }
+
+      spatial-geometry {
+        &::part(rotate),
+        &::part(resize-nw),
+        &::part(resize-ne),
+        &::part(resize-se),
+        &::part(resize-sw) {
+          display: none;
+        }
+      }
+
+      textarea {
+        width: 100%;
+        height: 100%;
+        resize: none;
+        field-sizing: content;
+      }
+    </style>
+  </head>
+  <body>
+    <button name="open">Open</button>
+    <button name="save">Save</button>
+    <button name="save-as">Save As</button>
+    <main></main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
