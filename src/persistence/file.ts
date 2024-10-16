@@ -44,12 +44,14 @@ export class FileSaver {
     return undefined;
   }
 
-  async open(): Promise<string> {
+  async open(showPicker = true): Promise<string> {
     let fileHandler = await this.#fileHandlerPromise;
 
-    if (fileHandler === undefined) {
-      fileHandler = await this.#showFilePicker();
+    if (showPicker) {
+      fileHandler = await this.#showOpenFilePicker();
     }
+
+    if (fileHandler === undefined) return '';
 
     const file = await fileHandler.getFile();
     const text = await file.text();
@@ -65,7 +67,7 @@ export class FileSaver {
     let fileHandler = await this.#fileHandlerPromise;
 
     if (promptNewFile || fileHandler === undefined) {
-      fileHandler = await this.#showFilePicker();
+      fileHandler = await this.#showSaveFilePicker();
     }
 
     const writer = await fileHandler.createWritable();
@@ -73,7 +75,11 @@ export class FileSaver {
     await writer.close();
   }
 
-  async #showFilePicker() {
+  clear() {
+    this.#store.clear();
+  }
+
+  async #showSaveFilePicker() {
     this.#fileHandlerPromise = window.showSaveFilePicker({
       id: this.#id,
       suggestedName: `${this.#id}.${this.#fileType}`,
@@ -84,6 +90,25 @@ export class FileSaver {
         },
       ],
     });
+
+    const fileHandler = (await this.#fileHandlerPromise)!;
+    await this.#store.set('file', fileHandler);
+    return fileHandler;
+  }
+
+  async #showOpenFilePicker() {
+    this.#fileHandlerPromise = window
+      .showOpenFilePicker({
+        id: this.#id,
+        suggestedName: `${this.#id}.${this.#fileType}`,
+        types: [
+          {
+            description: `${this.#fileType.toUpperCase()} document`,
+            accept: { [this.#mimeType]: [this.#fileExtension] },
+          },
+        ],
+      })
+      .then((files) => files[0]);
 
     const fileHandler = (await this.#fileHandlerPromise)!;
     await this.#store.set('file', fileHandler);

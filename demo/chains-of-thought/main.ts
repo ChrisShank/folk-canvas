@@ -62,10 +62,10 @@ const saveAsButton = document.querySelector('button[name="save-as"]')!;
 const main = document.querySelector('main')!;
 const fileSaver = new FileSaver('chains-of-thought', 'json', 'application/json');
 
-async function openFile() {
+async function openFile(showPicker = true) {
   try {
-    const text = await fileSaver.open();
-    const json = JSON.parse(text);
+    const text = await fileSaver.open(showPicker);
+    const json = JSON.parse(text || '{ "thoughts": [], "connections": [] }');
     main.innerHTML = renderChainOfThought(json);
   } catch (e) {
     // No file handler was persisted or the file is invalid JSON.
@@ -89,4 +89,4 @@ saveAsButton.addEventListener('click', () => {
   saveFile(true);
 });
 
-openFile();
+openFile(false);
