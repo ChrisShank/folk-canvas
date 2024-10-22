@@ -23,8 +23,14 @@ styles.replaceSync(`
   }
 `);
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'spatial-ink': SpatialInk;
+  }
+}
+
 export class SpatialInk extends HTMLElement {
-  static tagName = 'spatial-ink' as const;
+  static tagName = 'spatial-ink';
 
   static register() {
     customElements.define(this.tagName, this);
@@ -200,11 +206,5 @@ export class SpatialInk extends HTMLElement {
 
     d.push('Z');
     return d.join(' ');
-  }
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    [SpatialInk.tagName]: SpatialInk;
   }
 }

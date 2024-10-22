@@ -24,11 +24,17 @@ export type Arrow = [
   ac: number
 ];
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'spatial-connection': SpatialConnection;
+  }
+}
+
 export class SpatialConnection extends AbstractArrow {
-  static tagName = 'spatial-connection' as const;
+  static tagName = 'spatial-connection';
 
   #options: StrokeOptions = {
-    size: 10,
+    size: 7,
     thinning: 0.5,
     smoothing: 0.5,
     streamline: 0.5,
@@ -92,10 +98,4 @@ function getSvgPathFromStroke(stroke: number[][]): string {
 
   d.push('Z');
   return d.join(' ');
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    [SpatialConnection.tagName]: SpatialConnection;
-  }
 }

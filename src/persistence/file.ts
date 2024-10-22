@@ -38,8 +38,9 @@ export class FileSaver {
     const previousPermission = await file.queryPermission({ mode: 'readwrite' });
     if (previousPermission === 'granted') return file;
 
-    const newPermission = await file.requestPermission({ mode: 'readwrite' });
-    if (newPermission === 'granted') return file;
+    // this requires user interaction
+    // const newPermission = await file.requestPermission({ mode: 'readwrite' });
+    // if (newPermission === 'granted') return file;
 
     return undefined;
   }
