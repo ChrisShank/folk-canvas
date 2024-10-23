@@ -16,7 +16,8 @@
       }
 
       spatial-geometry {
-        background: rgb(187, 178, 178);
+        border: 1px solid black;
+        border-radius: 3px;
       }
 
       event-propagator {
@@ -34,6 +35,15 @@
       target="#box2"
       triggers="click"
       expression="$target.textContent += '!'"
+    ></event-propagator>
+
+    <spatial-geometry id="box3" x="150" y="200" width="50" height="50"></spatial-geometry>
+    <spatial-geometry id="box4" x="300" y="350" width="50" height="50"></spatial-geometry>
+    <event-propagator
+      source="#box3"
+      target="#box4"
+      triggers="move"
+      expression="$target.y = $source.x"
     ></event-propagator>
 
     <script type="module">
