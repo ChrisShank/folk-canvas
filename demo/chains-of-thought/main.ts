@@ -15,50 +15,26 @@ class SpatialThought extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
+  #deleteButton = this.querySelector('button[name="delete"]') as HTMLButtonElement;
+  #text = this.querySelector('span[name="text"]') as HTMLSpanElement;
+
+  #geometry = this.parentElement as SpatialGeometry;
+
   constructor() {
     super();
 
-    this.addEventListener('pointerdown', this);
-  }
-
-  #textarea = this.querySelector('textarea')!;
-  #geometry = this.querySelector('spatial-geometry')!;
-
-  #identifier = this.getAttribute('identifier') || '';
-  get identifier() {
-    return this.#identifier;
-  }
-  set identifier(id) {
-    this.#identifier = id;
+    this.addEventListener('click', this);
   }
 
   get text() {
-    return this.#textarea.value;
-  }
-  set text(text) {
-    this.#textarea.value = text;
+    return this.#text.innerText;
   }
 
-  get x() {
-    return this.#geometry.x;
+  handleEvent(event: PointerEvent): void {
+    if (event.type === 'click' && event.target === this.#deleteButton) {
+      this.#geometry.remove();
+    }
   }
-  set x(x) {
-    this.#geometry.x = x;
-  }
-
-  get y() {
-    return this.#geometry.y;
-  }
-
-  set y(y) {
-    this.#geometry.y = y;
-  }
-
-  focusTextArea() {
-    this.#textarea.focus();
-  }
-
-  handleEvent(event: PointerEvent): void {}
 }
 
 SpatialGeometry.register();
@@ -88,16 +64,19 @@ function parseHTML(html: string): Element {
   return document.createRange().createContextualFragment(html).firstElementChild!;
 }
 
-function renderThought(thought: Thought) {
-  return html`<spatial-geometry x="${thought.x}" y="${thought.y}" width="200" height="100">
-    <spatial-thought contenteditable="true" identifier="${thought.id}">${thought.text}</spatial-thought>
+function renderThought({ id, x, y, text }: Thought) {
+  return html`<spatial-geometry id="${id}" x="${x}" y="${y}" width="200" height="100">
+    <spatial-thought contenteditable="true">
+      <span name="text">${text}</span>
+      <button name="delete">␡</button>
+    </spatial-thought>
   </spatial-geometry>`;
 }
 
 function renderConnection({ sourceId, targetId }: Connection) {
   return html`<spatial-connection
-    source="spatial-geometry:has(spatial-thought[identifier='${sourceId}'])"
-    target="spatial-geometry:has(spatial-thought[identifier='${targetId}'])"
+    source="spatial-geometry[id='${sourceId}']"
+    target="spatial-geometry[id='${targetId}']"
   ></spatial-connection>`;
 }
 
@@ -107,15 +86,15 @@ function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
 
 function parseChainOfThought(): ChainOfThought {
   return {
-    thoughts: Array.from(document.querySelectorAll('spatial-thought')).map((el) => ({
-      id: el.identifier,
-      text: el.text,
+    thoughts: Array.from(document.querySelectorAll('spatial-geometry')).map((el) => ({
+      id: el.id,
+      text: (el.firstElementChild as SpatialThought).text,
       x: el.x,
       y: el.y,
     })),
     connections: Array.from(document.querySelectorAll('spatial-connection')).map((el) => ({
-      sourceId: (el.sourceElement as SpatialThought).identifier,
-      targetId: (el.targetElement as SpatialThought).identifier,
+      sourceId: (el.sourceElement as SpatialGeometry).id,
+      targetId: (el.targetElement as SpatialGeometry).id,
     })),
   };
 }
@@ -153,7 +132,8 @@ async function openFile(showPicker = true) {
 }
 
 async function saveFile(promptNewFile = false) {
-  fileSaver.save(JSON.stringify(parseChainOfThought(), null, 2), promptNewFile);
+  const file = JSON.stringify(parseChainOfThought(), null, 2);
+  fileSaver.save(file, promptNewFile);
 }
 
 openButton.addEventListener('click', () => {
