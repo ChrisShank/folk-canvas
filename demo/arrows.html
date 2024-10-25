@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arrows</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      spatial-geometry {
+        border: 1px solid black;
+        border-radius: 3px;
+      }
+
+      spatial-connection {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <spatial-geometry id="box1" x="100" y="100" width="50" height="50"></spatial-geometry>
+    <spatial-geometry id="box2" x="200" y="300" width="50" height="50">Hello World</spatial-geometry>
+    <spatial-connection source="#box1" target="#box2"></spatial-connection>
+
+    <spatial-connection source="#box1" target="400,100"></spatial-connection>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { SpatialConnection } from '../src/arrows/spatial-connection.ts';
+
+      SpatialGeometry.register();
+      SpatialConnection.register();
+    </script>
+  </body>
+</html>

@@ -33,6 +33,7 @@ class SpatialThought extends HTMLElement {
   handleEvent(event: PointerEvent): void {
     if (event.type === 'click' && event.target === this.#deleteButton) {
       this.#geometry.remove();
+
       document
         .querySelectorAll(
           `spatial-connection[source="spatial-geometry[id='${this.#geometry.id}']"], 

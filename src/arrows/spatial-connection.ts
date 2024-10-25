@@ -53,8 +53,10 @@ export class SpatialConnection extends AbstractArrow {
     },
   };
 
-  render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
-    const [sx, sy, cx, cy, ex, ey, ae] = getBoxToBoxArrow(
+  render() {
+    const { sourceRect, targetRect } = this;
+
+    const [sx, sy, cx, cy, ex, ey] = getBoxToBoxArrow(
       sourceRect.x,
       sourceRect.y,
       sourceRect.width,
