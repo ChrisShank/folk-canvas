@@ -16,7 +16,7 @@ class SpatialThought extends HTMLElement {
   }
 
   #deleteButton = this.querySelector('button[name="delete"]') as HTMLButtonElement;
-  #text = this.querySelector('span[name="text"]') as HTMLSpanElement;
+  #text = this.querySelector('[name="text"]') as HTMLElement;
 
   #geometry = this.parentElement as SpatialGeometry;
 
@@ -27,7 +27,7 @@ class SpatialThought extends HTMLElement {
   }
 
   get text() {
-    return this.#text.innerText;
+    return this.#text.innerHTML;
   }
 
   handleEvent(event: PointerEvent): void {
@@ -72,9 +72,9 @@ function parseHTML(html: string): Element {
 }
 
 function renderThought({ id, x, y, text }: Thought) {
-  return html`<spatial-geometry id="${id}" x="${x}" y="${y}" width="200" height="100">
-    <spatial-thought contenteditable="true">
-      <span name="text">${text}</span>
+  return html`<spatial-geometry id="${id}" x="${x}" y="${y}">
+    <spatial-thought>
+      <div contenteditable="true" name="text">${text}</div>
       <button name="delete">␡</button>
     </spatial-thought>
   </spatial-geometry>`;

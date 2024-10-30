@@ -1,3 +1,48 @@
+export type ResizeObserverEntryCallback = (entry: ResizeObserverEntry) => void;
+
+class ResizeObserverManager {
+  #elementMap = new WeakMap<Element, Set<ResizeObserverEntryCallback>>();
+  #elementEntry = new WeakMap<Element, ResizeObserverEntry>();
+
+  #vo = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      this.#elementEntry.set(entry.target, entry);
+      this.#elementMap.get(entry.target)?.forEach((callback) => callback(entry));
+    }
+  });
+
+  observe(target: Element, callback: ResizeObserverEntryCallback): void {
+    let callbacks = this.#elementMap.get(target);
+
+    if (callbacks === undefined) {
+      this.#vo.observe(target);
+      this.#elementMap.set(target, (callbacks = new Set()));
+    } else {
+      const entry = this.#elementEntry.get(target);
+      if (entry) {
+        callback(entry);
+      }
+    }
+
+    callbacks.add(callback);
+  }
+
+  unobserve(target: Element, callback: ResizeObserverEntryCallback): void {
+    let callbacks = this.#elementMap.get(target);
+
+    if (callbacks === undefined) return;
+
+    callbacks.delete(callback);
+
+    if (callbacks.size === 0) {
+      this.#vo.unobserve(target);
+      this.#elementMap.delete(target);
+    }
+  }
+}
+
+const resizeObserver = new ResizeObserverManager();
+
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
 export type MoveEventDetail = { movementX: number; movementY: number };
@@ -23,6 +68,8 @@ export class RotateEvent extends CustomEvent<RotateEventDetail> {
     super('rotate', { detail, cancelable: true, bubbles: true });
   }
 }
+
+export type Dimension = number | 'auto';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(`
@@ -61,57 +108,49 @@ styles.replaceSync(`
   user-select: none;
 }
 
-:host(:not(:focus-within)) [part^="resize"], :host(:not(:focus-within)) [part="rotate"] {
-  opacity: 0;
-}
-
-[part^="resize"] {
+[part="resize-nw"], 
+[part="resize-ne"], 
+[part="resize-se"], 
+[part="resize-sw"] {
   display: block;
   position: absolute;
   box-sizing: border-box;
   padding: 0;
   background: hsl(210, 20%, 98%);
   z-index: calc(infinity);
+  width: 13px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid hsl(214, 84%, 56%);
+  border-radius: 2px;
+}
 
-
-  &[part="resize-nw"], 
-  &[part="resize-ne"], 
-  &[part="resize-se"], 
-  &[part="resize-sw"] {
-    width: 13px;
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    border: 1.5px solid hsl(214, 84%, 56%);
-    border-radius: 2px;
-  }
-
-  &[part="resize-nw"] {
-    top: 0;
-    left: 0;
-  }
+[part="resize-nw"] {
+  top: 0;
+  left: 0;
+}
   
-  &[part="resize-ne"] {
-    top: 0;
-    left: 100%;
-  }
+[part="resize-ne"] {
+  top: 0;
+  left: 100%;
+}
   
-  &[part="resize-se"] {
-    top: 100%;
-    left: 100%;
-  }
+[part="resize-se"] {
+  top: 100%;
+  left: 100%;
+}
     
-  &[part="resize-sw"] {
-    top: 100%;
-    left: 0;
-  }
+[part="resize-sw"] {
+  top: 100%;
+  left: 0;
+}
 
-  &[part="resize-nw"], &[part="resize-se"] {
-    cursor: var(--fc-nwse-resize, nwse-resize)
-  }
+[part="resize-nw"], [part="resize-se"] {
+  cursor: var(--fc-nwse-resize, nwse-resize)
+}
     
-  &[part="resize-ne"], &[part="resize-sw"] {
-    cursor: var(--fc-nesw-resize, nesw-resize)
-  }
+[part="resize-ne"], [part="resize-sw"] {
+  cursor: var(--fc-nesw-resize, nesw-resize)
 }
 
 [part="rotate"] {
@@ -129,7 +168,13 @@ styles.replaceSync(`
   left: 50%;
   translate: -50% -150%;
   cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
-}`);
+}
+
+:host(:not(:focus-within)) [part^="resize"], :host(:not(:focus-within)) [part="rotate"] {
+  opacity: 0;
+  cursor: default;
+}
+`);
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -146,6 +191,94 @@ export class SpatialGeometry extends HTMLElement {
   }
 
   #internals = this.attachInternals();
+
+  #type = (this.getAttribute('type') || 'rectangle') as Shape;
+  get type(): Shape {
+    return this.#type;
+  }
+
+  set type(type: Shape) {
+    this.setAttribute('type', type);
+  }
+
+  #previousX = 0;
+  #x = Number(this.getAttribute('x')) || 0;
+  get x() {
+    return this.#x;
+  }
+
+  set x(x) {
+    this.#previousX = this.#x;
+    this.#x = x;
+    this.#requestUpdate('x');
+  }
+
+  #previousY = 0;
+  #y = Number(this.getAttribute('y')) || 0;
+  get y() {
+    return this.#y;
+  }
+
+  set y(y) {
+    this.#previousY = this.#y;
+    this.#y = y;
+    this.#requestUpdate('y');
+  }
+
+  #autoContentRect = this.getBoundingClientRect();
+
+  #previousWidth: Dimension = 0;
+  #width: Dimension = 0;
+  get width(): number {
+    if (this.#width === 'auto') {
+      return this.#autoContentRect.width;
+    }
+    return this.#width;
+  }
+
+  set width(width: Dimension) {
+    if (width === 'auto') {
+      resizeObserver.observe(this, this.#onResize);
+    } else if (this.#width === 'auto' && this.#height !== 'auto') {
+      resizeObserver.unobserve(this, this.#onResize);
+    }
+    this.#previousWidth = this.#width;
+    this.#width = width;
+    this.#requestUpdate('width');
+  }
+
+  #previousHeight: Dimension = 0;
+  #height: Dimension = 0;
+  get height(): number {
+    if (this.#height === 'auto') {
+      return this.#autoContentRect.height;
+    }
+    return this.#height;
+  }
+
+  set height(height: Dimension) {
+    if (height === 'auto') {
+      resizeObserver.observe(this, this.#onResize);
+    } else if (this.#height === 'auto' && this.#width !== 'auto') {
+      resizeObserver.unobserve(this, this.#onResize);
+    }
+
+    this.#previousHeight = this.#height;
+    this.#height = height;
+    this.#requestUpdate('height');
+  }
+
+  #previousRotate = 0;
+  #rotate = Number(this.getAttribute('rotate')) || 0;
+  get rotate(): number {
+    return this.#rotate;
+  }
+
+  set rotate(rotate: number) {
+    this.#previousRotate = this.#rotate;
+    this.#rotate = rotate;
+    this.#requestUpdate('rotate');
+  }
 
   constructor() {
     super();
@@ -164,75 +297,9 @@ export class SpatialGeometry extends HTMLElement {
   <button part="resize-se"></button>
   <button part="resize-sw"></button>
   <slot></slot>`;
-  }
 
-  #type = (this.getAttribute('type') || 'rectangle') as Shape;
-  get type(): Shape {
-    return this.#type;
-  }
-
-  set type(type: Shape) {
-    this.setAttribute('type', type);
-  }
-
-  #previousX = 0;
-  #x = Number(this.getAttribute('x')) || 0;
-  get x(): number {
-    return this.#x;
-  }
-
-  set x(x: number) {
-    this.#previousX = this.#x;
-    this.#x = x;
-    this.#requestUpdate('x');
-  }
-
-  #previousY = 0;
-  #y = Number(this.getAttribute('y')) || 0;
-  get y(): number {
-    return this.#y;
-  }
-
-  set y(y: number) {
-    this.#previousY = this.#y;
-    this.#y = y;
-    this.#requestUpdate('y');
-  }
-
-  #previousWidth = 0;
-  #width = Number(this.getAttribute('width')) || 1;
-  get width(): number {
-    return this.#width;
-  }
-
-  set width(width: number) {
-    this.#previousWidth = this.#width;
-    this.#width = width;
-    this.#requestUpdate('width');
-  }
-
-  #previousHeight = 0;
-  #height = Number(this.getAttribute('height')) || 1;
-  get height(): number {
-    return this.#height;
-  }
-
-  set height(height: number) {
-    this.#previousHeight = this.#height;
-    this.#height = height;
-    this.#requestUpdate('height');
-  }
-
-  #previousRotate = 0;
-  #rotate = Number(this.getAttribute('rotate')) || 0;
-  get rotate(): number {
-    return this.#rotate;
-  }
-
-  set rotate(rotate: number) {
-    this.#previousRotate = this.#rotate;
-    this.#rotate = rotate;
-    this.#requestUpdate('rotate');
+    this.height = Number(this.getAttribute('height')) || 'auto';
+    this.width = Number(this.getAttribute('width')) || 'auto';
   }
 
   connectedCallback() {
@@ -311,8 +378,8 @@ export class SpatialGeometry extends HTMLElement {
         }
 
         if (part === 'rotate') {
-          const centerX = (this.#x + this.#width) / 2;
-          const centerY = (this.#y + this.#height) / 2;
+          const centerX = (this.#x + this.width) / 2;
+          const centerY = (this.#y + this.height) / 2;
           var newAngle = ((Math.atan2(event.clientY - centerY, event.clientX - centerX) + Math.PI / 2) * 180) / Math.PI;
           this.rotate = newAngle;
           return;
@@ -386,17 +453,17 @@ export class SpatialGeometry extends HTMLElement {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new ResizeEvent({
-          movementX: this.#width - this.#previousWidth,
-          movementY: this.#height - this.#previousHeight,
+          movementX: this.width - (this.#previousWidth === 'auto' ? 0 : this.#previousWidth),
+          movementY: this.height - (this.#previousHeight === 'auto' ? 0 : this.#previousHeight),
         })
       );
       if (notCancelled) {
         if (updatedProperties.has('width')) {
-          this.style.width = `${this.#width}px`;
+          this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
         }
 
         if (updatedProperties.has('height')) {
-          this.style.height = `${this.#height}px`;
+          this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
         }
       } else {
         // TODO: Revert changes to position too
@@ -418,4 +485,26 @@ export class SpatialGeometry extends HTMLElement {
       }
     }
   }
+
+  #onResize = (entry: ResizeObserverEntry) => {
+    const previousRect = this.#autoContentRect;
+    this.#autoContentRect = entry.contentRect;
+
+    const notCancelled = this.dispatchEvent(
+      new ResizeEvent({
+        movementX: this.width - (this.#previousWidth === 'auto' ? previousRect.width : this.#previousWidth),
+        movementY: this.height - (this.#previousHeight === 'auto' ? previousRect.height : this.#previousHeight),
+      })
+    );
+
+    if (!notCancelled) {
+      if (this.#height === 'auto') {
+        this.height = previousRect?.height || 0;
+      }
+
+      if (this.#width === 'auto') {
+        this.width = previousRect?.width || 0;
+      }
+    }
+  };
 }

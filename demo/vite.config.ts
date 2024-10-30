@@ -12,6 +12,9 @@ export default defineConfig({
           acc[file.replace('.html', '')] = resolve(__dirname, file);
           return acc;
         }, {} as Record<string, string>),
+      // input: {
+      //   thoughts: resolve(__dirname, 'chains-of-thought/index.html'),
+      // },
     },
     modulePreload: {
       polyfill: false,

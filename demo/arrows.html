@@ -25,11 +25,15 @@
         position: absolute;
         inset: 0 0 0 0;
       }
+
+      #box2 {
+        max-width: 10ch;
+      }
     </style>
   </head>
   <body>
     <spatial-geometry id="box1" x="100" y="100" width="50" height="50"></spatial-geometry>
-    <spatial-geometry id="box2" x="200" y="300" width="50" height="50">Hello World</spatial-geometry>
+    <spatial-geometry id="box2" x="200" y="300">Hello World</spatial-geometry>
     <spatial-connection source="#box1" target="#box2"></spatial-connection>
 
     <spatial-connection source="#box1" target="400,100"></spatial-connection>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perf</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      spatial-geometry {
+        border: 2px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+
+      SpatialGeometry.register();
+
+      const geometries = [];
+
+      const now = performance.now();
+      for (let i = 0; i < 100; i++) {
+        for (let j = 0; j < 100; j++) {
+          const geo = document.createElement('spatial-geometry');
+          geo.x = 50 * i;
+          geo.y = 50 * j;
+          geo.width = geo.height = 45;
+          geometries.push(geo);
+          document.body.append(geo);
+        }
+      }
+      console.log(performance.now() - now);
+
+      setTimeout(() => {
+        const now = performance.now();
+        for (const geometry of geometries) {
+          geometry.x += 50;
+          // geometry.rotate += 45;
+        }
+        console.log(performance.now() - now);
+      }, 1000);
+    </script>
+  </body>
+</html>
