@@ -7,7 +7,9 @@ class ResizeObserverManager {
   #vo = new ResizeObserver((entries) => {
     for (const entry of entries) {
       this.#elementEntry.set(entry.target, entry);
-      this.#elementMap.get(entry.target)?.forEach((callback) => callback(entry));
+      this.#elementMap
+        .get(entry.target)
+        ?.forEach((callback) => callback(entry));
     }
   });
 
@@ -285,7 +287,10 @@ export class SpatialGeometry extends HTMLElement {
 
     this.addEventListener('pointerdown', this);
 
-    const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const shadowRoot = this.attachShadow({
+      mode: 'open',
+      delegatesFocus: true,
+    });
     shadowRoot.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
@@ -326,6 +331,21 @@ export class SpatialGeometry extends HTMLElement {
         if (event.button !== 0 || event.ctrlKey) return;
 
         const target = event.composedPath()[0] as HTMLElement;
+
+        // Store initial angle on rotation start
+        if (target.getAttribute('part') === 'rotate') {
+          // We need to store initial rotation/angle somewhere.
+          // This is a little awkward as we'll want to do *quite a lot* of this kind of thing.
+          // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
+          // But we also want to preserve the self-sufficient nature of elements' behaviour...
+          // Maybe some kind of shared utility, used by both the element and the outside environment?
+          target.dataset.initialRotation = String(this.#rotate);
+          const centerX = this.#x + this.width / 2;
+          const centerY = this.#y + this.height / 2;
+          target.dataset.startAngle = String(
+            Math.atan2(event.clientY - centerY, event.clientX - centerX)
+          );
+        }
 
         // ignore interactions from slotted elements.
         if (target !== this && !target.hasAttribute('part')) return;
@@ -378,10 +398,16 @@ export class SpatialGeometry extends HTMLElement {
         }
 
         if (part === 'rotate') {
-          const centerX = (this.#x + this.width) / 2;
-          const centerY = (this.#y + this.height) / 2;
-          var newAngle = ((Math.atan2(event.clientY - centerY, event.clientX - centerX) + Math.PI / 2) * 180) / Math.PI;
-          this.rotate = newAngle;
+          const centerX = this.#x + this.width / 2;
+          const centerY = this.#y + this.height / 2;
+          const currentAngle = Math.atan2(
+            event.clientY - centerY,
+            event.clientX - centerX
+          );
+          const startAngle = Number(target.dataset.startAngle);
+          const initialRotation = Number(target.dataset.initialRotation);
+          const deltaAngle = currentAngle - startAngle;
+          this.rotate = initialRotation + (deltaAngle * 180) / Math.PI;
           return;
         }
 
@@ -453,8 +479,12 @@ export class SpatialGeometry extends HTMLElement {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new ResizeEvent({
-          movementX: this.width - (this.#previousWidth === 'auto' ? 0 : this.#previousWidth),
-          movementY: this.height - (this.#previousHeight === 'auto' ? 0 : this.#previousHeight),
+          movementX:
+            this.width -
+            (this.#previousWidth === 'auto' ? 0 : this.#previousWidth),
+          movementY:
+            this.height -
+            (this.#previousHeight === 'auto' ? 0 : this.#previousHeight),
         })
       );
       if (notCancelled) {
@@ -463,7 +493,8 @@ export class SpatialGeometry extends HTMLElement {
         }
 
         if (updatedProperties.has('height')) {
-          this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
+          this.style.height =
+            this.#height === 'auto' ? '' : `${this.#height}px`;
         }
       } else {
         // TODO: Revert changes to position too
@@ -474,7 +505,9 @@ export class SpatialGeometry extends HTMLElement {
 
     if (updatedProperties.has('rotate')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotate - this.#previousRotate }));
+      const notCancelled = this.dispatchEvent(
+        new RotateEvent({ rotate: this.#rotate - this.#previousRotate })
+      );
 
       if (notCancelled) {
         if (updatedProperties.has('rotate')) {
@@ -492,8 +525,16 @@ export class SpatialGeometry extends HTMLElement {
 
     const notCancelled = this.dispatchEvent(
       new ResizeEvent({
-        movementX: this.width - (this.#previousWidth === 'auto' ? previousRect.width : this.#previousWidth),
-        movementY: this.height - (this.#previousHeight === 'auto' ? previousRect.height : this.#previousHeight),
+        movementX:
+          this.width -
+          (this.#previousWidth === 'auto'
+            ? previousRect.width
+            : this.#previousWidth),
+        movementY:
+          this.height -
+          (this.#previousHeight === 'auto'
+            ? previousRect.height
+            : this.#previousHeight),
       })
     );
 
