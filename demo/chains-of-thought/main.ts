@@ -1,15 +1,15 @@
-import { FolkGeometry } from '../../src/canvas/fc-geometry.ts';
-import { FolkConnection } from '../../src/arrows/fc-connection.ts';
-import { FileSaver } from '../../src/persistence/file.ts';
+import { FolkGeometry } from "../../src/canvas/fc-geometry.ts";
+import { FolkConnection } from "../../src/arrows/fc-connection.ts";
+import { FileSaver } from "../../src/persistence/file.ts";
 
 declare global {
   interface HTMLElementTagNameMap {
-    'fc-thought': FolkThought;
+    "fc-thought": FolkThought;
   }
 }
 
 class FolkThought extends HTMLElement {
-  static tagName = 'fc-thought';
+  static tagName = "fc-thought";
 
   static register() {
     customElements.define(this.tagName, this);
@@ -25,7 +25,7 @@ class FolkThought extends HTMLElement {
   constructor() {
     super();
 
-    this.addEventListener('click', this);
+    this.addEventListener("click", this);
   }
 
   get text() {
@@ -33,7 +33,7 @@ class FolkThought extends HTMLElement {
   }
 
   handleEvent(event: PointerEvent): void {
-    if (event.type === 'click' && event.target === this.#deleteButton) {
+    if (event.type === "click" && event.target === this.#deleteButton) {
       this.#geometry.remove();
 
       document
@@ -91,14 +91,14 @@ function renderConnection({ sourceId, targetId }: Connection) {
 }
 
 function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
-  return html`${thoughts.map(renderThought).join('')}${connections
+  return html`${thoughts.map(renderThought).join("")}${connections
     .map(renderConnection)
-    .join('')}`;
+    .join("")}`;
 }
 
 function parseChainOfThought(): ChainOfThought {
   return {
-    thoughts: Array.from(document.querySelectorAll('fc-geometry')).map(
+    thoughts: Array.from(document.querySelectorAll("fc-geometry")).map(
       (el) => ({
         id: el.id,
         text: (el.firstElementChild as FolkThought).text,
@@ -106,7 +106,7 @@ function parseChainOfThought(): ChainOfThought {
         y: el.y,
       })
     ),
-    connections: Array.from(document.querySelectorAll('fc-connection')).map(
+    connections: Array.from(document.querySelectorAll("fc-connection")).map(
       (el) => ({
         sourceId: (el.sourceElement as FolkGeometry).id,
         targetId: (el.targetElement as FolkGeometry).id,
@@ -118,20 +118,20 @@ function parseChainOfThought(): ChainOfThought {
 const openButton = document.querySelector('button[name="open"]')!;
 const saveButton = document.querySelector('button[name="save"]')!;
 const saveAsButton = document.querySelector('button[name="save-as"]')!;
-const main = document.querySelector('main')!;
+const main = document.querySelector("main")!;
 const fileSaver = new FileSaver(
-  'chains-of-thought',
-  'json',
-  'application/json'
+  "chains-of-thought",
+  "json",
+  "application/json"
 );
 
-main.addEventListener('dblclick', (e) => {
+main.addEventListener("dblclick", (e) => {
   if (e.target === main) {
     main.appendChild(
       parseHTML(
         renderThought({
-          id: String(document.querySelectorAll('fc-thought').length + 1),
-          text: '',
+          id: String(document.querySelectorAll("fc-thought").length + 1),
+          text: "",
           x: e.clientX,
           y: e.clientY,
         })
@@ -151,20 +151,20 @@ async function openFile(showPicker = true) {
   }
 }
 
-async function saveFile(promptNewFile = false) {
+function saveFile(promptNewFile = false) {
   const file = JSON.stringify(parseChainOfThought(), null, 2);
   fileSaver.save(file, promptNewFile);
 }
 
-openButton.addEventListener('click', () => {
+openButton.addEventListener("click", () => {
   openFile();
 });
 
-saveButton.addEventListener('click', () => {
+saveButton.addEventListener("click", () => {
   saveFile();
 });
 
-saveAsButton.addEventListener('click', () => {
+saveAsButton.addEventListener("click", () => {
   saveFile(true);
 });
 

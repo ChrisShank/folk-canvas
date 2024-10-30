@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "dev": "vite demo",
+    "build": "vite build demo --outDir dist"
+  },
+  "imports": {
+    "perfect-arrows": "npm:perfect-arrows@^0.3.7",
+    "perfect-freehand": "npm:perfect-freehand@^1.2.2",
+    "leaflet": "npm:leaflet@^1.9.4",
+    "vite": "npm:vite@^5.4.10"
+  },
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
+  },
+  "nodeModulesDir": "auto"
+}
