@@ -270,6 +270,8 @@ export class SpatialGeometry extends HTMLElement {
     this.#requestUpdate('height');
   }
 
+  #initialRotation = 0;
+  #startAngle = 0;
   #previousRotate = 0;
   #rotate = Number(this.getAttribute('rotate')) || 0;
   get rotate(): number {
@@ -339,11 +341,12 @@ export class SpatialGeometry extends HTMLElement {
           // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
           // But we also want to preserve the self-sufficient nature of elements' behaviour...
           // Maybe some kind of shared utility, used by both the element and the outside environment?
-          target.dataset.initialRotation = String(this.#rotate);
+          this.#initialRotation = this.#rotate;
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
-          target.dataset.startAngle = String(
-            Math.atan2(event.clientY - centerY, event.clientX - centerX)
+          this.#startAngle = Math.atan2(
+            event.clientY - centerY,
+            event.clientX - centerX
           );
         }
 
@@ -404,10 +407,9 @@ export class SpatialGeometry extends HTMLElement {
             event.clientY - centerY,
             event.clientX - centerX
           );
-          const startAngle = Number(target.dataset.startAngle);
-          const initialRotation = Number(target.dataset.initialRotation);
-          const deltaAngle = currentAngle - startAngle;
-          this.rotate = initialRotation + (deltaAngle * 180) / Math.PI;
+
+          const deltaAngle = currentAngle - this.#startAngle;
+          this.rotate = this.#initialRotation + (deltaAngle * 180) / Math.PI;
           return;
         }
 
