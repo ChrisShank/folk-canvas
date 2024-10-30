@@ -1,7 +1,7 @@
 {
   "tasks": {
     "dev": "vite demo",
-    "build": "vite build demo --outDir dist --base=/folk-canvas/"
+    "build": "vite build demo --outDir dist --base=/"
   },
   "imports": {
     "perfect-arrows": "npm:perfect-arrows@^0.3.7",
