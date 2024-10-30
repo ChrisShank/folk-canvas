@@ -26,12 +26,12 @@ export type Arrow = [
 
 declare global {
   interface HTMLElementTagNameMap {
-    'spatial-connection': SpatialConnection;
+    'fc-connection': FolkConnection;
   }
 }
 
-export class SpatialConnection extends AbstractArrow {
-  static tagName = 'spatial-connection';
+export class FolkConnection extends AbstractArrow {
+  static tagName = 'fc-connection';
 
   #options: StrokeOptions = {
     size: 7,

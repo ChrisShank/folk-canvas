@@ -180,13 +180,13 @@ styles.replaceSync(`
 
 declare global {
   interface HTMLElementTagNameMap {
-    'spatial-geometry': SpatialGeometry;
+    'fc-geometry': FolkGeometry;
   }
 }
 
 // TODO: add z coordinate?
-export class SpatialGeometry extends HTMLElement {
-  static tagName = 'spatial-geometry';
+export class FolkGeometry extends HTMLElement {
+  static tagName = 'fc-geometry';
 
   static register() {
     customElements.define(this.tagName, this);

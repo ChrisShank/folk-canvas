@@ -15,23 +15,23 @@
         margin: 0;
       }
 
-      spatial-geometry {
+      fc-geometry {
         border: 2px solid black;
       }
     </style>
   </head>
   <body>
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
 
-      SpatialGeometry.register();
+      FolkGeometry.register();
 
       const geometries = [];
 
       const now = performance.now();
       for (let i = 0; i < 100; i++) {
         for (let j = 0; j < 100; j++) {
-          const geo = document.createElement('spatial-geometry');
+          const geo = document.createElement('fc-geometry');
           geo.x = 50 * i;
           geo.y = 50 * j;
           geo.width = geo.height = 45;

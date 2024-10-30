@@ -25,12 +25,12 @@ styles.replaceSync(`
 
 declare global {
   interface HTMLElementTagNameMap {
-    'spatial-ink': SpatialInk;
+    'fc-ink': FolkInk;
   }
 }
 
-export class SpatialInk extends HTMLElement {
-  static tagName = 'spatial-ink';
+export class FolkInk extends HTMLElement {
+  static tagName = 'fc-ink';
 
   static register() {
     customElements.define(this.tagName, this);
@@ -81,7 +81,8 @@ export class SpatialInk extends HTMLElement {
     this.#update();
   }
 
-  #simulatePressure = this.getAttribute('streamline') === 'false' ? false : true;
+  #simulatePressure =
+    this.getAttribute('streamline') === 'false' ? false : true;
 
   get simulatePressure() {
     return this.#simulatePressure;
@@ -104,7 +105,10 @@ export class SpatialInk extends HTMLElement {
   constructor() {
     super();
 
-    const shadowRoot = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const shadowRoot = this.attachShadow({
+      mode: 'open',
+      delegatesFocus: true,
+    });
     shadowRoot.adoptedStyleSheets.push(styles);
     this.#svg.appendChild(this.#path);
     shadowRoot.appendChild(this.#svg);
@@ -189,7 +193,10 @@ export class SpatialInk extends HTMLElement {
         cap: true,
       },
     };
-    this.#path.setAttribute('d', this.#getSvgPathFromStroke(getStroke(this.#points, options)));
+    this.#path.setAttribute(
+      'd',
+      this.#getSvgPathFromStroke(getStroke(this.#points, options))
+    );
   }
 
   #getSvgPathFromStroke(stroke: Stroke): string {

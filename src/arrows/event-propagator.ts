@@ -1,6 +1,6 @@
-import { SpatialConnection } from './spatial-connection';
+import { FolkConnection } from './fc-connection';
 
-export class EventPropagator extends SpatialConnection {
+export class EventPropagator extends FolkConnection {
   static tagName = 'event-propagator';
 
   #triggers = (this.getAttribute('triggers') || '').split(',');

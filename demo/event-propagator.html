@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      spatial-geometry {
+      fc-geometry {
         border: 1px solid black;
         border-radius: 3px;
       }
@@ -28,8 +28,10 @@
     </style>
   </head>
   <body>
-    <spatial-geometry id="box1" x="100" y="100" width="50" height="50"></spatial-geometry>
-    <spatial-geometry id="box2" x="200" y="300" width="50" height="50">Hello World</spatial-geometry>
+    <fc-geometry id="box1" x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry id="box2" x="200" y="300" width="50" height="50"
+      >Hello World</fc-geometry
+    >
     <event-propagator
       source="#box1"
       target="#box2"
@@ -37,8 +39,8 @@
       expression="$target.textContent += '!'"
     ></event-propagator>
 
-    <spatial-geometry id="box3" x="150" y="200" width="50" height="50"></spatial-geometry>
-    <spatial-geometry id="box4" x="300" y="350" width="50" height="50"></spatial-geometry>
+    <fc-geometry id="box3" x="150" y="200" width="50" height="50"></fc-geometry>
+    <fc-geometry id="box4" x="300" y="350" width="50" height="50"></fc-geometry>
     <event-propagator
       source="#box3"
       target="#box4"
@@ -47,10 +49,10 @@
     ></event-propagator>
 
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
-      SpatialGeometry.register();
+      FolkGeometry.register();
       EventPropagator.register();
     </script>
   </body>

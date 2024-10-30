@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      spatial-geometry:has(record-player) {
+      fc-geometry:has(record-player) {
         &::part(resize-nw),
         &::part(resize-ne),
         &::part(resize-se),
@@ -24,7 +24,7 @@
         }
       }
 
-      spatial-geometry > video {
+      fc-geometry > video {
         height: 100%;
       }
     </style>
@@ -35,45 +35,47 @@
       ffmpeg -framerate 25 -pattern_type glob -i '*.png' -c:v prores -pix_fmt yuva444p10le dancing-flower.mov
       ffmpeg -framerate 25 -f image2 -pattern_type glob -i '*.png' -c:v libvpx-vp9 -pix_fmt yuva420p dancing-flowers.webm
     -->
-    <spatial-geometry x="100" y="75" width="330" height="198">
+    <fc-geometry x="100" y="75" width="330" height="198">
       <record-player>
         <audio src="/Feather.mp3"></audio>
       </record-player>
-    </spatial-geometry>
+    </fc-geometry>
 
-    <spatial-geometry x="25" y="300" width="166" height="200">
+    <fc-geometry x="25" y="300" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </spatial-geometry>
+    </fc-geometry>
 
-    <spatial-geometry x="155" y="315" width="166" height="200">
+    <fc-geometry x="155" y="315" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </spatial-geometry>
+    </fc-geometry>
 
-    <spatial-geometry x="280" y="305" width="166" height="200">
+    <fc-geometry x="280" y="305" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </spatial-geometry>
+    </fc-geometry>
 
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { RecordPlayer } from '../src/music/record-player.ts';
 
-      SpatialGeometry.register();
+      FolkGeometry.register();
       RecordPlayer.register();
 
       let proximityDistance = 200;
       const proximitySet = new Set();
-      const recordPlayerGeometry = document.querySelector('spatial-geometry:has(record-player)');
+      const recordPlayerGeometry = document.querySelector(
+        'fc-geometry:has(record-player)'
+      );
       const recordPlayer = recordPlayerGeometry.firstElementChild;
-      const flowers = document.querySelectorAll('spatial-geometry:has(video)');
+      const flowers = document.querySelectorAll('fc-geometry:has(video)');
       // set playback rate when video is ready
       function setPlayback(e) {
         e.target.playbackRate = (91 / 60) * e.target.duration;
