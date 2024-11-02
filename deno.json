@@ -1,7 +1,8 @@
 {
   "tasks": {
     "dev": "vite demo",
-    "build": "vite build demo --outDir dist --base=/"
+    "build": "vite build demo --base=/folk-canvas",
+    "preview": "deno run build && vite preview demo"
   },
   "imports": {
     "perfect-arrows": "npm:perfect-arrows@^0.3.7",
@@ -10,12 +11,7 @@
     "vite": "npm:vite@^5.4.10"
   },
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "dom.asynciterable",
-      "deno.ns"
-    ]
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "nodeModulesDir": "auto"
 }
