@@ -51,7 +51,7 @@ export class AbstractArrow extends HTMLElement {
 
   #sourceCallback = (entry: VisualObserverEntry) => {
     this.#sourceRect = entry.contentRect;
-    this.update();
+    this.#update();
   };
 
   #target = '';
@@ -76,7 +76,7 @@ export class AbstractArrow extends HTMLElement {
 
   #targetCallback = (entry: VisualObserverEntry) => {
     this.#targetRect = entry.contentRect;
-    this.update();
+    this.#update();
   };
 
   connectedCallback() {
@@ -101,7 +101,7 @@ export class AbstractArrow extends HTMLElement {
 
     if (vertex) {
       this.#sourceRect = DOMRectReadOnly.fromRect(vertex);
-      this.update();
+      this.#update();
     } else {
       const el = document.querySelector(this.source);
 
@@ -127,7 +127,7 @@ export class AbstractArrow extends HTMLElement {
 
     if (vertex) {
       this.#targetRect = DOMRectReadOnly.fromRect(vertex);
-      this.update();
+      this.#update();
     } else {
       this.#targetElement = document.querySelector(this.#target);
 
@@ -145,7 +145,7 @@ export class AbstractArrow extends HTMLElement {
     visualObserver.unobserve(this.#targetElement, this.#targetCallback);
   }
 
-  update() {
+  #update() {
     if (this.#sourceRect === undefined || this.#targetRect === undefined) return;
 
     this.render();
