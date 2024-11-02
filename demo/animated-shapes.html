@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animated Shapes</title>
+    <style>
+      html {
+        height: 100%;
+        --spring-easing: linear(
+          0,
+          0.01,
+          0.04 1.5%,
+          0.163 3.2%,
+          0.824 9.2%,
+          1.055,
+          1.199 14.2%,
+          1.24,
+          1.263,
+          1.265 18.2%,
+          1.243 19.9%,
+          0.996 28.8%,
+          0.951,
+          0.93 34.1%,
+          0.929 35.7%,
+          0.935 37.5%,
+          1 46.3%,
+          1.018 51.4%,
+          1.017 55.1%,
+          0.995 68.6%,
+          1.001 85.5%,
+          1
+        );
+        --spring-duration: 1s;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-timing-function: var(--spring-easing);
+        animation-duration: var(--spring-duration);
+      }
+
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        height: 100%;
+      }
+
+      spatial-geometry {
+        background: rgb(187, 178, 178);
+        box-shadow: rgba(0, 0, 0, 0.2) 1.95px 1.95px 2.6px;
+        transition: scale 100ms ease-out, box-shadow 100ms ease-out;
+      }
+
+      spatial-geometry:state(move) {
+        scale: 1.05;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+      }
+
+      #box1 {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <spatial-geometry x="100" y="100" width="50" height="50"></spatial-geometry>
+    <spatial-geometry x="100" y="200" width="50" height="50"></spatial-geometry>
+    <spatial-geometry x="100" y="300" width="50" height="50"></spatial-geometry>
+
+    <script type="module">
+      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+
+      SpatialGeometry.register();
+
+      const geos = document.querySelectorAll('spatial-geometry');
+
+      geos.forEach((el, i) => (el.style.viewTransitionName = `b${i}`));
+
+      while (true) {
+        await document.startViewTransition(() => {
+          geos.forEach((el) => {
+            el.x += 100;
+            el.width = 90;
+          });
+        }).finished;
+
+        await document.startViewTransition(() => {
+          geos.forEach((el) => {
+            el.y += 100;
+            el.height = 90;
+          });
+        }).finished;
+
+        await document.startViewTransition(() => {
+          geos.forEach((el) => {
+            el.x -= 100;
+            el.width = 50;
+          });
+        }).finished;
+
+        await document.startViewTransition(() => {
+          geos.forEach((el) => {
+            el.y -= 100;
+            el.height = 50;
+          });
+        }).finished;
+      }
+    </script>
+  </body>
+</html>
