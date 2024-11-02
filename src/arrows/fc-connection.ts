@@ -1,7 +1,7 @@
-import { getBoxToBoxArrow } from "perfect-arrows";
-import { AbstractArrow } from "./abstract-arrow.ts";
-import { pointsOnBezierCurves } from "./points-on-path.ts";
-import { getStroke, StrokeOptions } from "perfect-freehand";
+import { getBoxToBoxArrow } from 'perfect-arrows';
+import { AbstractArrow } from './abstract-arrow.ts';
+import { pointsOnBezierCurves } from './utils.ts';
+import { getStroke, StrokeOptions } from 'perfect-freehand';
 
 export type Arrow = [
   /** The x position of the (padded) starting point. */
@@ -26,12 +26,12 @@ export type Arrow = [
 
 declare global {
   interface HTMLElementTagNameMap {
-    "fc-connection": FolkConnection;
+    'fc-connection': FolkConnection;
   }
 }
 
 export class FolkConnection extends AbstractArrow {
-  static override tagName = "fc-connection";
+  static override tagName = 'fc-connection';
 
   #options: StrokeOptions = {
     size: 7,
@@ -77,12 +77,12 @@ export class FolkConnection extends AbstractArrow {
     const stroke = getStroke(points, this.#options);
     const path = getSvgPathFromStroke(stroke);
     this.style.clipPath = `path('${path}')`;
-    this.style.backgroundColor = "black";
+    this.style.backgroundColor = 'black';
   }
 }
 
 function getSvgPathFromStroke(stroke: number[][]): string {
-  if (stroke.length === 0) return "";
+  if (stroke.length === 0) return '';
 
   for (const point of stroke) {
     point[0] = Math.round(point[0] * 100) / 100;
@@ -95,9 +95,9 @@ function getSvgPathFromStroke(stroke: number[][]): string {
       acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
       return acc;
     },
-    ["M", ...stroke[0], "Q"]
+    ['M', ...stroke[0], 'Q']
   );
 
-  d.push("Z");
-  return d.join(" ");
+  d.push('Z');
+  return d.join(' ');
 }
