@@ -21,11 +21,11 @@
       <button on:click="DRAW">Draw</button>
     </nav>
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
-      import { SpatialInk } from '../src/canvas/spatial-ink.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkInk } from '../src/canvas/fc-ink.ts';
 
-      SpatialGeometry.register();
-      SpatialInk.register();
+      FolkGeometry.register();
+      FolkInk.register();
 
       const drawButton = document.querySelector('button');
 
@@ -36,7 +36,7 @@
         e.preventDefault();
         e.stopPropagation();
 
-        const ink = document.createElement('spatial-ink');
+        const ink = document.createElement('fc-ink');
 
         document.body.appendChild(ink);
 
@@ -45,7 +45,7 @@
 
         ink.points = ink.points.map(([x, y, p]) => [x - rect.x, y - rect.y, p]);
 
-        const geometry = document.createElement('spatial-geometry');
+        const geometry = document.createElement('fc-geometry');
         geometry.x = rect.x;
         geometry.y = rect.y;
         geometry.height = rect.height;

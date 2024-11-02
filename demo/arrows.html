@@ -15,12 +15,12 @@
         margin: 0;
       }
 
-      spatial-geometry {
+      fc-geometry {
         border: 1px solid black;
         border-radius: 3px;
       }
 
-      spatial-connection {
+      fc-connection {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -32,18 +32,18 @@
     </style>
   </head>
   <body>
-    <spatial-geometry id="box1" x="100" y="100" width="50" height="50"></spatial-geometry>
-    <spatial-geometry id="box2" x="200" y="300">Hello World</spatial-geometry>
-    <spatial-connection source="#box1" target="#box2"></spatial-connection>
+    <fc-geometry id="box1" x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry id="box2" x="200" y="300">Hello World</fc-geometry>
+    <fc-connection source="#box1" target="#box2"></fc-connection>
 
-    <spatial-connection source="#box1" target="400,100"></spatial-connection>
+    <fc-connection source="#box1" target="400,100"></fc-connection>
 
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
-      import { SpatialConnection } from '../src/arrows/spatial-connection.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkConnection } from '../src/arrows/fc-connection.ts';
 
-      SpatialGeometry.register();
-      SpatialConnection.register();
+      FolkGeometry.register();
+      FolkConnection.register();
     </script>
   </body>
 </html>

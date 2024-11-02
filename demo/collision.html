@@ -19,24 +19,27 @@
         margin: 0;
       }
 
-      spatial-geometry {
+      fc-geometry {
         border: 2px solid black;
       }
     </style>
   </head>
   <body>
-    <spatial-geometry x="100" y="100" width="50" height="50"></spatial-geometry>
-    <spatial-geometry x="200" y="200" width="50" height="50"></spatial-geometry>
+    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry x="200" y="200" width="50" height="50"></fc-geometry>
 
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
 
-      SpatialGeometry.register();
-      const geometryElements = document.querySelectorAll('spatial-geometry');
+      FolkGeometry.register();
+      const geometryElements = document.querySelectorAll('fc-geometry');
 
       function collisionDetection(rect1, rect2) {
         return (
-          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
+          rect1.left < rect2.right &&
+          rect1.right > rect2.left &&
+          rect1.top < rect2.bottom &&
+          rect1.bottom > rect2.top
         );
       }
 
@@ -46,7 +49,12 @@
             el !== e.target &&
             collisionDetection(
               // TODO: refactor this hack once resizing and the vertices API are figured out
-              DOMRectReadOnly.fromRect({ x: el.x, y: el.y, height: el.height, width: el.width }),
+              DOMRectReadOnly.fromRect({
+                x: el.x,
+                y: el.y,
+                height: el.height,
+                width: el.width,
+              }),
               DOMRectReadOnly.fromRect({
                 x: e.target.x,
                 y: e.target.y,

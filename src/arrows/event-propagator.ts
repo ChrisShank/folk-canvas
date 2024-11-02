@@ -1,9 +1,9 @@
-import { SpatialConnection } from './spatial-connection';
+import { FolkConnection } from "./fc-connection.ts";
 
-export class EventPropagator extends SpatialConnection {
-  static tagName = 'event-propagator';
+export class EventPropagator extends FolkConnection {
+  static override tagName = "event-propagator";
 
-  #triggers = (this.getAttribute('triggers') || '').split(',');
+  #triggers = (this.getAttribute("triggers") || "").split(",");
   get triggers() {
     return this.#triggers;
   }
@@ -11,23 +11,23 @@ export class EventPropagator extends SpatialConnection {
     this.#triggers = triggers;
   }
 
-  #expression = '';
+  #expression = "";
   #function = new Function();
   get expression() {
     return this.#expression;
   }
   set expression(expression) {
     this.#expression = expression;
-    this.#function = new Function('$source', '$target', '$event', expression);
+    this.#function = new Function("$source", "$target", "$event", expression);
   }
 
   constructor() {
     super();
 
-    this.expression = this.getAttribute('expression') || '';
+    this.expression = this.getAttribute("expression") || "";
   }
 
-  observeSource() {
+  override observeSource() {
     super.observeSource();
 
     for (const trigger of this.#triggers) {
@@ -38,7 +38,7 @@ export class EventPropagator extends SpatialConnection {
     this.evaluateExpression();
   }
 
-  unobserveSource() {
+  override unobserveSource() {
     super.unobserveSource();
 
     for (const trigger of this.#triggers) {
@@ -47,12 +47,12 @@ export class EventPropagator extends SpatialConnection {
     }
   }
 
-  observeTarget() {
+  override observeTarget() {
     super.observeTarget();
     this.evaluateExpression();
   }
 
-  unobserveTarget() {
+  override unobserveTarget() {
     super.unobserveTarget();
   }
 

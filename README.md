@@ -10,6 +10,17 @@
   - How can we compose together live and visual programming notations?
 - Can we have lightweight visual and live scripting for web pages?
 
+## Development
+
+1. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/)
+
+```bash
+deno i
+# then
+deno task dev
+```
+All config is in `deno.json`.
+
 ## Primitives
 
 - `<fc-geometry>`: Manipulate HTML elements in space.

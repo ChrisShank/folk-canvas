@@ -15,27 +15,27 @@
         margin: 0;
       }
 
-      spatial-geometry {
+      fc-geometry {
         background: rgb(187, 178, 178);
         box-shadow: rgba(0, 0, 0, 0.2) 1.95px 1.95px 2.6px;
         transition: scale 100ms ease-out, box-shadow 100ms ease-out;
       }
 
-      spatial-geometry:state(move) {
+      fc-geometry:state(move) {
         scale: 1.05;
         box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
       }
     </style>
   </head>
   <body>
-    <spatial-geometry x="100" y="100" width="50" height="50"></spatial-geometry>
-    <spatial-geometry x="100" y="200" width="50" height="50"></spatial-geometry>
-    <spatial-geometry x="100" y="300" width="50" height="50"></spatial-geometry>
+    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
+    <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
 
     <script type="module">
-      import { SpatialGeometry } from '../src/canvas/spatial-geometry.ts';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
 
-      SpatialGeometry.register();
+      FolkGeometry.register();
     </script>
   </body>
 </html>

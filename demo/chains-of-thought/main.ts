@@ -1,29 +1,31 @@
-import { SpatialGeometry } from '../../src/canvas/spatial-geometry.ts';
-import { SpatialConnection } from '../../src/arrows/spatial-connection.ts';
-import { FileSaver } from '../../src/persistence/file.ts';
+import { FolkGeometry } from "../../src/canvas/fc-geometry.ts";
+import { FolkConnection } from "../../src/arrows/fc-connection.ts";
+import { FileSaver } from "../../src/persistence/file.ts";
 
 declare global {
   interface HTMLElementTagNameMap {
-    'spatial-thought': SpatialThought;
+    "fc-thought": FolkThought;
   }
 }
 
-class SpatialThought extends HTMLElement {
-  static tagName = 'spatial-thought';
+class FolkThought extends HTMLElement {
+  static tagName = "fc-thought";
 
   static register() {
     customElements.define(this.tagName, this);
   }
 
-  #deleteButton = this.querySelector('button[name="delete"]') as HTMLButtonElement;
+  #deleteButton = this.querySelector(
+    'button[name="delete"]'
+  ) as HTMLButtonElement;
   #text = this.querySelector('[name="text"]') as HTMLElement;
 
-  #geometry = this.parentElement as SpatialGeometry;
+  #geometry = this.parentElement as FolkGeometry;
 
   constructor() {
     super();
 
-    this.addEventListener('click', this);
+    this.addEventListener("click", this);
   }
 
   get text() {
@@ -31,22 +33,22 @@ class SpatialThought extends HTMLElement {
   }
 
   handleEvent(event: PointerEvent): void {
-    if (event.type === 'click' && event.target === this.#deleteButton) {
+    if (event.type === "click" && event.target === this.#deleteButton) {
       this.#geometry.remove();
 
       document
         .querySelectorAll(
-          `spatial-connection[source="spatial-geometry[id='${this.#geometry.id}']"], 
-          spatial-connection[target="spatial-geometry[id='${this.#geometry.id}']"]`
+          `fc-connection[source="fc-geometry[id='${this.#geometry.id}']"], 
+          fc-connection[target="fc-geometry[id='${this.#geometry.id}']"]`
         )
         .forEach((el) => el.remove());
     }
   }
 }
 
-SpatialGeometry.register();
-SpatialThought.register();
-SpatialConnection.register();
+FolkGeometry.register();
+FolkThought.register();
+FolkConnection.register();
 
 interface Thought {
   id: string;
@@ -68,57 +70,68 @@ interface ChainOfThought {
 const html = String.raw;
 
 function parseHTML(html: string): Element {
-  return document.createRange().createContextualFragment(html).firstElementChild!;
+  return document.createRange().createContextualFragment(html)
+    .firstElementChild!;
 }
 
 function renderThought({ id, x, y, text }: Thought) {
-  return html`<spatial-geometry id="${id}" x="${x}" y="${y}">
-    <spatial-thought>
+  return html`<fc-geometry id="${id}" x="${x}" y="${y}">
+    <fc-thought>
       <div contenteditable="true" name="text">${text}</div>
       <button name="delete">␡</button>
-    </spatial-thought>
-  </spatial-geometry>`;
+    </fc-thought>
+  </fc-geometry>`;
 }
 
 function renderConnection({ sourceId, targetId }: Connection) {
-  return html`<spatial-connection
-    source="spatial-geometry[id='${sourceId}']"
-    target="spatial-geometry[id='${targetId}']"
-  ></spatial-connection>`;
+  return html`<fc-connection
+    source="fc-geometry[id='${sourceId}']"
+    target="fc-geometry[id='${targetId}']"
+  ></fc-connection>`;
 }
 
 function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
-  return html`${thoughts.map(renderThought).join('')}${connections.map(renderConnection).join('')}`;
+  return html`${thoughts.map(renderThought).join("")}${connections
+    .map(renderConnection)
+    .join("")}`;
 }
 
 function parseChainOfThought(): ChainOfThought {
   return {
-    thoughts: Array.from(document.querySelectorAll('spatial-geometry')).map((el) => ({
-      id: el.id,
-      text: (el.firstElementChild as SpatialThought).text,
-      x: el.x,
-      y: el.y,
-    })),
-    connections: Array.from(document.querySelectorAll('spatial-connection')).map((el) => ({
-      sourceId: (el.sourceElement as SpatialGeometry).id,
-      targetId: (el.targetElement as SpatialGeometry).id,
-    })),
+    thoughts: Array.from(document.querySelectorAll("fc-geometry")).map(
+      (el) => ({
+        id: el.id,
+        text: (el.firstElementChild as FolkThought).text,
+        x: el.x,
+        y: el.y,
+      })
+    ),
+    connections: Array.from(document.querySelectorAll("fc-connection")).map(
+      (el) => ({
+        sourceId: (el.sourceElement as FolkGeometry).id,
+        targetId: (el.targetElement as FolkGeometry).id,
+      })
+    ),
   };
 }
 
 const openButton = document.querySelector('button[name="open"]')!;
 const saveButton = document.querySelector('button[name="save"]')!;
 const saveAsButton = document.querySelector('button[name="save-as"]')!;
-const main = document.querySelector('main')!;
-const fileSaver = new FileSaver('chains-of-thought', 'json', 'application/json');
+const main = document.querySelector("main")!;
+const fileSaver = new FileSaver(
+  "chains-of-thought",
+  "json",
+  "application/json"
+);
 
-main.addEventListener('dblclick', (e) => {
+main.addEventListener("dblclick", (e) => {
   if (e.target === main) {
     main.appendChild(
       parseHTML(
         renderThought({
-          id: String(document.querySelectorAll('spatial-thought').length + 1),
-          text: '',
+          id: String(document.querySelectorAll("fc-thought").length + 1),
+          text: "",
           x: e.clientX,
           y: e.clientY,
         })
@@ -138,20 +151,20 @@ async function openFile(showPicker = true) {
   }
 }
 
-async function saveFile(promptNewFile = false) {
+function saveFile(promptNewFile = false) {
   const file = JSON.stringify(parseChainOfThought(), null, 2);
   fileSaver.save(file, promptNewFile);
 }
 
-openButton.addEventListener('click', () => {
+openButton.addEventListener("click", () => {
   openFile();
 });
 
-saveButton.addEventListener('click', () => {
+saveButton.addEventListener("click", () => {
   saveFile();
 });
 
-saveAsButton.addEventListener('click', () => {
+saveAsButton.addEventListener("click", () => {
   saveFile(true);
 });
 
