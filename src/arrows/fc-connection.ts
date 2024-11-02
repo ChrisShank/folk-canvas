@@ -1,6 +1,6 @@
 import { getBoxToBoxArrow } from 'perfect-arrows';
 import { AbstractArrow } from './abstract-arrow.ts';
-import { pointsOnBezierCurves } from './utils.ts';
+import { getSvgPathFromStroke, pointsOnBezierCurves } from './utils.ts';
 import { getStroke, StrokeOptions } from 'perfect-freehand';
 
 export type Arrow = [
@@ -79,25 +79,4 @@ export class FolkConnection extends AbstractArrow {
     this.style.clipPath = `path('${path}')`;
     this.style.backgroundColor = 'black';
   }
-}
-
-function getSvgPathFromStroke(stroke: number[][]): string {
-  if (stroke.length === 0) return '';
-
-  for (const point of stroke) {
-    point[0] = Math.round(point[0] * 100) / 100;
-    point[1] = Math.round(point[1] * 100) / 100;
-  }
-
-  const d = stroke.reduce(
-    (acc, [x0, y0], i, arr) => {
-      const [x1, y1] = arr[(i + 1) % arr.length];
-      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-      return acc;
-    },
-    ['M', ...stroke[0], 'Q']
-  );
-
-  d.push('Z');
-  return d.join(' ');
 }
