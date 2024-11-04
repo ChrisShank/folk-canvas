@@ -53,23 +53,15 @@
       }
 
       fc-geometry {
-        background: rgb(187, 178, 178);
-        box-shadow: rgba(0, 0, 0, 0.2) 1.95px 1.95px 2.6px;
-        transition: scale 100ms ease-out, box-shadow 100ms ease-out;
-      }
-
-      fc-geometry:state(move) {
-        scale: 1.05;
-        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-      }
-
-      #box1 {
-        display: flex;
+        background: black;
+        color: white;
       }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry x="100" y="100" width="50" height="50">
+      <h2>Lorem ipsum</h2>
+    </fc-geometry>
     <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
     <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
 
@@ -80,7 +72,7 @@
 
       const geos = document.querySelectorAll('fc-geometry');
 
-      geos.forEach((el, i) => (el.style.viewTransitionName = `b${i}`));
+      geos.forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
 
       while (true) {
         await document.startViewTransition(() => {

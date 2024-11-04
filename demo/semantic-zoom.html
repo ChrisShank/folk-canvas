@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semantic Zoom</title>
+    <style>
+      html {
+        height: 100%;
+        --spring-easing: linear(
+          0,
+          0.01,
+          0.04 1.5%,
+          0.163 3.2%,
+          0.824 9.2%,
+          1.055,
+          1.199 14.2%,
+          1.24,
+          1.263,
+          1.265 18.2%,
+          1.243 19.9%,
+          0.996 28.8%,
+          0.951,
+          0.93 34.1%,
+          0.929 35.7%,
+          0.935 37.5%,
+          1 46.3%,
+          1.018 51.4%,
+          1.017 55.1%,
+          0.995 68.6%,
+          1.001 85.5%,
+          1
+        );
+        --spring-duration: 1s;
+      }
+
+      body {
+        font-family: monospace;
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-timing-function: var(--spring-easing);
+        animation-duration: var(--spring-duration);
+      }
+
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        height: 100%;
+      }
+
+      input {
+        margin-top: 1rem;
+      }
+
+      fc-geometry {
+        background: black;
+        color: white;
+        max-width: 40ch;
+        padding: 0.5rem;
+        border-radius: 5px;
+
+        h2 {
+          margin: 0;
+        }
+
+        p {
+          margin: 0;
+        }
+      }
+
+      body[zoom='0.5'] fc-geometry p {
+        display: none;
+      }
+
+      body[zoom='0'] fc-geometry {
+        width: 20px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+
+        h2,
+        p {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body zoom="1">
+    <label>
+      Zoom:
+      <input type="range" min="0" max="2" value="1" step="0.1" />
+    </label>
+    <fc-geometry x="100" y="100">
+      <h2>Lorem ispum</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
+        laborum.
+      </p>
+    </fc-geometry>
+
+    <fc-geometry x="400" y="400">
+      <h2>Dolor sit amet</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat.
+      </p>
+    </fc-geometry>
+
+    <fc-geometry x="150" y="600">
+      <h2>Consectetur adipiscing elit</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua.
+      </p>
+    </fc-geometry>
+
+    <script type="module">
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+
+      FolkGeometry.register();
+
+      const range = document.querySelector('input');
+      const geos = document.querySelectorAll('fc-geometry');
+
+      geos.forEach((el, i) => (el.style.viewTransitionName = `b${i}`));
+
+      range.addEventListener('input', (e) => {
+        const currentZoom = range.valueAsNumber;
+        let semanticZoom;
+
+        if (currentZoom < 0.5) {
+          semanticZoom = 0;
+        } else if (currentZoom < 1) {
+          semanticZoom = 0.5;
+        } else if (currentZoom > 2) {
+          semanticZoom = 1;
+        } else {
+          semanticZoom = 2;
+        }
+
+        if (semanticZoom !== Number(document.body.getAttribute('zoom'))) {
+          document.startViewTransition(() => {
+            document.body.setAttribute('zoom', semanticZoom);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
