@@ -9,29 +9,33 @@
         height: 100%;
         --spring-easing: linear(
           0,
-          0.01,
-          0.04 1.5%,
-          0.163 3.2%,
-          0.824 9.2%,
-          1.055,
-          1.199 14.2%,
-          1.24,
-          1.263,
-          1.265 18.2%,
-          1.243 19.9%,
-          0.996 28.8%,
-          0.951,
-          0.93 34.1%,
-          0.929 35.7%,
-          0.935 37.5%,
-          1 46.3%,
-          1.018 51.4%,
-          1.017 55.1%,
-          0.995 68.6%,
-          1.001 85.5%,
+          0.009,
+          0.035 2.1%,
+          0.141,
+          0.281 6.7%,
+          0.723 12.9%,
+          0.938 16.7%,
+          1.017,
+          1.077,
+          1.121,
+          1.149 24.3%,
+          1.159,
+          1.163,
+          1.161,
+          1.154 29.9%,
+          1.129 32.8%,
+          1.051 39.6%,
+          1.017 43.1%,
+          0.991,
+          0.977 51%,
+          0.974 53.8%,
+          0.975 57.1%,
+          0.997 69.8%,
+          1.003 76.9%,
+          1.004 83.8%,
           1
         );
-        --spring-duration: 1s;
+        --spring-duration: 0.4s;
       }
 
       body {
@@ -41,9 +45,15 @@
         margin: 0;
       }
 
-      ::view-transition-group(*),
-      ::view-transition-old(*),
-      ::view-transition-new(*) {
+      ::view-transition-group(g0),
+      ::view-transition-group(g1),
+      ::view-transition-group(g2),
+      ::view-transition-old(g0),
+      ::view-transition-old(g1),
+      ::view-transition-old(g2),
+      ::view-transition-new(g0),
+      ::view-transition-new(g1),
+      ::view-transition-new(g2) {
         animation-timing-function: var(--spring-easing);
         animation-duration: var(--spring-duration);
       }
@@ -57,6 +67,12 @@
         margin-top: 1rem;
       }
 
+      fc-connection {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+      }
+
       fc-geometry {
         background: black;
         color: white;
@@ -66,15 +82,13 @@
 
         h2 {
           margin: 0;
+          /* set the aspect ratio to be the same, needed for view transition */
+          width: fit-content;
         }
 
         p {
           margin: 0;
         }
-      }
-
-      body[zoom='0.5'] fc-geometry p {
-        display: none;
       }
 
       body[zoom='0'] fc-geometry {
@@ -87,14 +101,19 @@
           display: none;
         }
       }
+
+      body[zoom='50'] fc-geometry p {
+        display: none;
+      }
     </style>
   </head>
   <body zoom="1">
     <label>
       Zoom:
-      <input type="range" min="0" max="2" value="1" step="0.1" />
+      <input type="range" min="0" max="100" value="100" />
     </label>
-    <fc-geometry x="100" y="100">
+
+    <fc-geometry id="box1" x="100" y="100">
       <h2>Lorem ispum</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
@@ -105,7 +124,7 @@
       </p>
     </fc-geometry>
 
-    <fc-geometry x="400" y="400">
+    <fc-geometry id="box2" x="400" y="400">
       <h2>Dolor sit amet</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
@@ -114,36 +133,42 @@
       </p>
     </fc-geometry>
 
-    <fc-geometry x="150" y="600">
-      <h2>Consectetur adipiscing elit</h2>
+    <fc-geometry id="box3" x="150" y="600">
+      <h2>Consectetur elit</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
         magna aliqua.
       </p>
     </fc-geometry>
 
+    <fc-connection source="#box1" target="#box2"></fc-connection>
+    <fc-connection source="#box2" target="#box3"></fc-connection>
+    <fc-connection source="#box1" target="#box3"></fc-connection>
+
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkConnection } from '../src/arrows/fc-connection.ts';
 
       FolkGeometry.register();
+      FolkConnection.register();
 
       const range = document.querySelector('input');
-      const geos = document.querySelectorAll('fc-geometry');
 
-      geos.forEach((el, i) => (el.style.viewTransitionName = `b${i}`));
+      document.body.querySelectorAll('fc-geometry').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
+      document.body.querySelectorAll('fc-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
+      document.body.querySelectorAll('h2').forEach((el, i) => (el.style.viewTransitionName = `h${i}`));
+      document.body.querySelectorAll('p').forEach((el, i) => (el.style.viewTransitionName = `p${i}`));
 
       range.addEventListener('input', (e) => {
         const currentZoom = range.valueAsNumber;
         let semanticZoom;
 
-        if (currentZoom < 0.5) {
+        if (currentZoom < 20) {
           semanticZoom = 0;
-        } else if (currentZoom < 1) {
-          semanticZoom = 0.5;
-        } else if (currentZoom > 2) {
-          semanticZoom = 1;
+        } else if (currentZoom < 80) {
+          semanticZoom = 50;
         } else {
-          semanticZoom = 2;
+          semanticZoom = 1;
         }
 
         if (semanticZoom !== Number(document.body.getAttribute('zoom'))) {
