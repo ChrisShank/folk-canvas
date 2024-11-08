@@ -23,25 +23,118 @@
   </head>
   <body>
     <fc-geometry x="50" y="50" height="300" width="500">
-      <s-table></s-table>
+      <s-table>
+        <s-cell column="A" row="1" expression="1"></s-cell>
+        <s-cell column="B" row="1"></s-cell>
+        <s-cell column="C" row="1"></s-cell>
+        <s-cell column="D" row="1"></s-cell>
+        <s-cell column="E" row="1"></s-cell>
+        <s-cell column="F" row="1"></s-cell>
+        <s-cell column="G" row="1"></s-cell>
+        <s-cell column="H" row="1"></s-cell>
+        <s-cell column="I" row="1"></s-cell>
+        <s-cell column="J" row="1"></s-cell>
+        <s-cell column="A" row="2" expression="$A1 * 2"></s-cell>
+        <s-cell column="B" row="2"></s-cell>
+        <s-cell column="C" row="2"></s-cell>
+        <s-cell column="D" row="2"></s-cell>
+        <s-cell column="E" row="2"></s-cell>
+        <s-cell column="F" row="2"></s-cell>
+        <s-cell column="G" row="2"></s-cell>
+        <s-cell column="H" row="2"></s-cell>
+        <s-cell column="I" row="2"></s-cell>
+        <s-cell column="J" row="2"></s-cell>
+        <s-cell column="A" row="3"></s-cell>
+        <s-cell column="B" row="3"></s-cell>
+        <s-cell column="C" row="3"></s-cell>
+        <s-cell column="D" row="3"></s-cell>
+        <s-cell column="E" row="3"></s-cell>
+        <s-cell column="F" row="3"></s-cell>
+        <s-cell column="G" row="3"></s-cell>
+        <s-cell column="H" row="3"></s-cell>
+        <s-cell column="I" row="3"></s-cell>
+        <s-cell column="J" row="3"></s-cell>
+        <s-cell column="A" row="4"></s-cell>
+        <s-cell column="B" row="4"></s-cell>
+        <s-cell column="C" row="4"></s-cell>
+        <s-cell column="D" row="4"></s-cell>
+        <s-cell column="E" row="4"></s-cell>
+        <s-cell column="F" row="4"></s-cell>
+        <s-cell column="G" row="4"></s-cell>
+        <s-cell column="H" row="4"></s-cell>
+        <s-cell column="I" row="4"></s-cell>
+        <s-cell column="J" row="4"></s-cell>
+        <s-cell column="A" row="5"></s-cell>
+        <s-cell column="B" row="5"></s-cell>
+        <s-cell column="C" row="5"></s-cell>
+        <s-cell column="D" row="5"></s-cell>
+        <s-cell column="E" row="5"></s-cell>
+        <s-cell column="F" row="5"></s-cell>
+        <s-cell column="G" row="5"></s-cell>
+        <s-cell column="H" row="5"></s-cell>
+        <s-cell column="I" row="5"></s-cell>
+        <s-cell column="J" row="5"></s-cell>
+        <s-cell column="A" row="6"></s-cell>
+        <s-cell column="B" row="6"></s-cell>
+        <s-cell column="C" row="6"></s-cell>
+        <s-cell column="D" row="6"></s-cell>
+        <s-cell column="E" row="6"></s-cell>
+        <s-cell column="F" row="6"></s-cell>
+        <s-cell column="G" row="6"></s-cell>
+        <s-cell column="H" row="6"></s-cell>
+        <s-cell column="I" row="6"></s-cell>
+        <s-cell column="J" row="6"></s-cell>
+        <s-cell column="A" row="7"></s-cell>
+        <s-cell column="B" row="7"></s-cell>
+        <s-cell column="C" row="7"></s-cell>
+        <s-cell column="D" row="7"></s-cell>
+        <s-cell column="E" row="7"></s-cell>
+        <s-cell column="F" row="7"></s-cell>
+        <s-cell column="G" row="7"></s-cell>
+        <s-cell column="H" row="7"></s-cell>
+        <s-cell column="I" row="7"></s-cell>
+        <s-cell column="J" row="7"></s-cell>
+        <s-cell column="A" row="8"></s-cell>
+        <s-cell column="B" row="8"></s-cell>
+        <s-cell column="C" row="8"></s-cell>
+        <s-cell column="D" row="8"></s-cell>
+        <s-cell column="E" row="8"></s-cell>
+        <s-cell column="F" row="8"></s-cell>
+        <s-cell column="G" row="8"></s-cell>
+        <s-cell column="H" row="8"></s-cell>
+        <s-cell column="I" row="8"></s-cell>
+        <s-cell column="J" row="8"></s-cell>
+        <s-cell column="A" row="9"></s-cell>
+        <s-cell column="B" row="9"></s-cell>
+        <s-cell column="C" row="9"></s-cell>
+        <s-cell column="D" row="9"></s-cell>
+        <s-cell column="E" row="9"></s-cell>
+        <s-cell column="F" row="9"></s-cell>
+        <s-cell column="G" row="9"></s-cell>
+        <s-cell column="H" row="9"></s-cell>
+        <s-cell column="I" row="9"></s-cell>
+        <s-cell column="J" row="9"></s-cell>
+        <s-cell column="A" row="10"></s-cell>
+        <s-cell column="B" row="10"></s-cell>
+        <s-cell column="C" row="10"></s-cell>
+        <s-cell column="D" row="10"></s-cell>
+        <s-cell column="E" row="10"></s-cell>
+        <s-cell column="F" row="10"></s-cell>
+        <s-cell column="G" row="10"></s-cell>
+        <s-cell column="H" row="10"></s-cell>
+        <s-cell column="I" row="10"></s-cell>
+        <s-cell column="J" row="10"></s-cell>
+      </s-table>
     </fc-geometry>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import {
-        SpreadsheetTable,
-        SpreadsheetHeader,
-        SpreadsheetCell,
-      } from '../src/spreadsheet/spreadsheet.ts';
+      import { SpreadsheetTable, SpreadsheetHeader, SpreadsheetCell } from '../src/spreadsheet/spreadsheet.ts';
 
       FolkGeometry.register();
       SpreadsheetTable.register();
       SpreadsheetHeader.register();
       SpreadsheetCell.register();
-
-      document.querySelector(`s-cell[column="A"][row="1"]`).expression = '1';
-      document.querySelector(`s-cell[column="A"][row="2"]`).expression =
-        '$A1 * 2';
     </script>
   </body>
 </html>

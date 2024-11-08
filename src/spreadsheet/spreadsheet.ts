@@ -1,10 +1,14 @@
 const styles = new CSSStyleSheet();
+// hardcoded column and row numbers
 styles.replaceSync(`
 :host {
-  --column-number: 26;
-  --row-number: 100;
+  --column-number: 10;
+  --row-number: 10;
   --cell-height: 1.75rem;
   --cell-width: 100px;
+  --border-color: #e1e1e1;
+  border: solid 1px var(--border-color);
+  box-sizing: border-box;
   display: grid;
   font-family: monospace;
   grid-template-columns: 50px repeat(var(--column-number), var(--cell-width));
@@ -52,7 +56,6 @@ s-rows {
 
 s-header {
   background-color: #f8f9fa;
-  border: 1px solid #e1e1e1;
   display: flex;
   padding: 0.125rem 0.5rem;
   align-items: center;
@@ -74,17 +77,21 @@ s-header {
 }
 
 s-body {
-  background-color: rgb(255, 255, 255);
   display: grid;
   grid-column: 2 / -1;
   grid-row: 2 / -1;
   grid-template-columns: subgrid;
   grid-template-rows: subgrid;
+  }
+  
+s-columns, s-rows, s-body {
+  background-color: var(--border-color);
+  gap: 1px;
 }
 
 ::slotted(s-cell) {
   align-items: center;
-  border: 0.5px solid #e1e1e1;
+  background-color: rgb(255, 255, 255);
   display: flex;
   padding: 0.25rem;
   justify-content: start;
@@ -96,8 +103,8 @@ s-body {
 }
 
 ::slotted(s-cell:focus) {
-  border: 2px solid #1b73e8;
-  outline: none;
+  outline: 2px solid #1b73e8;
+  z-index: 2;
 }
 `);
 
@@ -114,6 +121,23 @@ function getColumnIndex(name: string) {
 function relativeColumnName(name: string, num: number) {
   const index = alphabet.indexOf(name);
   return alphabet[index + num];
+}
+
+export function templateCells(numberOfRows: number, numberOfColumns: number, expressions: Record<string, string>) {
+  const cells: string[] = [];
+  for (let i = 0; i < numberOfRows; i += 1) {
+    for (let j = 0; j < numberOfColumns; j += 1) {
+      const column = getColumnName(j);
+      const row = i + 1;
+      const expression = expressions[`${column}${row}`];
+      cells.push(
+        `<s-cell column="${column}" row="${row}" tabindex="0" ${
+          expression ? `expression="${expression}"` : ''
+        }></s-cell>`
+      );
+    }
+  }
+  return cells.join('\n');
 }
 
 export class SpreadsheetTable extends HTMLElement {
@@ -139,17 +163,24 @@ export class SpreadsheetTable extends HTMLElement {
     this.addEventListener('focusout', this);
 
     this.#shadow.adoptedStyleSheets.push(styles);
-    const columnHeaders = Array.from({ length: 26 })
+  }
+
+  connectedCallback() {
+    this.#shadow.textContent = '';
+
+    const cells = this.querySelector('s-cell');
+
+    const columnHeaders = Array.from({ length: 10 })
       .map((_, i) => `<s-header column="${getColumnName(i)}">${getColumnName(i)}</s-header>`)
       .join('');
-    const columnRows = Array.from({ length: 100 })
+    const rowHeaders = Array.from({ length: 10 })
       .map((_, i) => `<s-header row="${i + 1}">${i + 1}</s-header>`)
       .join('');
 
     this.#shadow.innerHTML = `
       <s-header empty></s-header>
       <s-columns>${columnHeaders}</s-columns>
-      <s-rows>${columnRows}</s-rows>
+      <s-rows>${rowHeaders}</s-rows>
       <s-body><slot></slot></s-body>
       <textarea hidden></textarea>
     `;
@@ -163,18 +194,6 @@ export class SpreadsheetTable extends HTMLElement {
   }
   set range(range) {
     this.#range = range;
-  }
-
-  connectedCallback() {
-    let html = '';
-
-    for (let i = 0; i < 100; i += 1) {
-      for (let j = 0; j < 26; j += 1) {
-        html += `<s-cell column="${getColumnName(j)}" row="${i + 1}" tabindex="0"></s-cell>`;
-      }
-    }
-
-    this.innerHTML = html;
   }
 
   handleEvent(event: Event) {
@@ -315,6 +334,10 @@ export class SpreadsheetCell extends HTMLElement {
   connectedCallback() {
     // this should run after all of the other cells have run
     this.expression = this.getAttribute('expression') || '';
+
+    if (this.tabIndex === -1) {
+      this.tabIndex = 0;
+    }
   }
 
   get type() {
@@ -342,8 +365,15 @@ export class SpreadsheetCell extends HTMLElement {
   }
 
   #expression = '';
-  #dependencies: SpreadsheetCell[] = [];
+
+  #dependencies: ReadonlyArray<SpreadsheetCell> = [];
+
+  get dependencies() {
+    return this.#dependencies;
+  }
+
   #function = new Function();
+
   get expression() {
     return this.#expression;
   }
@@ -361,12 +391,14 @@ export class SpreadsheetCell extends HTMLElement {
 
     const argNames: string[] = expression.match(/\$[A-Z]+\d+/g) ?? [];
 
-    this.#dependencies = argNames
-      .map((dep) => {
-        const [, column, row] = dep.split(/([A-Z]+)(\d+)/s);
-        return this.#getCell(column, row);
-      })
-      .filter((cell) => cell !== null);
+    this.#dependencies = Object.freeze(
+      argNames
+        .map((dep) => {
+          const [, column, row] = dep.split(/([A-Z]+)(\d+)/s);
+          return this.#getCell(column, row);
+        })
+        .filter((cell) => cell !== null)
+    );
 
     this.#dependencies.forEach((dep) => dep.addEventListener('propagate', this));
 
@@ -375,9 +407,8 @@ export class SpreadsheetCell extends HTMLElement {
     this.#evaluate();
   }
 
-  // More generic parsing?
-  #value = NaN;
-  get value(): number {
+  #value: any;
+  get value() {
     return this.#value;
   }
 
@@ -408,12 +439,10 @@ export class SpreadsheetCell extends HTMLElement {
 
       const value = this.#function.apply(null, args);
 
-      if (typeof value === 'number' && !Number.isNaN(value)) {
-        this.#value = value;
-        this.textContent = value.toString();
-        this.dispatchEvent(new Event('propagate'));
-        this.setAttribute('type', 'number');
-      }
+      this.#value = value;
+      this.textContent = value.toString();
+      this.dispatchEvent(new Event('propagate'));
+      this.setAttribute('type', typeof value);
     } catch (error) {
       console.log(error);
     }
