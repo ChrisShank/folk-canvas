@@ -90,6 +90,7 @@ s-columns, s-rows, s-body {
 }
 
 ::slotted(s-cell) {
+  box-sizing: border-box;
   align-items: center;
   background-color: rgb(255, 255, 255);
   display: flex;
@@ -140,10 +141,18 @@ export function templateCells(numberOfRows: number, numberOfColumns: number, exp
   return cells.join('\n');
 }
 
+declare global {
+  interface HTMLElementTagNameMap {
+    's-table': SpreadsheetTable;
+  }
+}
+
 export class SpreadsheetTable extends HTMLElement {
   static tagName = 's-table';
 
   static register() {
+    SpreadsheetCell.register();
+    SpreadsheetHeader.register();
     customElements.define(this.tagName, this);
   }
 
@@ -168,14 +177,33 @@ export class SpreadsheetTable extends HTMLElement {
   connectedCallback() {
     this.#shadow.textContent = '';
 
-    const cells = this.querySelector('s-cell');
+    const columnNames = new Set();
+    const rowNames = new Set();
 
-    const columnHeaders = Array.from({ length: 10 })
-      .map((_, i) => `<s-header column="${getColumnName(i)}">${getColumnName(i)}</s-header>`)
-      .join('');
-    const rowHeaders = Array.from({ length: 10 })
-      .map((_, i) => `<s-header row="${i + 1}">${i + 1}</s-header>`)
-      .join('');
+    const cells = this.querySelectorAll('s-cell');
+
+    cells.forEach((cell) => {
+      columnNames.add(cell.column);
+      rowNames.add(cell.row);
+    });
+
+    const columns = Array.from({ length: columnNames.size }).map((_, i) => getColumnName(i));
+    const rows = Array.from({ length: rowNames.size }).map((_, i) => i + 1);
+
+    const columnHeaders = columns.map((column) => `<s-header column="${column}">${column}</s-header>`).join('\n');
+    const rowHeaders = rows.map((row) => `<s-header row="${row}">${row}</s-header>`).join('\n');
+
+    const style = `<style>
+      ${columns
+        .map(
+          (column) =>
+            `s-header[column="${column}"], ::slotted(s-cell[column="${column}"]) { grid-column: ${
+              getColumnIndex(column) + 1
+            }; }`
+        )
+        .join('\n')}
+      ${rows.map((row) => `s-header[row="${row}"], ::slotted(s-cell[row="${row}"]) { grid-row: ${row}; }`).join('\n')}
+    </style>`;
 
     this.#shadow.innerHTML = `
       <s-header empty></s-header>
@@ -183,6 +211,7 @@ export class SpreadsheetTable extends HTMLElement {
       <s-rows>${rowHeaders}</s-rows>
       <s-body><slot></slot></s-body>
       <textarea hidden></textarea>
+      ${style}
     `;
 
     this.#textarea = this.#shadow.querySelector('textarea')!;
@@ -300,6 +329,12 @@ export class SpreadsheetTable extends HTMLElement {
   }
 }
 
+declare global {
+  interface HTMLElementTagNameMap {
+    's-header': SpreadsheetHeader;
+  }
+}
+
 export class SpreadsheetHeader extends HTMLElement {
   static tagName = 's-header';
 
@@ -321,6 +356,12 @@ export class SpreadsheetHeader extends HTMLElement {
     } else {
       this.#internals.states.delete('selected');
     }
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    's-cell': SpreadsheetCell;
   }
 }
 

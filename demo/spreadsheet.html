@@ -14,15 +14,10 @@
         position: relative;
         margin: 0;
       }
-
-      s-table {
-        height: 100%;
-        width: 100%;
-      }
     </style>
   </head>
   <body>
-    <fc-geometry x="50" y="50" height="300" width="500">
+    <fc-geometry x="50" y="50" width="500">
       <s-table>
         <s-cell column="A" row="1" expression="1"></s-cell>
         <s-cell column="B" row="1"></s-cell>
@@ -129,12 +124,10 @@
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { SpreadsheetTable, SpreadsheetHeader, SpreadsheetCell } from '../src/spreadsheet/spreadsheet.ts';
+      import { SpreadsheetTable } from '../src/spreadsheet/spreadsheet.ts';
 
       FolkGeometry.register();
       SpreadsheetTable.register();
-      SpreadsheetHeader.register();
-      SpreadsheetCell.register();
     </script>
   </body>
 </html>
