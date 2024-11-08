@@ -7,9 +7,7 @@ class ResizeObserverManager {
   #vo = new ResizeObserver((entries) => {
     for (const entry of entries) {
       this.#elementEntry.set(entry.target, entry);
-      this.#elementMap
-        .get(entry.target)
-        ?.forEach((callback) => callback(entry));
+      this.#elementMap.get(entry.target)?.forEach((callback) => callback(entry));
     }
   });
 
@@ -45,13 +43,13 @@ class ResizeObserverManager {
 
 const resizeObserver = new ResizeObserverManager();
 
-export type Shape = "rectangle" | "circle" | "triangle";
+export type Shape = 'rectangle' | 'circle' | 'triangle';
 
 export type MoveEventDetail = { movementX: number; movementY: number };
 
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
   constructor(detail: MoveEventDetail) {
-    super("move", { detail, cancelable: true, bubbles: true });
+    super('move', { detail, cancelable: true, bubbles: true });
   }
 }
 
@@ -59,7 +57,7 @@ export type ResizeEventDetail = { movementX: number; movementY: number };
 
 export class ResizeEvent extends CustomEvent<MoveEventDetail> {
   constructor(detail: MoveEventDetail) {
-    super("resize", { detail, cancelable: true, bubbles: true });
+    super('resize', { detail, cancelable: true, bubbles: true });
   }
 }
 
@@ -67,11 +65,11 @@ export type RotateEventDetail = { rotate: number };
 
 export class RotateEvent extends CustomEvent<RotateEventDetail> {
   constructor(detail: RotateEventDetail) {
-    super("rotate", { detail, cancelable: true, bubbles: true });
+    super('rotate', { detail, cancelable: true, bubbles: true });
   }
 }
 
-export type Dimension = number | "auto";
+export type Dimension = number | 'auto';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(`
@@ -79,6 +77,7 @@ styles.replaceSync(`
   display: block;
   position: absolute;
   cursor: var(--fc-move, move);
+  box-sizing: border-box;
 }
 
 :host::before {
@@ -86,6 +85,12 @@ styles.replaceSync(`
   position: absolute;
   inset: -10px -10px -10px -10px;
   z-index: -1;
+}
+
+div {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 ::slotted(*) {
@@ -180,13 +185,13 @@ styles.replaceSync(`
 
 declare global {
   interface HTMLElementTagNameMap {
-    "fc-geometry": FolkGeometry;
+    'fc-geometry': FolkGeometry;
   }
 }
 
 // TODO: add z coordinate?
 export class FolkGeometry extends HTMLElement {
-  static tagName = "fc-geometry";
+  static tagName = 'fc-geometry';
 
   static register() {
     customElements.define(this.tagName, this);
@@ -194,17 +199,17 @@ export class FolkGeometry extends HTMLElement {
 
   #internals = this.attachInternals();
 
-  #type = (this.getAttribute("type") || "rectangle") as Shape;
+  #type = (this.getAttribute('type') || 'rectangle') as Shape;
   get type(): Shape {
     return this.#type;
   }
 
   set type(type: Shape) {
-    this.setAttribute("type", type);
+    this.setAttribute('type', type);
   }
 
   #previousX = 0;
-  #x = Number(this.getAttribute("x")) || 0;
+  #x = Number(this.getAttribute('x')) || 0;
   get x() {
     return this.#x;
   }
@@ -212,11 +217,11 @@ export class FolkGeometry extends HTMLElement {
   set x(x) {
     this.#previousX = this.#x;
     this.#x = x;
-    this.#requestUpdate("x");
+    this.#requestUpdate('x');
   }
 
   #previousY = 0;
-  #y = Number(this.getAttribute("y")) || 0;
+  #y = Number(this.getAttribute('y')) || 0;
   get y() {
     return this.#y;
   }
@@ -224,7 +229,7 @@ export class FolkGeometry extends HTMLElement {
   set y(y) {
     this.#previousY = this.#y;
     this.#y = y;
-    this.#requestUpdate("y");
+    this.#requestUpdate('y');
   }
 
   #autoContentRect = this.getBoundingClientRect();
@@ -232,48 +237,48 @@ export class FolkGeometry extends HTMLElement {
   #previousWidth: Dimension = 0;
   #width: Dimension = 0;
   get width(): number {
-    if (this.#width === "auto") {
+    if (this.#width === 'auto') {
       return this.#autoContentRect.width;
     }
     return this.#width;
   }
 
   set width(width: Dimension) {
-    if (width === "auto") {
+    if (width === 'auto') {
       resizeObserver.observe(this, this.#onResize);
-    } else if (this.#width === "auto" && this.#height !== "auto") {
+    } else if (this.#width === 'auto' && this.#height !== 'auto') {
       resizeObserver.unobserve(this, this.#onResize);
     }
     this.#previousWidth = this.#width;
     this.#width = width;
-    this.#requestUpdate("width");
+    this.#requestUpdate('width');
   }
 
   #previousHeight: Dimension = 0;
   #height: Dimension = 0;
   get height(): number {
-    if (this.#height === "auto") {
+    if (this.#height === 'auto') {
       return this.#autoContentRect.height;
     }
     return this.#height;
   }
 
   set height(height: Dimension) {
-    if (height === "auto") {
+    if (height === 'auto') {
       resizeObserver.observe(this, this.#onResize);
-    } else if (this.#height === "auto" && this.#width !== "auto") {
+    } else if (this.#height === 'auto' && this.#width !== 'auto') {
       resizeObserver.unobserve(this, this.#onResize);
     }
 
     this.#previousHeight = this.#height;
     this.#height = height;
-    this.#requestUpdate("height");
+    this.#requestUpdate('height');
   }
 
   #initialRotation = 0;
   #startAngle = 0;
   #previousRotate = 0;
-  #rotate = Number(this.getAttribute("rotate")) || 0;
+  #rotate = Number(this.getAttribute('rotate')) || 0;
   get rotate(): number {
     return this.#rotate;
   }
@@ -281,16 +286,16 @@ export class FolkGeometry extends HTMLElement {
   set rotate(rotate: number) {
     this.#previousRotate = this.#rotate;
     this.#rotate = rotate;
-    this.#requestUpdate("rotate");
+    this.#requestUpdate('rotate');
   }
 
   constructor() {
     super();
 
-    this.addEventListener("pointerdown", this);
+    this.addEventListener('pointerdown', this);
 
     const shadowRoot = this.attachShadow({
-      mode: "open",
+      mode: 'open',
       delegatesFocus: true,
     });
     shadowRoot.adoptedStyleSheets.push(styles);
@@ -303,14 +308,14 @@ export class FolkGeometry extends HTMLElement {
   <button part="resize-ne"></button>
   <button part="resize-se"></button>
   <button part="resize-sw"></button>
-  <slot></slot>`;
+  <div><slot></slot></div>`;
 
-    this.height = Number(this.getAttribute("height")) || "auto";
-    this.width = Number(this.getAttribute("width")) || "auto";
+    this.height = Number(this.getAttribute('height')) || 'auto';
+    this.width = Number(this.getAttribute('width')) || 'auto';
   }
 
   connectedCallback() {
-    this.#update(new Set(["type", "x", "y", "height", "width", "rotate"]));
+    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
   }
 
   disconnectedCallback() {
@@ -319,7 +324,7 @@ export class FolkGeometry extends HTMLElement {
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
   getBoundingPath(): string {
-    return "";
+    return '';
   }
 
   // We might also want some kind of utility function that maps a path into an approximate set of vertices.
@@ -329,13 +334,13 @@ export class FolkGeometry extends HTMLElement {
 
   handleEvent(event: PointerEvent) {
     switch (event.type) {
-      case "pointerdown": {
+      case 'pointerdown': {
         if (event.button !== 0 || event.ctrlKey) return;
 
         const target = event.composedPath()[0] as HTMLElement;
 
         // Store initial angle on rotation start
-        if (target.getAttribute("part") === "rotate") {
+        if (target.getAttribute('part') === 'rotate') {
           // We need to store initial rotation/angle somewhere.
           // This is a little awkward as we'll want to do *quite a lot* of this kind of thing.
           // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
@@ -344,26 +349,23 @@ export class FolkGeometry extends HTMLElement {
           this.#initialRotation = this.#rotate;
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
-          this.#startAngle = Math.atan2(
-            event.clientY - centerY,
-            event.clientX - centerX
-          );
+          this.#startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
         }
 
         // ignore interactions from slotted elements.
-        if (target !== this && !target.hasAttribute("part")) return;
+        if (target !== this && !target.hasAttribute('part')) return;
 
-        target.addEventListener("pointermove", this);
-        this.addEventListener("lostpointercapture", this);
+        target.addEventListener('pointermove', this);
+        this.addEventListener('lostpointercapture', this);
         target.setPointerCapture(event.pointerId);
 
-        const interaction = target.getAttribute("part") || "move";
+        const interaction = target.getAttribute('part') || 'move';
         this.#internals.states.add(interaction);
 
         this.focus();
         return;
       }
-      case "pointermove": {
+      case 'pointermove': {
         const target = event.target as HTMLElement;
 
         if (target === null) return;
@@ -374,39 +376,36 @@ export class FolkGeometry extends HTMLElement {
           return;
         }
 
-        const part = target.getAttribute("part");
+        const part = target.getAttribute('part');
 
         if (part === null) return;
 
-        if (part.includes("resize")) {
+        if (part.includes('resize')) {
           // This triggers a move and resize event :(
-          if (part.includes("-n")) {
+          if (part.includes('-n')) {
             this.y += event.movementY;
             this.height -= event.movementY;
           }
 
-          if (part.endsWith("e")) {
+          if (part.endsWith('e')) {
             this.width += event.movementX;
           }
 
-          if (part.includes("-s")) {
+          if (part.includes('-s')) {
             this.height += event.movementY;
           }
 
-          if (part.endsWith("w")) {
+          if (part.endsWith('w')) {
             this.x += event.movementX;
             this.width -= event.movementX;
           }
           return;
         }
 
-        if (part === "rotate") {
+        if (part === 'rotate') {
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
-          const currentAngle = Math.atan2(
-            event.clientY - centerY,
-            event.clientX - centerX
-          );
+          const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
 
           const deltaAngle = currentAngle - this.#startAngle;
           this.rotate = this.#initialRotation + (deltaAngle * 180) / Math.PI;
@@ -415,12 +414,12 @@ export class FolkGeometry extends HTMLElement {
 
         return;
       }
-      case "lostpointercapture": {
+      case 'lostpointercapture': {
         const target = event.composedPath()[0] as HTMLElement;
-        const interaction = target.getAttribute("part") || "move";
+        const interaction = target.getAttribute('part') || 'move';
         this.#internals.states.delete(interaction);
-        target.removeEventListener("pointermove", this);
-        this.removeEventListener("lostpointercapture", this);
+        target.removeEventListener('pointermove', this);
+        this.removeEventListener('lostpointercapture', this);
         return;
       }
     }
@@ -446,14 +445,14 @@ export class FolkGeometry extends HTMLElement {
 
   // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
   #update(updatedProperties: Set<string>) {
-    if (updatedProperties.has("type")) {
+    if (updatedProperties.has('type')) {
       // TODO: Update shape styles. For many shapes, we could just use clip-path to style the shape.
       // If we use relative values in `clip-path: polygon()`, then no JS is needed to style the shape
       // If `clip-path: path()` is used then we need to update the path in JS.
       // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
     }
 
-    if (updatedProperties.has("x") || updatedProperties.has("y")) {
+    if (updatedProperties.has('x') || updatedProperties.has('y')) {
       // Although the change in movement isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new MoveEvent({
@@ -463,12 +462,12 @@ export class FolkGeometry extends HTMLElement {
       );
 
       if (notCancelled) {
-        if (updatedProperties.has("x")) {
+        if (updatedProperties.has('x')) {
           // In the future, when CSS `attr()` is supported we could define this x/y projection in CSS.
           this.style.left = `${this.#x}px`;
         }
 
-        if (updatedProperties.has("y")) {
+        if (updatedProperties.has('y')) {
           this.style.top = `${this.#y}px`;
         }
       } else {
@@ -477,26 +476,21 @@ export class FolkGeometry extends HTMLElement {
       }
     }
 
-    if (updatedProperties.has("width") || updatedProperties.has("height")) {
+    if (updatedProperties.has('width') || updatedProperties.has('height')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(
         new ResizeEvent({
-          movementX:
-            this.width -
-            (this.#previousWidth === "auto" ? 0 : this.#previousWidth),
-          movementY:
-            this.height -
-            (this.#previousHeight === "auto" ? 0 : this.#previousHeight),
+          movementX: this.width - (this.#previousWidth === 'auto' ? 0 : this.#previousWidth),
+          movementY: this.height - (this.#previousHeight === 'auto' ? 0 : this.#previousHeight),
         })
       );
       if (notCancelled) {
-        if (updatedProperties.has("width")) {
-          this.style.width = this.#width === "auto" ? "" : `${this.#width}px`;
+        if (updatedProperties.has('width')) {
+          this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
         }
 
-        if (updatedProperties.has("height")) {
-          this.style.height =
-            this.#height === "auto" ? "" : `${this.#height}px`;
+        if (updatedProperties.has('height')) {
+          this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
         }
       } else {
         // TODO: Revert changes to position too
@@ -505,14 +499,12 @@ export class FolkGeometry extends HTMLElement {
       }
     }
 
-    if (updatedProperties.has("rotate")) {
+    if (updatedProperties.has('rotate')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(
-        new RotateEvent({ rotate: this.#rotate - this.#previousRotate })
-      );
+      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotate - this.#previousRotate }));
 
       if (notCancelled) {
-        if (updatedProperties.has("rotate")) {
+        if (updatedProperties.has('rotate')) {
           this.style.rotate = `${this.#rotate}deg`;
         }
       } else {
@@ -527,25 +519,17 @@ export class FolkGeometry extends HTMLElement {
 
     const notCancelled = this.dispatchEvent(
       new ResizeEvent({
-        movementX:
-          this.width -
-          (this.#previousWidth === "auto"
-            ? previousRect.width
-            : this.#previousWidth),
-        movementY:
-          this.height -
-          (this.#previousHeight === "auto"
-            ? previousRect.height
-            : this.#previousHeight),
+        movementX: this.width - (this.#previousWidth === 'auto' ? previousRect.width : this.#previousWidth),
+        movementY: this.height - (this.#previousHeight === 'auto' ? previousRect.height : this.#previousHeight),
       })
     );
 
     if (!notCancelled) {
-      if (this.#height === "auto") {
+      if (this.#height === 'auto') {
         this.height = previousRect?.height || 0;
       }
 
-      if (this.#width === "auto") {
+      if (this.#width === 'auto') {
         this.width = previousRect?.width || 0;
       }
     }
