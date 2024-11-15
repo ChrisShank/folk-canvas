@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "vite demo",
     "build": "vite build demo --base=/folk-canvas",
-    "preview": "deno run build && vite preview demo"
+    "preview": "vite build demo && vite preview demo"
   },
   "imports": {
     "perfect-arrows": "npm:perfect-arrows@^0.3.7",

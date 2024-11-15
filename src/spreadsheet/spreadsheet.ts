@@ -24,6 +24,7 @@ textarea {
   background-color: rgba(255, 255, 255, 0.75);
   grid-column: var(--text-column, 0);
   grid-row: var(--text-row, 0);
+  z-index: 11;
 }
 
 s-columns {
@@ -105,7 +106,7 @@ s-columns, s-rows, s-body {
 
 ::slotted(s-cell:focus) {
   outline: 2px solid #1b73e8;
-  z-index: 2;
+  z-index: 4;
 }
 `);
 
@@ -151,9 +152,9 @@ export class SpreadsheetTable extends HTMLElement {
   static tagName = 's-table';
 
   static register() {
+    customElements.define(this.tagName, this);
     SpreadsheetCell.register();
     SpreadsheetHeader.register();
-    customElements.define(this.tagName, this);
   }
 
   #shadow = this.attachShadow({ mode: 'open' });
@@ -223,6 +224,10 @@ export class SpreadsheetTable extends HTMLElement {
   }
   set range(range) {
     this.#range = range;
+  }
+
+  getCell(column: string, row: number | string): SpreadsheetCell | null {
+    return this.querySelector(`s-cell[column="${column}"][row="${row}"]`);
   }
 
   handleEvent(event: Event) {
@@ -454,7 +459,7 @@ export class SpreadsheetCell extends HTMLElement {
   }
 
   #getCell(column: string, row: number | string): SpreadsheetCell | null {
-    return document.querySelector(`s-cell[column="${column}"][row="${row}"]`);
+    return this.parentElement!.querySelector(`s-cell[column="${column}"][row="${row}"]`);
   }
 
   get cellAbove() {
