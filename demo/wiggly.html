@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wiggly</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      fc-geometry {
+        border: 1px solid black;
+        border-radius: 3px;
+      }
+
+      fc-rope {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <fc-geometry id="box1" x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry id="box2" x="300" y="105">Hello World</fc-geometry>
+    <fc-rope source="#box1" target="#box2"></fc-rope>
+
+    <script type="module">
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkRope } from '../src/arrows/fc-rope.ts';
+
+      FolkGeometry.register();
+      FolkRope.register();
+    </script>
+  </body>
+</html>

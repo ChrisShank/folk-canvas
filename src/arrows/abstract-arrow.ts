@@ -1,11 +1,7 @@
+import { Vertex } from './utils';
 import { VisualObserverEntry, VisualObserverManager } from './visual-observer';
 
 const visualObserver = new VisualObserverManager();
-
-interface Vertex {
-  x: number;
-  y: number;
-}
 
 const vertexRegex = /(?<x>-?([0-9]*[.])?[0-9]+),\s*(?<y>-?([0-9]*[.])?[0-9]+)/;
 
@@ -38,7 +34,7 @@ export class AbstractArrow extends HTMLElement {
     this.observeSource();
   }
 
-  #sourceRect!: DOMRectReadOnly;
+  #sourceRect: DOMRectReadOnly | undefined;
   get sourceRect() {
     return this.#sourceRect;
   }
@@ -64,7 +60,7 @@ export class AbstractArrow extends HTMLElement {
     this.observeTarget();
   }
 
-  #targetRect!: DOMRectReadOnly;
+  #targetRect: DOMRectReadOnly | undefined;
   get targetRect() {
     return this.#targetRect;
   }
@@ -80,8 +76,8 @@ export class AbstractArrow extends HTMLElement {
   };
 
   connectedCallback() {
-    this.source = this.getAttribute('source') || '';
-    this.target = this.getAttribute('target') || '';
+    this.source = this.getAttribute('source') || this.#source;
+    this.target = this.getAttribute('target') || this.#target;
   }
 
   disconnectedCallback() {
@@ -103,14 +99,14 @@ export class AbstractArrow extends HTMLElement {
       this.#sourceRect = DOMRectReadOnly.fromRect(vertex);
       this.#update();
     } else {
-      const el = document.querySelector(this.source);
+      this.#sourceElement = document.querySelector(this.source);
 
-      if (el === null) {
+      if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
       }
 
-      this.#sourceElement = el;
       visualObserver.observe(this.#sourceElement, this.#sourceCallback);
+      this.#sourceRect = this.#sourceElement.getBoundingClientRect();
     }
   }
 
@@ -136,6 +132,7 @@ export class AbstractArrow extends HTMLElement {
       }
 
       visualObserver.observe(this.#targetElement, this.#targetCallback);
+      this.#targetRect = this.#targetElement.getBoundingClientRect();
     }
   }
 
@@ -148,8 +145,9 @@ export class AbstractArrow extends HTMLElement {
   #update() {
     if (this.#sourceRect === undefined || this.#targetRect === undefined) return;
 
-    this.render();
+    this.render(this.#sourceRect, this.#targetRect);
   }
 
-  render() {}
+  // @ts-ignore
+  render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {}
 }

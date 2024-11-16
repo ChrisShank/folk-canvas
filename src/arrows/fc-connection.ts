@@ -56,6 +56,11 @@ export class FolkConnection extends AbstractArrow {
   override render() {
     const { sourceRect, targetRect } = this;
 
+    if (sourceRect === undefined || targetRect === undefined) {
+      this.style.clipPath = '';
+      return;
+    }
+
     const [sx, sy, cx, cy, ex, ey] = getBoxToBoxArrow(
       sourceRect.x,
       sourceRect.y,
