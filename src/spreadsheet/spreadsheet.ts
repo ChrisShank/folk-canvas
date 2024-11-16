@@ -152,9 +152,9 @@ export class SpreadsheetTable extends HTMLElement {
   static tagName = 's-table';
 
   static register() {
-    customElements.define(this.tagName, this);
     SpreadsheetCell.register();
     SpreadsheetHeader.register();
+    customElements.define(this.tagName, this);
   }
 
   #shadow = this.attachShadow({ mode: 'open' });
