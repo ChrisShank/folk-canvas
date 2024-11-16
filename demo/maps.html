@@ -19,7 +19,7 @@
         margin: 0;
       }
 
-      leaflet-map,
+      folk-map,
       geo-wiki {
         display: block;
         height: 100%;
@@ -38,34 +38,27 @@
   </head>
   <body>
     <fc-geometry x="25" y="100" width="400" height="200">
-      <leaflet-map coordinates="52.09, 5.12" zoom="13"></leaflet-map>
+      <folk-map coordinates="52.09, 5.12" zoom="13"></folk-map>
     </fc-geometry>
 
     <fc-geometry x="50" y="550" width="400" height="250">
-      <leaflet-map
-        coordinates="51.50404120260676, -0.14007568359375003"
-        zoom="13"
-      ></leaflet-map>
+      <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
     </fc-geometry>
 
     <fc-geometry x="500" y="400" width="500" height="300">
-      <geo-wiki
-        coordinates="51.50404120260676, -0.14007568359375003"
-      ></geo-wiki>
+      <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
     </fc-geometry>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { LeafletMap } from '../src/maps';
+      import { FolkMap } from '../src/maps';
+
       FolkGeometry.register();
-      LeafletMap.register();
+      FolkMap.register();
 
       function collisionDetection(rect1, rect2) {
         return (
-          rect1.left < rect2.right &&
-          rect1.right > rect2.left &&
-          rect1.top < rect2.bottom &&
-          rect1.bottom > rect2.top
+          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
         );
       }
 
@@ -81,12 +74,7 @@
         );
       }
 
-      const proximityMap = new Map(
-        Array.from(document.querySelectorAll('fc-geometry')).map((el) => [
-          el,
-          new Set(),
-        ])
-      );
+      const proximityMap = new Map(Array.from(document.querySelectorAll('fc-geometry')).map((el) => [el, new Set()]));
 
       function handleProximity(e) {
         proximityMap.forEach((set, el) => {
@@ -124,7 +112,7 @@
         proximityMap.get(e.target.parentElement)?.forEach((el) => {
           const content = el.firstElementChild;
           if (content instanceof GeoWiki) {
-            const { lat, lng } = e.detail;
+            const { lat, lng } = e.target.coordinates;
             content.coordinates = [lat, lng];
           }
         });
@@ -152,9 +140,7 @@
 
         attributeChangedCallback(name, oldValue, newValue) {
           if (name === 'coordinates') {
-            this.#coordinates = newValue
-              .split(',')
-              .map((str) => Number(str)) || [0, 0];
+            this.#coordinates = newValue.split(',').map((str) => Number(str)) || [0, 0];
             this.searchWiki(this.#coordinates);
           }
         }
@@ -170,9 +156,7 @@
             origin: '*',
           });
           // https://www.mediawiki.org/wiki/API:Geosearch
-          this.#results = await fetch(
-            `https://en.wikipedia.org/w/api.php?${params}`
-          )
+          this.#results = await fetch(`https://en.wikipedia.org/w/api.php?${params}`)
             .then((response) => response.json())
             .then((data) => data?.query?.geosearch ?? []);
 

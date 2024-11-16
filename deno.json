@@ -5,6 +5,7 @@
     "preview": "vite build demo && vite preview demo"
   },
   "imports": {
+    "@types/leaflet": "npm:@types/leaflet@^1.9.14",
     "perfect-arrows": "npm:perfect-arrows@^0.3.7",
     "perfect-freehand": "npm:perfect-freehand@^1.2.2",
     "leaflet": "npm:leaflet@^1.9.4",
