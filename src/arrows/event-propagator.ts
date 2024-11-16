@@ -1,9 +1,9 @@
-import { FolkConnection } from "./fc-connection.ts";
+import { FolkConnection } from './fc-connection.ts';
 
 export class EventPropagator extends FolkConnection {
-  static override tagName = "event-propagator";
+  static override tagName = 'event-propagator';
 
-  #triggers = (this.getAttribute("triggers") || "").split(",");
+  #triggers = (this.getAttribute('triggers') || '').split(',');
   get triggers() {
     return this.#triggers;
   }
@@ -11,20 +11,20 @@ export class EventPropagator extends FolkConnection {
     this.#triggers = triggers;
   }
 
-  #expression = "";
+  #expression = '';
   #function = new Function();
   get expression() {
     return this.#expression;
   }
   set expression(expression) {
     this.#expression = expression;
-    this.#function = new Function("$source", "$target", "$event", expression);
+    this.#function = new Function('$source', '$target', '$event', expression);
   }
 
   constructor() {
     super();
 
-    this.expression = this.getAttribute("expression") || "";
+    this.expression = this.getAttribute('expression') || '';
   }
 
   override observeSource() {

@@ -16,8 +16,8 @@
       }
 
       fc-geometry {
-        border: 1px solid black;
-        border-radius: 3px;
+        background-color: black;
+        border-radius: 10%;
       }
 
       fc-rope {
@@ -29,9 +29,13 @@
     </style>
   </head>
   <body>
-    <fc-geometry id="box1" x="100" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry id="box2" x="300" y="105">Hello World</fc-geometry>
+    <fc-geometry id="box1" x="100" y="100" width="30" height="30"></fc-geometry>
+    <fc-geometry id="box2" x="300" y="105" width="30" height="30"></fc-geometry>
+    <fc-geometry id="box3" x="200" y="150" width="30" height="30"></fc-geometry>
+    <fc-geometry id="box4" x="400" y="100" width="30" height="30"></fc-geometry>
     <fc-rope source="#box1" target="#box2"></fc-rope>
+    <fc-rope source="#box1" target="#box3"></fc-rope>
+    <fc-rope source="#box1" target="#box4"></fc-rope>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';

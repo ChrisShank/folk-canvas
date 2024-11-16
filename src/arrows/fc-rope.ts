@@ -1,11 +1,6 @@
 import { AbstractArrow } from './abstract-arrow.ts';
-import { Vertex } from './utils.ts';
-//A small scaffold specifically to help me design code pen interactions
-
-//Math extensions
-const lerp = (first, second, percentage) => {
-  return first + (second - first) * percentage;
-};
+// This is a direct port from https://github.com/guerrillacontra/html5-es6-physics-rope/blob/master/js/microlib.js
+const lerp = (first, second, percentage) => first + (second - first) * percentage;
 
 class Vector2 {
   static zero() {
@@ -43,8 +38,7 @@ class Vector2 {
 }
 
 class App {
-  constructor(window, canvas, context, updateHandler, drawHandler, frameRate = 60) {
-    this._window = window;
+  constructor(canvas, context, updateHandler, drawHandler, frameRate = 60) {
     this._canvas = canvas;
     this._context = context;
     this._updateHandler = updateHandler;
@@ -59,18 +53,19 @@ class App {
   }
 
   start() {
-    this._lastTime = new Date().getTime();
+    this._lastTime = 0;
     this._currentTime = 0;
     this._deltaTime = 0;
     this._interval = 1000 / this._frameRate;
 
-    this._onRequestAnimationFrame();
+    this._onRequestAnimationFrame(performance.now());
   }
 
-  _onRequestAnimationFrame() {
-    this._window.requestAnimationFrame(this._onRequestAnimationFrame);
+  _onRequestAnimationFrame(timestamp) {
+    requestAnimationFrame(this._onRequestAnimationFrame);
 
-    this._currentTime = new Date().getTime();
+    this._currentTime = timestamp;
+
     this._deltaTime = this._currentTime - this._lastTime;
 
     if (this._deltaTime > this._interval) {
@@ -215,17 +210,14 @@ class Rope {
   }
 
   update(gravity, dt) {
-    for (let i = 0; i < this._points.length; i++) {
-      let point = this._points[i];
-
+    for (const point of this._points) {
       let accel = { ...gravity };
 
       RopePoint.integrate(point, accel, dt, this._prevDelta);
     }
 
     for (let iteration = 0; iteration < this._solverIterations; iteration++)
-      for (let i = 0; i < this._points.length; i++) {
-        let point = this._points[i];
+      for (const point of this._points) {
         RopePoint.constrain(point);
       }
 
@@ -262,7 +254,7 @@ export class FolkRope extends AbstractArrow {
       const args = {
         start: { x: 100, y: this.#canvas.height / 2 },
         end: { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
-        resolution: 10,
+        resolution: 5,
         mass: 1,
         damping: 0.99,
         gravity: { x: 0, y: 3000 },
@@ -300,17 +292,17 @@ export class FolkRope extends AbstractArrow {
         drawRopePoints(this.#points, args.ropeSize);
       };
 
-      const app = new App(window, this.#canvas, this.#context, tick, draw);
+      const app = new App(this.#canvas, this.#context, tick, draw);
 
       app.start();
     }
 
     const startingPoint = this.#rope.getPoint(0);
-    startingPoint.pos.x = sourceRect.right;
-    startingPoint.pos.y = sourceRect.bottom;
+    startingPoint.pos.x = sourceRect.x + sourceRect.width / 2;
+    startingPoint.pos.y = sourceRect.y + sourceRect.height / 2;
 
     const endingPoint = this.#rope.getPoint(-1);
-    endingPoint.pos.x = targetRect.x;
-    endingPoint.pos.y = targetRect.bottom;
+    endingPoint.pos.x = targetRect.x + targetRect.width / 2;
+    endingPoint.pos.y = targetRect.y + targetRect.height / 2;
   }
 }
