@@ -54,10 +54,7 @@ class App {
     this._currentTime = 0;
     this._deltaTime = 0;
     this._interval = 0;
-    this.onMouseMoveHandler = (x, y) => {};
-    this.onMouseDownHandler = (x, y) => {};
     this.start = this.start.bind(this);
-    this._onMouseEventHandlerWrapper = this._onMouseEventHandlerWrapper.bind(this);
     this._onRequestAnimationFrame = this._onRequestAnimationFrame.bind(this);
   }
 
@@ -67,41 +64,7 @@ class App {
     this._deltaTime = 0;
     this._interval = 1000 / this._frameRate;
 
-    document.addEventListener(
-      'mousemove',
-      (e) => {
-        this._onMouseEventHandlerWrapper(e, this.onMouseMoveHandler);
-      },
-      false
-    );
-
-    document.addEventListener(
-      'mousedown',
-      (e) => {
-        this._onMouseEventHandlerWrapper(e, this.onMouseDownHandler);
-      },
-      false
-    );
-
     this._onRequestAnimationFrame();
-  }
-
-  _onMouseEventHandlerWrapper(e, callback) {
-    let element = this._canvas;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (element.offsetParent) {
-      do {
-        offsetX += element.offsetLeft;
-        offsetY += element.offsetTop;
-      } while ((element = element.offsetParent));
-    }
-
-    const x = e.pageX - offsetX;
-    const y = e.pageY - offsetY;
-
-    callback(x, y);
   }
 
   _onRequestAnimationFrame() {
@@ -248,7 +211,7 @@ class Rope {
   }
 
   getPoint(index) {
-    return this._points[index];
+    return this._points.at(index);
   }
 
   update(gravity, dt) {
@@ -282,76 +245,72 @@ export class FolkRope extends AbstractArrow {
   #canvas = document.createElement('canvas');
   #context = this.#canvas.getContext('2d')!;
   #shadow = this.attachShadow({ mode: 'open' });
-  #args;
+  #points: RopePoint[] = [];
+  #rope: Rope | null = null;
 
   constructor() {
     super();
-    const context = this.#context;
+
     this.#canvas.width = this.clientWidth;
     this.#canvas.height = this.clientHeight;
-
-    const gradient = this.#context.createLinearGradient(0, 0, 500, 0);
-    gradient.addColorStop(0, 'white');
-    gradient.addColorStop(0.25, 'yellow');
-    gradient.addColorStop(0.5, 'blue');
-    gradient.addColorStop(0.75, 'red');
-    gradient.addColorStop(1.0, 'white');
-
-    const args = (this.#args = {
-      start: { x: 100, y: this.#canvas.height / 2 },
-      end: { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
-      resolution: 10,
-      mass: 1,
-      damping: 0.99,
-      gravity: { x: 0, y: 3000 },
-      solverIterations: 600,
-      ropeColour: gradient,
-      ropeSize: 2,
-    });
-
-    const points = Rope.generate(args.start, args.end, args.resolution, args.mass, args.damping);
-
-    let rope = new Rope(points, args.solverIterations);
-
-    const tick = (dt) => {
-      rope.update(args.gravity, dt);
-    };
-
-    const drawRopePoints = (points, colour, width) => {
-      for (let i = 0; i < points.length; i++) {
-        let p = points[i];
-
-        const prev = i > 0 ? points[i - 1] : null;
-
-        if (prev) {
-          context.beginPath();
-          context.moveTo(prev.pos.x, prev.pos.y);
-          context.lineTo(p.pos.x, p.pos.y);
-          context.lineWidth = width;
-          context.strokeStyle = colour;
-          context.stroke();
-        }
-      }
-    };
-
-    //render a rope using the verlet points
-    const draw = (dt) => {
-      drawRopePoints(points, args.ropeColour, args.ropeSize);
-    };
-
-    const onMouseMove = (x, y) => {
-      let point = rope.getPoint(0);
-      point.pos.x = x;
-      point.pos.y = y;
-    };
-
-    const app = new App(window, this.#canvas, context, tick, draw);
-
-    app.onMouseMoveHandler = onMouseMove;
-    app.start();
 
     this.#shadow.appendChild(this.#canvas);
   }
 
-  render() {}
+  render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
+    if (this.#rope === null) {
+      const args = {
+        start: { x: 100, y: this.#canvas.height / 2 },
+        end: { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
+        resolution: 10,
+        mass: 1,
+        damping: 0.99,
+        gravity: { x: 0, y: 3000 },
+        solverIterations: 600,
+        ropeSize: 2,
+      };
+
+      this.#points = Rope.generate(args.start, args.end, args.resolution, args.mass, args.damping);
+
+      this.#rope = new Rope(this.#points, args.solverIterations);
+
+      const tick = (dt) => {
+        this.#rope?.update(args.gravity, dt);
+      };
+
+      const drawRopePoints = (points, width) => {
+        for (let i = 0; i < points.length; i++) {
+          let p = points[i];
+
+          const prev = i > 0 ? points[i - 1] : null;
+
+          if (prev) {
+            this.#context.beginPath();
+            this.#context.moveTo(prev.pos.x, prev.pos.y);
+            this.#context.lineTo(p.pos.x, p.pos.y);
+            this.#context.lineWidth = width;
+            this.#context.strokeStyle = 'black';
+            this.#context.stroke();
+          }
+        }
+      };
+
+      //render a rope using the verlet points
+      const draw = (dt) => {
+        drawRopePoints(this.#points, args.ropeSize);
+      };
+
+      const app = new App(window, this.#canvas, this.#context, tick, draw);
+
+      app.start();
+    }
+
+    const startingPoint = this.#rope.getPoint(0);
+    startingPoint.pos.x = sourceRect.right;
+    startingPoint.pos.y = sourceRect.bottom;
+
+    const endingPoint = this.#rope.getPoint(-1);
+    endingPoint.pos.x = targetRect.x;
+    endingPoint.pos.y = targetRect.bottom;
+  }
 }
