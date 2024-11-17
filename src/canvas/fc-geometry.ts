@@ -315,10 +315,6 @@ export class FolkGeometry extends HTMLElement {
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
   }
 
-  disconnectedCallback() {
-    cancelAnimationFrame(this.#rAFId);
-  }
-
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
   getBoundingPath(): string {
     return '';
@@ -423,21 +419,18 @@ export class FolkGeometry extends HTMLElement {
   }
 
   #updatedProperties = new Set<string>();
-  #rAFId = -1;
   #isUpdating = false;
 
-  #requestUpdate(property: string) {
+  async #requestUpdate(property: string) {
     this.#updatedProperties.add(property);
 
     if (this.#isUpdating) return;
 
     this.#isUpdating = true;
-    this.#rAFId = requestAnimationFrame(() => {
-      this.#isUpdating = false;
-      this.#update(this.#updatedProperties);
-      this.#updatedProperties.clear();
-      this.#rAFId = -1;
-    });
+    await true;
+    this.#isUpdating = false;
+    this.#update(this.#updatedProperties);
+    this.#updatedProperties.clear();
   }
 
   // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
