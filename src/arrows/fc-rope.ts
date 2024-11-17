@@ -1,40 +1,20 @@
+// This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
+
 import { AbstractArrow } from './abstract-arrow.ts';
 import { Vertex } from './utils.ts';
-// This is a direct port from https://github.com/guerrillacontra/html5-es6-physics-rope/blob/master/js/microlib.js
+
 const lerp = (first, second, percentage) => first + (second - first) * percentage;
 
 class Vector {
-  static zero() {
-    return { x: 0, y: 0 };
-  }
-
-  static sub(a, b) {
-    return { x: a.x - b.x, y: a.y - b.y };
-  }
-
-  static add(a, b) {
-    return { x: a.x + b.x, y: a.y + b.y };
-  }
-
-  static mult(a, b) {
-    return { x: a.x * b.x, y: a.y * b.y };
-  }
-
-  static scale(v, scaleFactor) {
-    return { x: v.x * scaleFactor, y: v.y * scaleFactor };
-  }
-
-  static mag(v) {
-    return Math.sqrt(v.x * v.x + v.y * v.y);
-  }
-
+  static zero = () => ({ x: 0, y: 0 });
+  static sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
+  static add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
+  static mult = (a, b) => ({ x: a.x * b.x, y: a.y * b.y });
+  static scale = (v, scaleFactor) => ({ x: v.x * scaleFactor, y: v.y * scaleFactor });
+  static mag = (v) => Math.sqrt(v.x * v.x + v.y * v.y);
   static normalized(v) {
     const mag = Vector.mag(v);
-
-    if (mag === 0) {
-      return Vector.zero();
-    }
-    return { x: v.x / mag, y: v.y / mag };
+    return mag === 0 ? Vector.zero() : { x: v.x / mag, y: v.y / mag };
   }
 }
 
@@ -90,8 +70,7 @@ export class FolkRope extends AbstractArrow {
     this.#deltaTime = this.#currentTime - this.#lastTime;
 
     if (this.#deltaTime > this.#interval) {
-      //delta time in seconds
-      const dts = this.#deltaTime * 0.001;
+      const dts = this.#deltaTime * 0.001; // delta time in seconds
 
       for (const point of this.#points) {
         this.#integratePoint(point, this.#gravity, dts, this.#previousDelta);
@@ -114,9 +93,8 @@ export class FolkRope extends AbstractArrow {
   render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
     if (this.#points.length === 0) {
       this.#points = this.generatePoints(
-        { x: 100, y: this.#canvas.height / 2 },
-        { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
-        5
+        { x: sourceRect.x, y: sourceRect.y },
+        { x: targetRect.right, y: targetRect.bottom }
       );
 
       this.#lastTime = 0;
@@ -157,10 +135,10 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  generatePoints(start: Vertex, end: Vertex, resolution: number) {
+  generatePoints(start: Vertex, end: Vertex) {
     const delta = Vector.sub(end, start);
     const len = Vector.mag(delta);
-
+    const resolution = 5;
     let points: RopePoint[] = [];
     const pointsLen = Math.floor(len / resolution);
 
