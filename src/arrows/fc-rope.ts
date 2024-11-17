@@ -114,62 +114,6 @@ class RopePoint {
   }
 }
 
-//manages a collection of rope points and executes
-//the integration
-class Rope {
-  //generate an array of points suitable for a dynamic
-  //rope contour
-  static generate(start, end, resolution, mass, damping) {
-    const delta = Vector2.sub(end, start);
-    const len = Vector2.mag(delta);
-
-    let points: RopePoint[] = [];
-    const pointsLen = Math.floor(len / resolution);
-
-    for (let i = 0; i < pointsLen; i++) {
-      const percentage = i / (pointsLen - 1);
-
-      const lerpX = lerp(start.x, end.x, percentage);
-      const lerpY = lerp(start.y, end.y, percentage);
-      const isFixed = i === 0 || i === pointsLen - 1;
-      points.push(new RopePoint({ x: lerpX, y: lerpY }, resolution, mass, damping, isFixed));
-    }
-
-    //Link nodes into a doubly linked list
-    for (let i = 0; i < pointsLen; i++) {
-      const prev = i != 0 ? points[i - 1] : null;
-      const curr = points[i];
-      const next = i != pointsLen - 1 ? points[i + 1] : null;
-
-      curr.prev = prev;
-      curr.next = next;
-    }
-
-    return points;
-  }
-
-  constructor(points, solverIterations) {
-    this._points = points;
-    this._prevDelta = 0;
-    this._solverIterations = solverIterations;
-  }
-
-  update(gravity, dt) {
-    for (const point of this._points) {
-      let accel = { ...gravity };
-
-      RopePoint.integrate(point, accel, dt, this._prevDelta);
-    }
-
-    for (let iteration = 0; iteration < this._solverIterations; iteration++)
-      for (const point of this._points) {
-        RopePoint.constrain(point);
-      }
-
-    this._prevDelta = dt;
-  }
-}
-
 declare global {
   interface HTMLElementTagNameMap {
     'fc-rope': FolkRope;
@@ -186,10 +130,10 @@ export class FolkRope extends AbstractArrow {
   #lastTime = 0;
   #currentTime = 0;
   #deltaTime = 0;
+  #previousDelta = 0;
   #interval = 1000 / 60; // ms per frame
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
-  #rope: Rope | null = null;
 
   constructor() {
     super();
@@ -212,7 +156,17 @@ export class FolkRope extends AbstractArrow {
       //delta time in seconds
       const dts = this.#deltaTime * 0.001;
 
-      this.#rope?.update(this.#gravity, dts);
+      for (const point of this.#points) {
+        RopePoint.integrate(point, this.#gravity, dts, this.#previousDelta);
+      }
+
+      for (let iteration = 0; iteration < 600; iteration++) {
+        for (const point of this.#points) {
+          RopePoint.constrain(point);
+        }
+      }
+
+      this.#previousDelta = dts;
 
       this.drawRopePoints();
 
@@ -221,16 +175,14 @@ export class FolkRope extends AbstractArrow {
   }
 
   render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
-    if (this.#rope === null) {
-      this.#points = Rope.generate(
+    if (this.#points.length === 0) {
+      this.#points = this.generatePoints(
         { x: 100, y: this.#canvas.height / 2 },
         { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
         5,
         1,
         0.99
       );
-
-      this.#rope = new Rope(this.#points, 600);
 
       this.#lastTime = 0;
       this.#currentTime = 0;
@@ -268,5 +220,34 @@ export class FolkRope extends AbstractArrow {
         this.#context.stroke();
       }
     }
+  }
+
+  generatePoints(start, end, resolution, mass, damping) {
+    const delta = Vector2.sub(end, start);
+    const len = Vector2.mag(delta);
+
+    let points: RopePoint[] = [];
+    const pointsLen = Math.floor(len / resolution);
+
+    for (let i = 0; i < pointsLen; i++) {
+      const percentage = i / (pointsLen - 1);
+
+      const lerpX = lerp(start.x, end.x, percentage);
+      const lerpY = lerp(start.y, end.y, percentage);
+      const isFixed = i === 0 || i === pointsLen - 1;
+      points.push(new RopePoint({ x: lerpX, y: lerpY }, resolution, mass, damping, isFixed));
+    }
+
+    //Link nodes into a doubly linked list
+    for (let i = 0; i < pointsLen; i++) {
+      const prev = i != 0 ? points[i - 1] : null;
+      const curr = points[i];
+      const next = i != pointsLen - 1 ? points[i + 1] : null;
+
+      curr.prev = prev;
+      curr.next = next;
+    }
+
+    return points;
   }
 }
