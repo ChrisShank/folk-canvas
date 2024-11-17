@@ -83,7 +83,7 @@ styles.replaceSync(`
 :host::before {
   content: '';
   position: absolute;
-  inset: -10px -10px -10px -10px;
+  inset: -15px -15px -15px -15px;
   z-index: -1;
 }
 
@@ -91,9 +91,6 @@ div {
   height: 100%;
   width: 100%;
   overflow: hidden;
-}
-
-::slotted(*) {
   cursor: default;
 }
 

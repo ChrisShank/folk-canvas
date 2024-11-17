@@ -1,8 +1,9 @@
 import { AbstractArrow } from './abstract-arrow.ts';
+import { Vertex } from './utils.ts';
 // This is a direct port from https://github.com/guerrillacontra/html5-es6-physics-rope/blob/master/js/microlib.js
 const lerp = (first, second, percentage) => first + (second - first) * percentage;
 
-class Vector2 {
+class Vector {
   static zero() {
     return { x: 0, y: 0 };
   }
@@ -28,90 +29,26 @@ class Vector2 {
   }
 
   static normalized(v) {
-    const mag = Vector2.mag(v);
+    const mag = Vector.mag(v);
 
     if (mag === 0) {
-      return Vector2.zero();
+      return Vector.zero();
     }
     return { x: v.x / mag, y: v.y / mag };
   }
 }
 
-//each rope part is one of these
-//uses a high precison varient of Störmer–Verlet integration
-//to keep the simulation consistant otherwise it would "explode"!
-class RopePoint {
-  //integrates motion equations per node without taking into account relationship
-  //with other nodes...
-  static integrate(point, gravity, dt, previousFrameDt) {
-    if (!point.isFixed) {
-      point.velocity = Vector2.sub(point.pos, point.oldPos);
-      point.oldPos = { ...point.pos };
-
-      //drastically improves stability
-      let timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
-
-      let accel = Vector2.add(gravity, { x: 0, y: point.mass });
-
-      const velCoef = timeCorrection * point.damping;
-      const accelCoef = Math.pow(dt, 2);
-
-      point.pos.x += point.velocity.x * velCoef + accel.x * accelCoef;
-      point.pos.y += point.velocity.y * velCoef + accel.y * accelCoef;
-    } else {
-      point.velocity = Vector2.zero();
-      point.oldPos = { ...point.pos };
-    }
-  }
-
-  //apply constraints related to other nodes next to it
-  //(keeps each node within distance)
-  static constrain(point) {
-    if (point.next) {
-      const delta = Vector2.sub(point.next.pos, point.pos);
-      const len = Vector2.mag(delta);
-      const diff = len - point.distanceToNextPoint;
-      const normal = Vector2.normalized(delta);
-
-      if (!point.isFixed) {
-        point.pos.x += normal.x * diff * 0.25;
-        point.pos.y += normal.y * diff * 0.25;
-      }
-
-      if (!point.next.isFixed) {
-        point.next.pos.x -= normal.x * diff * 0.25;
-        point.next.pos.y -= normal.y * diff * 0.25;
-      }
-    }
-    if (point.prev) {
-      const delta = Vector2.sub(point.prev.pos, point.pos);
-      const len = Vector2.mag(delta);
-      const diff = len - point.distanceToNextPoint;
-      const normal = Vector2.normalized(delta);
-
-      if (!point.isFixed) {
-        point.pos.x += normal.x * diff * 0.25;
-        point.pos.y += normal.y * diff * 0.25;
-      }
-
-      if (!point.prev.isFixed) {
-        point.prev.pos.x -= normal.x * diff * 0.25;
-        point.prev.pos.y -= normal.y * diff * 0.25;
-      }
-    }
-  }
-
-  constructor(initialPos, distanceToNextPoint, mass = 1, damping = 1, isFixed = false) {
-    this.pos = initialPos;
-    this.distanceToNextPoint = distanceToNextPoint;
-    this.isFixed = isFixed;
-    this.oldPos = { ...initialPos };
-    this.velocity = Vector2.zero();
-    this.mass = mass;
-    this.damping = damping;
-    this.prev = null;
-    this.next = null;
-  }
+// Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!
+interface RopePoint {
+  pos: Vertex;
+  distanceToNextPoint: number;
+  isFixed: boolean;
+  oldPos: Vertex;
+  velocity: Vertex;
+  mass: number;
+  damping: number;
+  prev: RopePoint | null;
+  next: RopePoint | null;
 }
 
 declare global {
@@ -157,12 +94,12 @@ export class FolkRope extends AbstractArrow {
       const dts = this.#deltaTime * 0.001;
 
       for (const point of this.#points) {
-        RopePoint.integrate(point, this.#gravity, dts, this.#previousDelta);
+        this.#integratePoint(point, this.#gravity, dts, this.#previousDelta);
       }
 
       for (let iteration = 0; iteration < 600; iteration++) {
         for (const point of this.#points) {
-          RopePoint.constrain(point);
+          this.#constrainPoint(point);
         }
       }
 
@@ -179,9 +116,7 @@ export class FolkRope extends AbstractArrow {
       this.#points = this.generatePoints(
         { x: 100, y: this.#canvas.height / 2 },
         { x: this.#canvas.width - 100, y: this.#canvas.height / 2 },
-        5,
-        1,
-        0.99
+        5
       );
 
       this.#lastTime = 0;
@@ -222,20 +157,31 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  generatePoints(start, end, resolution, mass, damping) {
-    const delta = Vector2.sub(end, start);
-    const len = Vector2.mag(delta);
+  generatePoints(start: Vertex, end: Vertex, resolution: number) {
+    const delta = Vector.sub(end, start);
+    const len = Vector.mag(delta);
 
     let points: RopePoint[] = [];
     const pointsLen = Math.floor(len / resolution);
 
     for (let i = 0; i < pointsLen; i++) {
       const percentage = i / (pointsLen - 1);
-
-      const lerpX = lerp(start.x, end.x, percentage);
-      const lerpY = lerp(start.y, end.y, percentage);
-      const isFixed = i === 0 || i === pointsLen - 1;
-      points.push(new RopePoint({ x: lerpX, y: lerpY }, resolution, mass, damping, isFixed));
+      const pos = {
+        x: lerp(start.x, end.x, percentage),
+        y: lerp(start.y, end.y, percentage),
+      };
+      // new RopePoint({ x: lerpX, y: lerpY }, resolution, mass, damping, isFixed)
+      points.push({
+        pos,
+        oldPos: { ...pos },
+        distanceToNextPoint: resolution,
+        mass: 1,
+        damping: 0.99,
+        velocity: Vector.zero(),
+        isFixed: i === 0 || i === pointsLen - 1,
+        prev: null,
+        next: null,
+      });
     }
 
     //Link nodes into a doubly linked list
@@ -249,5 +195,63 @@ export class FolkRope extends AbstractArrow {
     }
 
     return points;
+  }
+
+  // Integrate motion equations per node without taking into account relationship with other nodes...
+  #integratePoint(point: RopePoint, gravity, dt, previousFrameDt) {
+    if (!point.isFixed) {
+      point.velocity = Vector.sub(point.pos, point.oldPos);
+      point.oldPos = { ...point.pos };
+
+      //drastically improves stability
+      let timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
+
+      let accel = Vector.add(gravity, { x: 0, y: point.mass });
+
+      const velCoef = timeCorrection * point.damping;
+      const accelCoef = Math.pow(dt, 2);
+
+      point.pos.x += point.velocity.x * velCoef + accel.x * accelCoef;
+      point.pos.y += point.velocity.y * velCoef + accel.y * accelCoef;
+    } else {
+      point.velocity = Vector.zero();
+      point.oldPos = { ...point.pos };
+    }
+  }
+
+  //Apply constraints related to other nodes next to it (keeps each node within distance)
+  #constrainPoint(point: RopePoint) {
+    if (point.next) {
+      const delta = Vector.sub(point.next.pos, point.pos);
+      const len = Vector.mag(delta);
+      const diff = len - point.distanceToNextPoint;
+      const normal = Vector.normalized(delta);
+
+      if (!point.isFixed) {
+        point.pos.x += normal.x * diff * 0.25;
+        point.pos.y += normal.y * diff * 0.25;
+      }
+
+      if (!point.next.isFixed) {
+        point.next.pos.x -= normal.x * diff * 0.25;
+        point.next.pos.y -= normal.y * diff * 0.25;
+      }
+    }
+    if (point.prev) {
+      const delta = Vector.sub(point.prev.pos, point.pos);
+      const len = Vector.mag(delta);
+      const diff = len - point.distanceToNextPoint;
+      const normal = Vector.normalized(delta);
+
+      if (!point.isFixed) {
+        point.pos.x += normal.x * diff * 0.25;
+        point.pos.y += normal.y * diff * 0.25;
+      }
+
+      if (!point.prev.isFixed) {
+        point.prev.pos.x -= normal.x * diff * 0.25;
+        point.prev.pos.y -= normal.y * diff * 0.25;
+      }
+    }
   }
 }
