@@ -1,6 +1,6 @@
-import { FolkConnection } from './fc-connection.ts';
+import { FolkRope } from './fc-rope.ts';
 
-export class EventPropagator extends FolkConnection {
+export class EventPropagator extends FolkRope {
   static override tagName = 'event-propagator';
 
   #triggers = (this.getAttribute('triggers') || '').split(',');

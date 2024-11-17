@@ -76,7 +76,7 @@ export class FolkRope extends AbstractArrow {
         this.#integratePoint(point, this.#gravity, dts, this.#previousDelta);
       }
 
-      for (let iteration = 0; iteration < 600; iteration++) {
+      for (let iteration = 0; iteration < 100; iteration++) {
         for (const point of this.#points) {
           this.#constrainPoint(point);
         }
@@ -110,10 +110,10 @@ export class FolkRope extends AbstractArrow {
     if (startingPoint === undefined || endingPoint === undefined) return;
 
     startingPoint.pos.x = sourceRect.x + sourceRect.width / 2;
-    startingPoint.pos.y = sourceRect.y + sourceRect.height / 2;
+    startingPoint.pos.y = sourceRect.bottom;
 
     endingPoint.pos.x = targetRect.x + targetRect.width / 2;
-    endingPoint.pos.y = targetRect.y + targetRect.height / 2;
+    endingPoint.pos.y = targetRect.bottom;
   }
 
   drawRopePoints() {
@@ -181,7 +181,7 @@ export class FolkRope extends AbstractArrow {
       point.velocity = Vector.sub(point.pos, point.oldPos);
       point.oldPos = { ...point.pos };
 
-      //drastically improves stability
+      // Drastically improves stability
       let timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
 
       let accel = Vector.add(gravity, { x: 0, y: point.mass });
@@ -197,7 +197,7 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  //Apply constraints related to other nodes next to it (keeps each node within distance)
+  // Apply constraints related to other nodes next to it (keeps each node within distance)
   #constrainPoint(point: RopePoint) {
     if (point.next) {
       const delta = Vector.sub(point.next.pos, point.pos);

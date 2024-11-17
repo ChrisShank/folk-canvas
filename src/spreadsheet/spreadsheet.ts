@@ -5,7 +5,7 @@ styles.replaceSync(`
   --column-number: 10;
   --row-number: 10;
   --cell-height: 1.75rem;
-  --cell-width: 100px;
+  --cell-width: 200px;
   --border-color: #e1e1e1;
   border: solid 1px var(--border-color);
   box-sizing: border-box;
@@ -98,6 +98,7 @@ s-columns, s-rows, s-body {
   padding: 0.25rem;
   justify-content: start;
   scroll-snap-align: start;
+  overflow: hidden;
 }
 
 ::slotted(s-cell[type='number']) {
@@ -424,7 +425,7 @@ export class SpreadsheetCell extends HTMLElement {
     return this.#expression;
   }
   set expression(expression) {
-    expression = expression.trim();
+    expression = String(expression).trim();
     this.#expression = expression;
 
     this.#dependencies.forEach((dep) => dep.removeEventListener('propagate', this));

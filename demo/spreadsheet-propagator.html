@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spreadsheet Propagator</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-map {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      event-propagator {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+        z-index: calc(infinity);
+      }
+    </style>
+  </head>
+  <body>
+    <fc-geometry x="600" y="50" width="300" height="300">
+      <folk-map id="map1" zoom="10" coordinates="48.86,2.35"></folk-map>
+    </fc-geometry>
+
+    <fc-geometry x="600" y="400" width="300" height="300">
+      <folk-map id="map2" zoom="10"></folk-map>
+    </fc-geometry>
+
+    <fc-geometry x="25" y="300" width="500">
+      <s-table>
+        <s-cell row="1" column="A"></s-cell>
+        <s-cell row="1" column="B"></s-cell>
+        <s-cell row="1" column="C"></s-cell>
+        <s-cell row="1" column="D"></s-cell>
+        <s-cell row="1" column="E"></s-cell>
+        <s-cell row="1" column="F"></s-cell>
+        <s-cell row="1" column="G"></s-cell>
+        <s-cell row="1" column="H"></s-cell>
+        <s-cell row="1" column="I"></s-cell>
+        <s-cell row="1" column="J"></s-cell>
+        <s-cell row="2" column="A"></s-cell>
+        <s-cell row="2" column="B"></s-cell>
+        <s-cell row="2" column="C"></s-cell>
+        <s-cell row="2" column="D"></s-cell>
+        <s-cell row="2" column="E"></s-cell>
+        <s-cell row="2" column="F"></s-cell>
+        <s-cell row="2" column="G"></s-cell>
+        <s-cell row="2" column="H"></s-cell>
+        <s-cell row="2" column="I"></s-cell>
+        <s-cell row="2" column="J"></s-cell>
+        <s-cell row="3" column="A" expression="[$A1 + 0.25, $A2 - 0.25]"></s-cell>
+        <s-cell row="3" column="B"></s-cell>
+        <s-cell row="3" column="C"></s-cell>
+        <s-cell row="3" column="D"></s-cell>
+        <s-cell row="3" column="E"></s-cell>
+        <s-cell row="3" column="F"></s-cell>
+        <s-cell row="3" column="G"></s-cell>
+        <s-cell row="3" column="H"></s-cell>
+        <s-cell row="3" column="I"></s-cell>
+        <s-cell row="3" column="J"></s-cell>
+        <s-cell row="4" column="A"></s-cell>
+        <s-cell row="4" column="B"></s-cell>
+        <s-cell row="4" column="C"></s-cell>
+        <s-cell row="4" column="D"></s-cell>
+        <s-cell row="4" column="E"></s-cell>
+        <s-cell row="4" column="F"></s-cell>
+        <s-cell row="4" column="G"></s-cell>
+        <s-cell row="4" column="H"></s-cell>
+        <s-cell row="4" column="I"></s-cell>
+        <s-cell row="4" column="J"></s-cell>
+        <s-cell row="5" column="A"></s-cell>
+        <s-cell row="5" column="B"></s-cell>
+        <s-cell row="5" column="C"></s-cell>
+        <s-cell row="5" column="D"></s-cell>
+        <s-cell row="5" column="E"></s-cell>
+        <s-cell row="5" column="F"></s-cell>
+        <s-cell row="5" column="G"></s-cell>
+        <s-cell row="5" column="H"></s-cell>
+        <s-cell row="5" column="I"></s-cell>
+        <s-cell row="5" column="J"></s-cell>
+        <s-cell row="6" column="A"></s-cell>
+        <s-cell row="6" column="B"></s-cell>
+        <s-cell row="6" column="C"></s-cell>
+        <s-cell row="6" column="D"></s-cell>
+        <s-cell row="6" column="E"></s-cell>
+        <s-cell row="6" column="F"></s-cell>
+        <s-cell row="6" column="G"></s-cell>
+        <s-cell row="6" column="H"></s-cell>
+        <s-cell row="6" column="I"></s-cell>
+        <s-cell row="6" column="J"></s-cell>
+        <s-cell row="7" column="A"></s-cell>
+        <s-cell row="7" column="B"></s-cell>
+        <s-cell row="7" column="C"></s-cell>
+        <s-cell row="7" column="D"></s-cell>
+        <s-cell row="7" column="E"></s-cell>
+        <s-cell row="7" column="F"></s-cell>
+        <s-cell row="7" column="G"></s-cell>
+        <s-cell row="7" column="H"></s-cell>
+        <s-cell row="7" column="I"></s-cell>
+        <s-cell row="7" column="J"></s-cell>
+        <s-cell row="8" column="A"></s-cell>
+        <s-cell row="8" column="B"></s-cell>
+        <s-cell row="8" column="C"></s-cell>
+        <s-cell row="8" column="D"></s-cell>
+        <s-cell row="8" column="E"></s-cell>
+        <s-cell row="8" column="F"></s-cell>
+        <s-cell row="8" column="G"></s-cell>
+        <s-cell row="8" column="H"></s-cell>
+        <s-cell row="8" column="I"></s-cell>
+        <s-cell row="8" column="J"></s-cell>
+        <s-cell row="9" column="A"></s-cell>
+        <s-cell row="9" column="B"></s-cell>
+        <s-cell row="9" column="C"></s-cell>
+        <s-cell row="9" column="D"></s-cell>
+        <s-cell row="9" column="E"></s-cell>
+        <s-cell row="9" column="F"></s-cell>
+        <s-cell row="9" column="G"></s-cell>
+        <s-cell row="9" column="H"></s-cell>
+        <s-cell row="9" column="I"></s-cell>
+        <s-cell row="9" column="J"></s-cell>
+        <s-cell row="10" column="A"></s-cell>
+        <s-cell row="10" column="B"></s-cell>
+        <s-cell row="10" column="C"></s-cell>
+        <s-cell row="10" column="D"></s-cell>
+        <s-cell row="10" column="E"></s-cell>
+        <s-cell row="10" column="F"></s-cell>
+        <s-cell row="10" column="G"></s-cell>
+        <s-cell row="10" column="H"></s-cell>
+        <s-cell row="10" column="I"></s-cell>
+        <s-cell row="10" column="J"></s-cell>
+      </s-table>
+    </fc-geometry>
+
+    <event-propagator
+      source="#map1"
+      target="s-cell[column='A'][row='1']"
+      triggers="recenter"
+      expression="$target.expression = $source.coordinates.lat"
+    ></event-propagator>
+
+    <event-propagator
+      source="#map1"
+      target="s-cell[column='A'][row='2']"
+      triggers="recenter"
+      expression="$target.expression = $source.coordinates.lng"
+    ></event-propagator>
+
+    <event-propagator
+      source="s-cell[column='A'][row='3']"
+      target="#map2"
+      triggers="propagate"
+      expression="$target.coordinates = $source.value"
+    ></event-propagator>
+
+    <script type="module">
+      import { FolkMap } from '../src/maps';
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { EventPropagator } from '../src/arrows/event-propagator.ts';
+      import { SpreadsheetTable } from '../src/spreadsheet/spreadsheet.ts';
+
+      FolkMap.register();
+      FolkGeometry.register();
+      SpreadsheetTable.register();
+      EventPropagator.register();
+    </script>
+  </body>
+</html>
