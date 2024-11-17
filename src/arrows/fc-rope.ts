@@ -1,5 +1,6 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
+import { ResizeObserverManager } from '../resize-observer.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
 import { Vertex } from './utils.ts';
 
@@ -31,6 +32,8 @@ interface RopePoint {
   next: RopePoint | null;
 }
 
+const resizeObserver = new ResizeObserverManager();
+
 declare global {
   interface HTMLElementTagNameMap {
     'fc-rope': FolkRope;
@@ -44,6 +47,7 @@ export class FolkRope extends AbstractArrow {
   #context = this.#canvas.getContext('2d')!;
   #shadow = this.attachShadow({ mode: 'open' });
 
+  #rAFId = -1;
   #lastTime = 0;
   #currentTime = 0;
   #deltaTime = 0;
@@ -55,15 +59,29 @@ export class FolkRope extends AbstractArrow {
   constructor() {
     super();
 
-    this.#canvas.width = this.clientWidth;
-    this.#canvas.height = this.clientHeight;
-
     this.#shadow.appendChild(this.#canvas);
-    this.tick = this.tick.bind(this);
   }
 
-  tick(timestamp: number) {
-    requestAnimationFrame(this.tick);
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    resizeObserver.observe(this, this.#onResize);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    resizeObserver.unobserve(this, this.#onResize);
+  }
+
+  #onResize = (entry) => {
+    this.#canvas.width = entry.contentRect.width;
+    this.#canvas.height = entry.contentRect.height;
+    this.#drawRopePoints();
+  };
+
+  #tick = (timestamp: number = performance.now()) => {
+    this.#rAFId = requestAnimationFrame(this.#tick);
 
     this.#currentTime = timestamp;
 
@@ -84,15 +102,15 @@ export class FolkRope extends AbstractArrow {
 
       this.#previousDelta = dts;
 
-      this.drawRopePoints();
+      this.#drawRopePoints();
 
       this.#lastTime = this.#currentTime - (this.#deltaTime % this.#interval);
     }
-  }
+  };
 
   render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
     if (this.#points.length === 0) {
-      this.#points = this.generatePoints(
+      this.#points = this.#generatePoints(
         { x: sourceRect.x, y: sourceRect.y },
         { x: targetRect.right, y: targetRect.bottom }
       );
@@ -101,7 +119,7 @@ export class FolkRope extends AbstractArrow {
       this.#currentTime = 0;
       this.#deltaTime = 0;
 
-      this.tick(performance.now());
+      this.#tick();
     }
 
     const startingPoint = this.#points.at(0);
@@ -116,7 +134,7 @@ export class FolkRope extends AbstractArrow {
     endingPoint.pos.y = targetRect.bottom;
   }
 
-  drawRopePoints() {
+  #drawRopePoints() {
     this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
 
     for (let i = 0; i < this.#points.length; i++) {
@@ -135,7 +153,7 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  generatePoints(start: Vertex, end: Vertex) {
+  #generatePoints(start: Vertex, end: Vertex) {
     const delta = Vector.sub(end, start);
     const len = Vector.mag(delta);
     const resolution = 5;
