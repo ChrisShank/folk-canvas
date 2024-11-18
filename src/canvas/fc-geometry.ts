@@ -274,6 +274,10 @@ export class FolkGeometry extends HTMLElement {
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
   }
 
+  getClientRect(): DOMRect {
+    return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
+  }
+
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
   getBoundingPath(): string {
     return '';

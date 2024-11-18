@@ -1,3 +1,4 @@
+import { FolkGeometry } from '../canvas/fc-geometry';
 import { Vertex } from './utils';
 import { VisualObserverEntry, VisualObserverManager } from './visual-observer';
 
@@ -50,6 +51,13 @@ export class AbstractArrow extends HTMLElement {
     this.#update();
   };
 
+  #sourceHandler = (e: Event) => {
+    const geometry = e.target as FolkGeometry;
+    this.#sourceRect = geometry.getClientRect();
+    console.log();
+    this.#update();
+  };
+
   #target = '';
   /** A CSS selector for the target of the arrow. */
   get target() {
@@ -72,6 +80,12 @@ export class AbstractArrow extends HTMLElement {
 
   #targetCallback = (entry: VisualObserverEntry) => {
     this.#targetRect = entry.contentRect;
+    this.#update();
+  };
+
+  #targetHandler = (e: Event) => {
+    const geometry = e.target as FolkGeometry;
+    this.#targetRect = geometry.getClientRect();
     this.#update();
   };
 
@@ -103,9 +117,13 @@ export class AbstractArrow extends HTMLElement {
 
       if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
+      } else if (false) {
+        this.#sourceElement.addEventListener('resize', this.#sourceHandler);
+        this.#sourceElement.addEventListener('move', this.#sourceHandler);
+      } else {
+        visualObserver.observe(this.#sourceElement, this.#sourceCallback);
       }
 
-      visualObserver.observe(this.#sourceElement, this.#sourceCallback);
       this.#sourceRect = this.#sourceElement.getBoundingClientRect();
     }
   }
@@ -113,7 +131,12 @@ export class AbstractArrow extends HTMLElement {
   unobserveSource() {
     if (this.#sourceElement === null) return;
 
-    visualObserver.unobserve(this.#sourceElement, this.#sourceCallback);
+    if (this.#sourceElement instanceof FolkGeometry) {
+      this.#sourceElement.removeEventListener('resize', this.#sourceHandler);
+      this.#sourceElement.removeEventListener('move', this.#sourceHandler);
+    } else {
+      visualObserver.unobserve(this.#sourceElement, this.#sourceCallback);
+    }
   }
 
   observeTarget() {
@@ -129,9 +152,12 @@ export class AbstractArrow extends HTMLElement {
 
       if (!this.#targetElement) {
         throw new Error('target is not a valid element');
+      } else if (false) {
+        this.#targetElement.addEventListener('resize', this.#targetHandler);
+        this.#targetElement.addEventListener('move', this.#targetHandler);
+      } else {
+        visualObserver.observe(this.#targetElement, this.#targetCallback);
       }
-
-      visualObserver.observe(this.#targetElement, this.#targetCallback);
       this.#targetRect = this.#targetElement.getBoundingClientRect();
     }
   }
@@ -139,7 +165,12 @@ export class AbstractArrow extends HTMLElement {
   unobserveTarget() {
     if (this.#targetElement === null) return;
 
-    visualObserver.unobserve(this.#targetElement, this.#targetCallback);
+    if (this.#targetElement instanceof FolkGeometry) {
+      this.#targetElement.removeEventListener('resize', this.#targetHandler);
+      this.#targetElement.removeEventListener('move', this.#targetHandler);
+    } else {
+      visualObserver.unobserve(this.#targetElement, this.#targetCallback);
+    }
   }
 
   #update() {

@@ -72,6 +72,7 @@ export class FolkRope extends AbstractArrow {
     super.disconnectedCallback();
 
     resizeObserver.unobserve(this, this.#onResize);
+    cancelAnimationFrame(this.#rAFId);
   }
 
   #onResize = (entry) => {
