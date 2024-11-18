@@ -63,8 +63,16 @@
         height: 100%;
       }
 
-      input {
-        margin-top: 1rem;
+      ::view-transition-group(slider),
+      ::view-transition-old(slider),
+      ::view-transition-new(slider) {
+        animation-duration: 0s !important;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        margin: 1rem;
       }
 
       fc-connection {
@@ -95,13 +103,9 @@
         width: 20px;
         aspect-ratio: 1;
         border-radius: 50%;
-
-        h2,
-        p {
-          display: none;
-        }
       }
 
+      body[zoom='0'] fc-geometry :is(h2, p),
       body[zoom='50'] fc-geometry p {
         display: none;
       }
@@ -110,7 +114,7 @@
   <body zoom="1">
     <label>
       Zoom:
-      <input type="range" min="0" max="100" value="100" />
+      <input type="range" min="0" max="100" value="100" style="view-transition-name: slider" />
     </label>
 
     <fc-geometry id="box1" x="100" y="100">
@@ -152,12 +156,12 @@
       FolkGeometry.register();
       FolkConnection.register();
 
-      const range = document.querySelector('input');
-
       document.body.querySelectorAll('fc-geometry').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
       document.body.querySelectorAll('fc-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
       document.body.querySelectorAll('h2').forEach((el, i) => (el.style.viewTransitionName = `h${i}`));
       document.body.querySelectorAll('p').forEach((el, i) => (el.style.viewTransitionName = `p${i}`));
+
+      const range = document.querySelector('input');
 
       range.addEventListener('input', (e) => {
         const currentZoom = range.valueAsNumber;
