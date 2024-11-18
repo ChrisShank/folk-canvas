@@ -5,7 +5,7 @@ styles.replaceSync(`
   --column-number: 10;
   --row-number: 10;
   --cell-height: 1.75rem;
-  --cell-width: 200px;
+  --cell-width: 100px;
   --border-color: #e1e1e1;
   border: solid 1px var(--border-color);
   box-sizing: border-box;

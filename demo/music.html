@@ -16,6 +16,8 @@
       }
 
       fc-geometry:has(record-player) {
+        box-shadow: 10px 0px 150px 0px rgba(0, 0, 0, 0.61);
+
         &::part(resize-nw),
         &::part(resize-ne),
         &::part(resize-se),
@@ -30,14 +32,9 @@
     </style>
   </head>
   <body>
-    <!-- 
-      sips -c 326 276 --cropOffset 1 1 *.png --out pngs/
-      ffmpeg -framerate 25 -pattern_type glob -i '*.png' -c:v prores -pix_fmt yuva444p10le dancing-flower.mov
-      ffmpeg -framerate 25 -f image2 -pattern_type glob -i '*.png' -c:v libvpx-vp9 -pix_fmt yuva420p dancing-flowers.webm
-    -->
     <fc-geometry x="100" y="75" width="330" height="198">
       <record-player>
-        <audio src="/Feather.mp3"></audio>
+        <audio src="/Feather.mov"></audio>
       </record-player>
     </fc-geometry>
 
@@ -69,11 +66,15 @@
       FolkGeometry.register();
       RecordPlayer.register();
 
-      let proximityDistance = 200;
+      /**
+        sips -c 326 276 --cropOffset 1 1 *.png --out pngs/
+        ffmpeg -framerate 25 -pattern_type glob -i '*.png' -c:v prores -pix_fmt yuva444p10le dancing-flower.mov
+        ffmpeg -framerate 25 -f image2 -pattern_type glob -i '*.png' -c:v libvpx-vp9 -pix_fmt yuva420p dancing-flowers.webm
+       */
+
+      let proximityDistance = 150;
       const proximitySet = new Set();
-      const recordPlayerGeometry = document.querySelector(
-        'fc-geometry:has(record-player)'
-      );
+      const recordPlayerGeometry = document.querySelector('fc-geometry:has(record-player)');
       const recordPlayer = recordPlayerGeometry.firstElementChild;
       const flowers = document.querySelectorAll('fc-geometry:has(video)');
       // set playback rate when video is ready
@@ -88,10 +89,7 @@
 
       function collisionDetection(rect1, rect2) {
         return (
-          rect1.left < rect2.right &&
-          rect1.right > rect2.left &&
-          rect1.top < rect2.bottom &&
-          rect1.bottom > rect2.top
+          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
         );
       }
 
