@@ -54,7 +54,6 @@ export class AbstractArrow extends HTMLElement {
   #sourceHandler = (e: Event) => {
     const geometry = e.target as FolkGeometry;
     this.#sourceRect = geometry.getClientRect();
-    console.log();
     this.#update();
   };
 
@@ -117,7 +116,7 @@ export class AbstractArrow extends HTMLElement {
 
       if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
-      } else if (false) {
+      } else if (this.#sourceElement instanceof FolkGeometry) {
         this.#sourceElement.addEventListener('resize', this.#sourceHandler);
         this.#sourceElement.addEventListener('move', this.#sourceHandler);
       } else {
@@ -152,7 +151,7 @@ export class AbstractArrow extends HTMLElement {
 
       if (!this.#targetElement) {
         throw new Error('target is not a valid element');
-      } else if (false) {
+      } else if (this.#targetElement instanceof FolkGeometry) {
         this.#targetElement.addEventListener('resize', this.#targetHandler);
         this.#targetElement.addEventListener('move', this.#targetHandler);
       } else {
