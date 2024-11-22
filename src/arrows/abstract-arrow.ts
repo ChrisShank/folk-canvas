@@ -17,6 +17,10 @@ function parseVertex(str: string): Vertex | null {
   };
 }
 
+function parseCSSSelector(selector) {
+  return selector.split('>>>').map((s) => s.trim());
+}
+
 export class AbstractArrow extends HTMLElement {
   static tagName = 'abstract-arrow';
 
@@ -57,6 +61,49 @@ export class AbstractArrow extends HTMLElement {
     this.#update();
   };
 
+  #sourceIframeSelector = '';
+  #sourceIframeRect = DOMRectReadOnly.fromRect();
+  #sourceIframeChildRect = DOMRectReadOnly.fromRect();
+
+  #sourcePostMessage = (event: MessageEvent) => {
+    const iframe = this.#sourceElement as HTMLIFrameElement;
+
+    if (event.source !== iframe.contentWindow) return;
+
+    switch (event.data.type) {
+      case 'folk-iframe-ready': {
+        event.source?.postMessage({
+          type: 'folk-observe-element',
+          selector: this.#sourceIframeSelector,
+        });
+        return;
+      }
+      case 'folk-element-change': {
+        if (this.#sourceIframeSelector === event.data.selector) {
+          this.#sourceIframeChildRect = event.data.boundingBox;
+          this.#updateSourceIframeRect();
+        }
+        return;
+      }
+    }
+  };
+
+  #sourceIframeCallback = (entry: VisualObserverEntry) => {
+    this.#sourceIframeRect = entry.contentRect;
+    this.#updateSourceIframeRect();
+  };
+
+  #updateSourceIframeRect() {
+    this.#sourceRect = DOMRectReadOnly.fromRect({
+      x: this.#sourceIframeRect.x + this.#sourceIframeChildRect.x,
+      y: this.#sourceIframeRect.y + this.#sourceIframeChildRect.y,
+      height: this.#sourceIframeChildRect.height,
+      width: this.#sourceIframeChildRect.width,
+    });
+
+    this.#update();
+  }
+
   #target = '';
   /** A CSS selector for the target of the arrow. */
   get target() {
@@ -88,6 +135,49 @@ export class AbstractArrow extends HTMLElement {
     this.#update();
   };
 
+  #targetIframeSelector = '';
+  #targetIframeRect = DOMRectReadOnly.fromRect();
+  #targetIframeChildRect = DOMRectReadOnly.fromRect();
+
+  #targetPostMessage = (event: MessageEvent) => {
+    const iframe = this.#targetElement as HTMLIFrameElement;
+
+    if (event.source !== iframe.contentWindow) return;
+
+    switch (event.data.type) {
+      case 'folk-iframe-ready': {
+        event.source?.postMessage({
+          type: 'folk-observe-element',
+          selector: this.#targetIframeSelector,
+        });
+        return;
+      }
+      case 'folk-element-change': {
+        if (this.#targetIframeSelector === event.data.selector) {
+          this.#targetIframeChildRect = event.data.boundingBox;
+          this.#updateTargetIframeRect();
+        }
+        return;
+      }
+    }
+  };
+
+  #targetIframeCallback = (entry: VisualObserverEntry) => {
+    this.#targetIframeRect = entry.contentRect;
+    this.#updateTargetIframeRect();
+  };
+
+  #updateTargetIframeRect() {
+    this.#targetRect = DOMRectReadOnly.fromRect({
+      x: this.#targetIframeRect.x + this.#targetIframeChildRect.x,
+      y: this.#targetIframeRect.y + this.#targetIframeChildRect.y,
+      height: this.#targetIframeChildRect.height,
+      width: this.#targetIframeChildRect.width,
+    });
+
+    this.#update();
+  }
+
   connectedCallback() {
     this.source = this.getAttribute('source') || this.#source;
     this.target = this.getAttribute('target') || this.#target;
@@ -112,18 +202,27 @@ export class AbstractArrow extends HTMLElement {
       this.#sourceRect = DOMRectReadOnly.fromRect(vertex);
       this.#update();
     } else {
-      this.#sourceElement = document.querySelector(this.source);
+      const [selector, iframeSelector] = parseCSSSelector(this.#source);
+      this.#sourceIframeSelector = iframeSelector;
+      this.#sourceElement = document.querySelector(selector);
 
       if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
       } else if (this.#sourceElement instanceof FolkGeometry) {
         this.#sourceElement.addEventListener('resize', this.#sourceHandler);
         this.#sourceElement.addEventListener('move', this.#sourceHandler);
+        this.#sourceRect = this.#sourceElement.getBoundingClientRect();
+      } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
+        window.addEventListener('message', this.#sourcePostMessage);
+        visualObserver.observe(this.#sourceElement, this.#sourceIframeCallback);
+        this.#sourceElement.contentWindow?.postMessage({
+          type: 'folk-observe-element',
+          selector: this.#sourceIframeSelector,
+        });
       } else {
         visualObserver.observe(this.#sourceElement, this.#sourceCallback);
+        this.#sourceRect = this.#sourceElement.getBoundingClientRect();
       }
-
-      this.#sourceRect = this.#sourceElement.getBoundingClientRect();
     }
   }
 
@@ -133,6 +232,13 @@ export class AbstractArrow extends HTMLElement {
     if (this.#sourceElement instanceof FolkGeometry) {
       this.#sourceElement.removeEventListener('resize', this.#sourceHandler);
       this.#sourceElement.removeEventListener('move', this.#sourceHandler);
+    } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
+      window.removeEventListener('message', this.#sourcePostMessage);
+      visualObserver.unobserve(this.#sourceElement, this.#sourceIframeCallback);
+      this.#sourceElement.contentWindow?.postMessage({
+        type: 'folk-unobserve-element',
+        selector: this.#sourceIframeSelector,
+      });
     } else {
       visualObserver.unobserve(this.#sourceElement, this.#sourceCallback);
     }
@@ -147,13 +253,22 @@ export class AbstractArrow extends HTMLElement {
       this.#targetRect = DOMRectReadOnly.fromRect(vertex);
       this.#update();
     } else {
-      this.#targetElement = document.querySelector(this.#target);
+      const [selector, iframeSelector] = parseCSSSelector(this.#target);
+      this.#targetIframeSelector = iframeSelector;
+      this.#targetElement = document.querySelector(selector);
 
       if (!this.#targetElement) {
         throw new Error('target is not a valid element');
       } else if (this.#targetElement instanceof FolkGeometry) {
         this.#targetElement.addEventListener('resize', this.#targetHandler);
         this.#targetElement.addEventListener('move', this.#targetHandler);
+      } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
+        window.addEventListener('message', this.#targetPostMessage);
+        visualObserver.observe(this.#targetElement, this.#targetIframeCallback);
+        this.#targetElement.contentWindow?.postMessage({
+          type: 'folk-observe-element',
+          selector: this.#targetIframeSelector,
+        });
       } else {
         visualObserver.observe(this.#targetElement, this.#targetCallback);
       }
@@ -167,6 +282,13 @@ export class AbstractArrow extends HTMLElement {
     if (this.#targetElement instanceof FolkGeometry) {
       this.#targetElement.removeEventListener('resize', this.#targetHandler);
       this.#targetElement.removeEventListener('move', this.#targetHandler);
+    } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
+      window.removeEventListener('message', this.#targetPostMessage);
+      visualObserver.unobserve(this.#targetElement, this.#targetIframeCallback);
+      this.#targetElement.contentWindow?.postMessage({
+        type: 'folk-unobserve-element',
+        selector: this.#targetIframeSelector,
+      });
     } else {
       visualObserver.unobserve(this.#targetElement, this.#targetCallback);
     }

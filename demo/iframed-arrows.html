@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Arrows</title>
+    <title>Iframe Arrows</title>
     <style>
       html {
         height: 100%;
@@ -20,25 +20,35 @@
         border-radius: 3px;
       }
 
-      fc-connection {
+      fc-rope {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
+        pointer-events: none;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
   <body>
-    <fc-geometry id="box1" x="50" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry id="box2" x="150" y="300" width="50" height="50"></fc-geometry>
-    <fc-connection source="#box1" target="#box2"></fc-connection>
+    <fc-geometry x="10" y="100" width="250" height="400">
+      <iframe id="frame1" src="./arrows.html"></iframe>
+    </fc-geometry>
+    <fc-geometry x="300" y="100" width="250" height="400">
+      <iframe id="frame2" src="./arrows.html"></iframe>
+    </fc-geometry>
+
+    <fc-rope source="#frame1 >>> #box1" target="#frame2 >>> #box1"></fc-rope>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkConnection } from '../src/arrows/fc-connection.ts';
-      import '../src/arrows/iframe-script.ts';
+      import { FolkRope } from '../src/arrows/fc-rope.ts';
 
       FolkGeometry.register();
-      FolkConnection.register();
+      FolkRope.register();
     </script>
   </body>
 </html>
