@@ -34,8 +34,8 @@ export class EventPropagator extends FolkRope {
       // TODO: add special triggers for intersection, rAF, etc.
       this.sourceElement?.addEventListener(trigger, this.evaluateExpression);
     }
-
-    this.evaluateExpression();
+    //should we evaluate them immediately?
+    // this.evaluateExpression();
   }
 
   override unobserveSource() {
@@ -49,7 +49,7 @@ export class EventPropagator extends FolkRope {
 
   override observeTarget() {
     super.observeTarget();
-    this.evaluateExpression();
+    // this.evaluateExpression();
   }
 
   override unobserveTarget() {
