@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beats</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      event-propagator {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+      }
+
+      fc-geometry {
+        border: 1px solid black;
+        border-radius: 4px;
+      }
+
+      folk-metronome {
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <fc-geometry x="100" y="100">
+      <folk-metronome bpm="120"></folk-metronome>
+    </fc-geometry>
+
+    <fc-geometry x="200" y="100">
+      <audio id="kick" src="/Kick_Bouncy.wav" controls></audio>
+    </fc-geometry>
+
+    <fc-geometry x="200" y="200">
+      <audio id="hat" src="/Hat_Closed.wav" controls></audio>
+    </fc-geometry>
+
+    <event-propagator
+      source="folk-metronome"
+      target="#kick"
+      triggers="beat"
+      expression="if ($source.beat % 2 === 0) $target.play();"
+    ></event-propagator>
+
+    <event-propagator
+      source="folk-metronome"
+      target="#hat"
+      triggers="beat"
+      expression="if ($source.beat > 2) $target.play();"
+    ></event-propagator>
+
+    <script type="module">
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkLLM } from '../src/folk-llm.ts';
+      import { FolkMetronome } from '../src/folk-metronome.ts';
+      import { EventPropagator } from '../src/arrows/event-propagator.ts';
+
+      FolkGeometry.register();
+      FolkLLM.register();
+      FolkMetronome.register();
+      EventPropagator.register();
+    </script>
+  </body>
+</html>
