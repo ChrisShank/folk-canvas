@@ -18,13 +18,53 @@ export class EventPropagator extends FolkRope {
   }
   set expression(expression) {
     this.#expression = expression;
-    this.#function = new Function('$source', '$target', '$event', expression);
+    try {
+      this.#function = new Function('$source', '$target', '$event', expression);
+    } catch (error) {
+      console.warn('Failed to parse expression:', error);
+      // Use no-op function when parsing fails
+      this.#function = () => {};
+    }
   }
+
+  #textarea = document.createElement('textarea');
 
   constructor() {
     super();
 
-    this.expression = this.getAttribute('expression') || '';
+    this.#textarea.style.cssText = `
+      position: absolute;
+      width: auto;
+      min-width: 60px;
+      height: auto;
+      resize: none;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 4px;
+      pointer-events: auto;
+      overflow: hidden;
+      field-sizing: content;
+    `;
+
+    this.#textarea.value = this.getAttribute('expression') || '';
+    this.#textarea.addEventListener('input', () => {
+      this.expression = this.#textarea.value;
+    });
+
+    this.shadowRoot?.appendChild(this.#textarea);
+    this.expression = this.#textarea.value;
+  }
+
+  override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
+    super.render(sourceRect, targetRect);
+
+    // Position textarea between source and target
+    const midX = (sourceRect.x + targetRect.x) / 2;
+    const midY = (sourceRect.y + targetRect.y) / 2;
+
+    // Center the textarea by subtracting half its width and height
+    this.#textarea.style.left = `${midX - this.#textarea.offsetWidth / 2}px`;
+    this.#textarea.style.top = `${midY - this.#textarea.offsetHeight / 2}px`;
   }
 
   override observeSource() {
