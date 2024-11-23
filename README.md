@@ -19,11 +19,12 @@ deno i
 # then
 deno task dev
 ```
+
 All config is in `deno.json`.
 
 ## Primitives
 
-- `<fc-geometry>`: Manipulate HTML elements in space.
-- `<fc-ink>`: Draw lines of ink.
-- `<fc-arrow>`: Define connection between HTML elements.
-- `<fc-canvas>`: Control a camera (panning/zoom) and query elements in space
+- `<folk-shape>`: Manipulate HTML elements in space.
+- `<folk-ink>`: Draw lines of ink.
+- `<folk-arrow>`: Define connection between HTML elements.
+- `<folk-canvas>`: Control a camera (panning/zoom) and query elements in space

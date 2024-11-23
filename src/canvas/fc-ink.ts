@@ -1,4 +1,4 @@
-import { getStroke, StrokeOptions } from "perfect-freehand";
+import { getStroke, StrokeOptions } from 'perfect-freehand';
 
 export type Point = [x: number, y: number, pressure: number];
 
@@ -25,12 +25,12 @@ styles.replaceSync(`
 
 declare global {
   interface HTMLElementTagNameMap {
-    "fc-ink": FolkInk;
+    'folk-ink': FolkInk;
   }
 }
 
 export class FolkInk extends HTMLElement {
-  static tagName = "fc-ink";
+  static tagName = 'folk-ink';
 
   static register() {
     customElements.define(this.tagName, this);
@@ -38,10 +38,10 @@ export class FolkInk extends HTMLElement {
 
   #internals = this.attachInternals();
 
-  #svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  #path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-  #size = Number(this.getAttribute("size") || 16);
+  #size = Number(this.getAttribute('size') || 16);
 
   get size() {
     return this.#size;
@@ -51,7 +51,7 @@ export class FolkInk extends HTMLElement {
     this.#update();
   }
 
-  #thinning = Number(this.getAttribute("thinning") || 0.5);
+  #thinning = Number(this.getAttribute('thinning') || 0.5);
 
   get thinning() {
     return this.#thinning;
@@ -61,7 +61,7 @@ export class FolkInk extends HTMLElement {
     this.#update();
   }
 
-  #smoothing = Number(this.getAttribute("smoothing") || 0.5);
+  #smoothing = Number(this.getAttribute('smoothing') || 0.5);
 
   get smoothing() {
     return this.#smoothing;
@@ -71,7 +71,7 @@ export class FolkInk extends HTMLElement {
     this.#update();
   }
 
-  #streamline = Number(this.getAttribute("streamline") || 0.5);
+  #streamline = Number(this.getAttribute('streamline') || 0.5);
 
   get streamline() {
     return this.#streamline;
@@ -81,8 +81,7 @@ export class FolkInk extends HTMLElement {
     this.#update();
   }
 
-  #simulatePressure =
-    this.getAttribute("streamline") === "false" ? false : true;
+  #simulatePressure = this.getAttribute('streamline') === 'false' ? false : true;
 
   get simulatePressure() {
     return this.#simulatePressure;
@@ -92,7 +91,7 @@ export class FolkInk extends HTMLElement {
     this.#update();
   }
 
-  #points: Point[] = JSON.parse(this.getAttribute("points") || "[]");
+  #points: Point[] = JSON.parse(this.getAttribute('points') || '[]');
 
   get points() {
     return this.#points;
@@ -106,7 +105,7 @@ export class FolkInk extends HTMLElement {
     super();
 
     const shadowRoot = this.attachShadow({
-      mode: "open",
+      mode: 'open',
       delegatesFocus: true,
     });
     shadowRoot.adoptedStyleSheets.push(styles);
@@ -130,10 +129,10 @@ export class FolkInk extends HTMLElement {
 
   // TODO: cancel trace?
   draw(event?: PointerEvent) {
-    if (event?.type === "pointerdown") {
+    if (event?.type === 'pointerdown') {
       this.handleEvent(event);
     } else {
-      this.addEventListener("pointerdown", this);
+      this.addEventListener('pointerdown', this);
     }
     this.#tracingPromise = Promise.withResolvers();
     return this.#tracingPromise.promise;
@@ -146,26 +145,26 @@ export class FolkInk extends HTMLElement {
 
   handleEvent(event: PointerEvent) {
     switch (event.type) {
-      case "pointerdown": {
+      case 'pointerdown': {
         if (event.button !== 0 || event.ctrlKey) return;
 
         this.points = [];
         this.addPoint([event.offsetX, event.offsetY, event.pressure]);
-        this.addEventListener("lostpointercapture", this);
-        this.addEventListener("pointermove", this);
+        this.addEventListener('lostpointercapture', this);
+        this.addEventListener('pointermove', this);
         this.setPointerCapture(event.pointerId);
-        this.#internals.states.add("drawing");
+        this.#internals.states.add('drawing');
         return;
       }
-      case "pointermove": {
+      case 'pointermove': {
         this.addPoint([event.offsetX, event.offsetY, event.pressure]);
         return;
       }
-      case "lostpointercapture": {
-        this.removeEventListener("pointerdown", this);
-        this.removeEventListener("pointermove", this);
-        this.removeEventListener("lostpointercapture", this);
-        this.#internals.states.delete("drawing");
+      case 'lostpointercapture': {
+        this.removeEventListener('pointerdown', this);
+        this.removeEventListener('pointermove', this);
+        this.removeEventListener('lostpointercapture', this);
+        this.#internals.states.delete('drawing');
         this.#tracingPromise?.resolve();
         this.#tracingPromise = null;
         return;
@@ -193,14 +192,11 @@ export class FolkInk extends HTMLElement {
         cap: true,
       },
     };
-    this.#path.setAttribute(
-      "d",
-      this.#getSvgPathFromStroke(getStroke(this.#points, options))
-    );
+    this.#path.setAttribute('d', this.#getSvgPathFromStroke(getStroke(this.#points, options)));
   }
 
   #getSvgPathFromStroke(stroke: Stroke): string {
-    if (stroke.length === 0) return "";
+    if (stroke.length === 0) return '';
 
     const d = stroke.reduce(
       (acc, [x0, y0], i, arr) => {
@@ -208,10 +204,10 @@ export class FolkInk extends HTMLElement {
         acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
         return acc;
       },
-      ["M", ...stroke[0], "Q"]
+      ['M', ...stroke[0], 'Q']
     );
 
-    d.push("Z");
-    return d.join(" ");
+    d.push('Z');
+    return d.join(' ');
   }
 }
