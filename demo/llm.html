@@ -109,43 +109,12 @@
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { FolkLLM } from '../src/folk-llm.ts';
+      import { FolkTimer } from '../src/folk-timer.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
       FolkGeometry.register();
       FolkLLM.register();
-
-      customElements.define(
-        'folk-timer',
-        class Timer extends HTMLElement {
-          #timeMs = 0;
-          #intervalMs = 100;
-          #timeoutId = -1;
-
-          connectedCallback() {
-            this.#updateTime(0);
-          }
-
-          start() {
-            this.#timeoutId = setInterval(this.#updateTime, this.#intervalMs);
-          }
-
-          stop() {
-            clearInterval(this.#timeoutId);
-            this.#timeoutId = -1;
-          }
-
-          reset() {
-            this.stop();
-            this.#updateTime(0);
-          }
-
-          #updateTime = (time = this.#timeMs + this.#intervalMs) => {
-            this.#timeMs = time;
-            this.textContent = (time / 1000).toFixed(1);
-          };
-        }
-      );
-
+      FolkTimer.register();
       EventPropagator.register();
     </script>
   </body>
