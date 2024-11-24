@@ -155,11 +155,9 @@ export class FolkRope extends AbstractArrow {
     for (let i = 0; i < this.#points.length; i++) {
       const p = this.#points[i];
 
-      const prev = i > 0 ? this.#points[i - 1] : null;
-
-      if (prev) {
+      if (p.prev) {
         this.#context.beginPath();
-        this.#context.moveTo(prev.pos.x, prev.pos.y);
+        this.#context.moveTo(p.prev.pos.x, p.prev.pos.y);
         this.#context.lineTo(p.pos.x, p.pos.y);
         this.#context.lineWidth = 2;
         this.#context.strokeStyle = this.#stroke;
@@ -264,5 +262,19 @@ export class FolkRope extends AbstractArrow {
         point.prev.pos.y -= normal.y * diff * 0.25;
       }
     }
+  }
+
+  break(index = Math.floor(this.#points.length / 2)) {
+    if (this.#points.length === 0) return;
+
+    this.#points[index].next = null;
+    this.#points[index + 1].prev = null;
+  }
+
+  mend(index = Math.floor(this.#points.length / 2)) {
+    if (this.#points.length === 0) return;
+
+    this.#points[index].next = this.#points[index + 1];
+    this.#points[index + 1].prev = this.#points[index];
   }
 }

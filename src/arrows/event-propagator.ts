@@ -17,14 +17,14 @@ export class EventPropagator extends FolkRope {
     return this.#expression;
   }
   set expression(expression) {
-    this.stroke = 'black';
+    this.mend();
     this.#expression = expression;
     try {
       this.#function = new Function('$source', '$target', '$event', expression);
     } catch (error) {
       console.warn('Failed to parse expression:', error);
       // Use no-op function when parsing fails
-      this.stroke = 'red';
+      this.break();
       this.#function = () => {};
     }
   }
