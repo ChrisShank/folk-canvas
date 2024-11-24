@@ -101,7 +101,11 @@ export class EventPropagator extends FolkRope {
   // Do we need the event at all?
   evaluateExpression = (event?: Event) => {
     if (this.sourceElement === null || this.targetElement === null) return;
-
-    this.#function(this.sourceElement, this.targetElement, event);
+    this.stroke = 'black';
+    try {
+      this.#function(this.sourceElement, this.targetElement, event);
+    } catch (error) {
+      this.stroke = 'red';
+    }
   };
 }
