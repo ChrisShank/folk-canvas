@@ -56,6 +56,15 @@ export class FolkRope extends AbstractArrow {
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
+  #stroke = this.getAttribute('stroke') || 'black';
+  get stroke() {
+    return this.#stroke;
+  }
+  set stroke(stroke) {
+    this.#stroke = stroke;
+    // TODO: redraw rope?
+  }
+
   constructor() {
     super();
 
@@ -148,7 +157,7 @@ export class FolkRope extends AbstractArrow {
         this.#context.moveTo(prev.pos.x, prev.pos.y);
         this.#context.lineTo(p.pos.x, p.pos.y);
         this.#context.lineWidth = 2;
-        this.#context.strokeStyle = 'black';
+        this.#context.strokeStyle = this.#stroke;
         this.#context.stroke();
       }
     }
