@@ -41,7 +41,7 @@ export class FolkMetronome extends HTMLElement {
     return (60 * 1000) / this.#bpm;
   }
 
-  handleEvent(e) {
+  handleEvent(e: Event) {
     if (e.type === 'click' && e.target === this) {
       this.isPlaying ? this.pause() : this.play();
     }

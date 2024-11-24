@@ -17,7 +17,7 @@ function parseVertex(str: string): Vertex | null {
   };
 }
 
-function parseCSSSelector(selector) {
+function parseCSSSelector(selector: string): string[] {
   return selector.split('>>>').map((s) => s.trim());
 }
 

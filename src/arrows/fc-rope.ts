@@ -4,19 +4,24 @@ import { ResizeObserverManager } from '../resize-observer.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
 import { Vertex } from './utils.ts';
 
-const lerp = (first, second, percentage) => first + (second - first) * percentage;
+const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
+
+type Vector2 = { x: number; y: number };
 
 class Vector {
-  static zero = () => ({ x: 0, y: 0 });
-  static sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
-  static add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
-  static mult = (a, b) => ({ x: a.x * b.x, y: a.y * b.y });
-  static scale = (v, scaleFactor) => ({ x: v.x * scaleFactor, y: v.y * scaleFactor });
-  static mag = (v) => Math.sqrt(v.x * v.x + v.y * v.y);
-  static normalized(v) {
+  static zero: () => Vector2 = () => ({ x: 0, y: 0 });
+  static sub: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
+  static add: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
+  static mult: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x * b.x, y: a.y * b.y });
+  static scale: (v: Vector2, scaleFactor: number) => Vector2 = (v, scaleFactor) => ({
+    x: v.x * scaleFactor,
+    y: v.y * scaleFactor,
+  });
+  static mag: (v: Vector2) => number = (v) => Math.sqrt(v.x * v.x + v.y * v.y);
+  static normalized: (v: Vector2) => Vector2 = (v) => {
     const mag = Vector.mag(v);
     return mag === 0 ? Vector.zero() : { x: v.x / mag, y: v.y / mag };
-  }
+  };
 }
 
 // Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!
@@ -71,20 +76,20 @@ export class FolkRope extends AbstractArrow {
     this.#shadow.appendChild(this.#canvas);
   }
 
-  connectedCallback(): void {
+  override connectedCallback(): void {
     super.connectedCallback();
 
     resizeObserver.observe(this, this.#onResize);
   }
 
-  disconnectedCallback(): void {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
 
     resizeObserver.unobserve(this, this.#onResize);
     cancelAnimationFrame(this.#rAFId);
   }
 
-  #onResize = (entry) => {
+  #onResize = (entry: ResizeObserverEntry) => {
     this.#canvas.width = entry.contentRect.width;
     this.#canvas.height = entry.contentRect.height;
     this.#drawRopePoints();
@@ -118,7 +123,7 @@ export class FolkRope extends AbstractArrow {
     }
   };
 
-  render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
+  override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
     if (this.#points.length === 0) {
       this.#points = this.#generatePoints(
         { x: sourceRect.x, y: sourceRect.y },
@@ -148,7 +153,7 @@ export class FolkRope extends AbstractArrow {
     this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
 
     for (let i = 0; i < this.#points.length; i++) {
-      let p = this.#points[i];
+      const p = this.#points[i];
 
       const prev = i > 0 ? this.#points[i - 1] : null;
 
@@ -167,7 +172,7 @@ export class FolkRope extends AbstractArrow {
     const delta = Vector.sub(end, start);
     const len = Vector.mag(delta);
     const resolution = 5;
-    let points: RopePoint[] = [];
+    const points: RopePoint[] = [];
     const pointsLen = Math.floor(len / resolution);
 
     for (let i = 0; i < pointsLen; i++) {
@@ -204,15 +209,15 @@ export class FolkRope extends AbstractArrow {
   }
 
   // Integrate motion equations per node without taking into account relationship with other nodes...
-  #integratePoint(point: RopePoint, gravity, dt, previousFrameDt) {
+  #integratePoint(point: RopePoint, gravity: Vector2, dt: number, previousFrameDt: number) {
     if (!point.isFixed) {
       point.velocity = Vector.sub(point.pos, point.oldPos);
       point.oldPos = { ...point.pos };
 
       // Drastically improves stability
-      let timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
+      const timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
 
-      let accel = Vector.add(gravity, { x: 0, y: point.mass });
+      const accel = Vector.add(gravity, { x: 0, y: point.mass });
 
       const velCoef = timeCorrection * point.damping;
       const accelCoef = Math.pow(dt, 2);
