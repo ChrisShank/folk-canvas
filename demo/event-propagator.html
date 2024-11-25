@@ -33,7 +33,7 @@
   </head>
   <body>
     <fc-geometry id="box1" x="100" y="100" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box2" x="200" y="300">Hello World</fc-geometry>
+    <fc-geometry id="box2" x="200" y="350">Hello World</fc-geometry>
     <event-propagator
       source="#box1"
       target="#box2"
@@ -41,8 +41,8 @@
       expression="$target.textContent += '!'"
     ></event-propagator>
 
-    <fc-geometry id="box3" x="150" y="200" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box4" x="300" y="350" width="30" height="30"></fc-geometry>
+    <fc-geometry id="box3" x="350" y="200" width="30" height="30"></fc-geometry>
+    <fc-geometry id="box4" x="500" y="250" width="30" height="30"></fc-geometry>
     <event-propagator
       source="#box3"
       target="#box4"

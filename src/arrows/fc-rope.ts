@@ -61,6 +61,10 @@ export class FolkRope extends AbstractArrow {
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
+  get points() {
+    return this.#points;
+  }
+
   #stroke = this.getAttribute('stroke') || 'black';
   get stroke() {
     return this.#stroke;
@@ -92,7 +96,7 @@ export class FolkRope extends AbstractArrow {
   #onResize = (entry: ResizeObserverEntry) => {
     this.#canvas.width = entry.contentRect.width;
     this.#canvas.height = entry.contentRect.height;
-    this.#drawRopePoints();
+    this.draw();
   };
 
   #tick = (timestamp: number = performance.now()) => {
@@ -117,7 +121,7 @@ export class FolkRope extends AbstractArrow {
 
       this.#previousDelta = dts;
 
-      this.#drawRopePoints();
+      this.draw();
 
       this.#lastTime = this.#currentTime - (this.#deltaTime % this.#interval);
     }
@@ -149,7 +153,7 @@ export class FolkRope extends AbstractArrow {
     endingPoint.pos.y = targetRect.bottom;
   }
 
-  #drawRopePoints() {
+  draw() {
     this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
 
     for (let i = 0; i < this.#points.length; i++) {
@@ -264,7 +268,7 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  break(index = Math.floor(this.#points.length / 2)) {
+  cut(index = Math.floor(this.#points.length / 2)) {
     if (this.#points.length === 0) return;
 
     this.#points[index].next = null;

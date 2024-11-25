@@ -1,5 +1,23 @@
 import { FolkRope } from './fc-rope.ts';
 
+const styles = new CSSStyleSheet();
+styles.replaceSync(`
+textarea {
+  position: absolute;
+  width: auto;
+  min-width: 60px;
+  height: auto;
+  resize: none;
+  background: rgba(256, 256, 256, 0.8);
+  border: 1px solid #ccc;
+  padding: 4px;
+  pointer-events: auto;
+  overflow: hidden;
+  field-sizing: content;
+  translate: -50% -50%;
+}  
+`);
+
 export class EventPropagator extends FolkRope {
   static override tagName = 'event-propagator';
 
@@ -24,7 +42,7 @@ export class EventPropagator extends FolkRope {
     } catch (error) {
       console.warn('Failed to parse expression:', error);
       // Use no-op function when parsing fails
-      this.break();
+      this.cut();
       this.#function = () => {};
     }
   }
@@ -34,27 +52,15 @@ export class EventPropagator extends FolkRope {
   constructor() {
     super();
 
-    this.#textarea.style.cssText = `
-      position: absolute;
-      width: auto;
-      min-width: 60px;
-      height: auto;
-      resize: none;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 4px;
-      pointer-events: auto;
-      overflow: hidden;
-      field-sizing: content;
-    `;
+    this.shadowRoot?.adoptedStyleSheets.push(styles);
 
-    this.#textarea.value = this.getAttribute('expression') || '';
     this.#textarea.addEventListener('input', () => {
       this.expression = this.#textarea.value;
     });
 
     this.shadowRoot?.appendChild(this.#textarea);
-    this.expression = this.#textarea.value;
+
+    this.expression = this.#textarea.value = this.getAttribute('expression') || '';
   }
 
   override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
@@ -63,10 +69,15 @@ export class EventPropagator extends FolkRope {
     // Position textarea between source and target
     const midX = (sourceRect.x + targetRect.x) / 2;
     const midY = (sourceRect.y + targetRect.y) / 2;
+  }
 
+  override draw() {
+    super.draw();
+
+    const point = this.points[Math.floor(this.points.length / 2)];
     // Center the textarea by subtracting half its width and height
-    this.#textarea.style.left = `${midX - this.#textarea.offsetWidth / 2}px`;
-    this.#textarea.style.top = `${midY - this.#textarea.offsetHeight / 2}px`;
+    this.#textarea.style.left = `${point.pos.x}px`;
+    this.#textarea.style.top = `${point.pos.y}px`;
   }
 
   override observeSource() {
