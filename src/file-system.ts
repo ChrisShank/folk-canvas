@@ -1,4 +1,4 @@
-import { KeyValueStore } from './indexeddb';
+import { KeyValueStore } from './indexeddb.ts';
 
 export class FileSaver {
   #id;

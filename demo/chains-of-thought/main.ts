@@ -1,23 +1,21 @@
-import { FolkGeometry } from "../../src/canvas/fc-geometry.ts";
-import { FolkConnection } from "../../src/arrows/fc-connection.ts";
-import { FileSaver } from "../../src/persistence/file.ts";
+import { FolkGeometry } from '../../src/canvas/fc-geometry.ts';
+import { FolkConnection } from '../../src/arrows/fc-connection.ts';
+import { FileSaver } from '../../src/file-system.ts';
 
 declare global {
   interface HTMLElementTagNameMap {
-    "fc-thought": FolkThought;
+    'fc-thought': FolkThought;
   }
 }
 
 class FolkThought extends HTMLElement {
-  static tagName = "fc-thought";
+  static tagName = 'fc-thought';
 
   static register() {
     customElements.define(this.tagName, this);
   }
 
-  #deleteButton = this.querySelector(
-    'button[name="delete"]'
-  ) as HTMLButtonElement;
+  #deleteButton = this.querySelector('button[name="delete"]') as HTMLButtonElement;
   #text = this.querySelector('[name="text"]') as HTMLElement;
 
   #geometry = this.parentElement as FolkGeometry;
@@ -25,7 +23,7 @@ class FolkThought extends HTMLElement {
   constructor() {
     super();
 
-    this.addEventListener("click", this);
+    this.addEventListener('click', this);
   }
 
   get text() {
@@ -33,7 +31,7 @@ class FolkThought extends HTMLElement {
   }
 
   handleEvent(event: PointerEvent): void {
-    if (event.type === "click" && event.target === this.#deleteButton) {
+    if (event.type === 'click' && event.target === this.#deleteButton) {
       this.#geometry.remove();
 
       document
@@ -70,8 +68,7 @@ interface ChainOfThought {
 const html = String.raw;
 
 function parseHTML(html: string): Element {
-  return document.createRange().createContextualFragment(html)
-    .firstElementChild!;
+  return document.createRange().createContextualFragment(html).firstElementChild!;
 }
 
 function renderThought({ id, x, y, text }: Thought) {
@@ -91,47 +88,37 @@ function renderConnection({ sourceId, targetId }: Connection) {
 }
 
 function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
-  return html`${thoughts.map(renderThought).join("")}${connections
-    .map(renderConnection)
-    .join("")}`;
+  return html`${thoughts.map(renderThought).join('')}${connections.map(renderConnection).join('')}`;
 }
 
 function parseChainOfThought(): ChainOfThought {
   return {
-    thoughts: Array.from(document.querySelectorAll("fc-geometry")).map(
-      (el) => ({
-        id: el.id,
-        text: (el.firstElementChild as FolkThought).text,
-        x: el.x,
-        y: el.y,
-      })
-    ),
-    connections: Array.from(document.querySelectorAll("fc-connection")).map(
-      (el) => ({
-        sourceId: (el.sourceElement as FolkGeometry).id,
-        targetId: (el.targetElement as FolkGeometry).id,
-      })
-    ),
+    thoughts: Array.from(document.querySelectorAll('fc-geometry')).map((el) => ({
+      id: el.id,
+      text: (el.firstElementChild as FolkThought).text,
+      x: el.x,
+      y: el.y,
+    })),
+    connections: Array.from(document.querySelectorAll('fc-connection')).map((el) => ({
+      sourceId: (el.sourceElement as FolkGeometry).id,
+      targetId: (el.targetElement as FolkGeometry).id,
+    })),
   };
 }
 
 const openButton = document.querySelector('button[name="open"]')!;
 const saveButton = document.querySelector('button[name="save"]')!;
 const saveAsButton = document.querySelector('button[name="save-as"]')!;
-const main = document.querySelector("main")!;
-const fileSaver = new FileSaver(
-  "chains-of-thought",
-  "json",
-  "application/json"
-);
+const main = document.querySelector('main')!;
+const fileSaver = new FileSaver('chains-of-thought', 'json', 'application/json');
 
-main.addEventListener("dblclick", (e) => {
+main.addEventListener('dblclick', (e) => {
   if (e.target === main) {
     main.appendChild(
       parseHTML(
         renderThought({
-          id: String(document.querySelectorAll("fc-thought").length + 1),
-          text: "",
+          id: String(document.querySelectorAll('fc-thought').length + 1),
+          text: '',
           x: e.clientX,
           y: e.clientY,
         })
@@ -156,15 +143,15 @@ function saveFile(promptNewFile = false) {
   fileSaver.save(file, promptNewFile);
 }
 
-openButton.addEventListener("click", () => {
+openButton.addEventListener('click', () => {
   openFile();
 });
 
-saveButton.addEventListener("click", () => {
+saveButton.addEventListener('click', () => {
   saveFile();
 });
 
-saveAsButton.addEventListener("click", () => {
+saveAsButton.addEventListener('click', () => {
   saveFile(true);
 });
 
