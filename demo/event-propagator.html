@@ -38,7 +38,7 @@
       source="#box1"
       target="#box2"
       triggers="click"
-      expression="$target.textContent += '!'"
+      expression="textContent: _ + '!'"
     ></event-propagator>
 
     <fc-geometry id="box3" x="350" y="200" width="30" height="30"></fc-geometry>
@@ -47,7 +47,8 @@
       source="#box3"
       target="#box4"
       triggers="move"
-      expression="$target.y = $source.x"
+      expression="y: from.x,
+rotate: from.x"
     ></event-propagator>
 
     <script type="module">

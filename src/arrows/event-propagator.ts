@@ -38,7 +38,7 @@ export class EventPropagator extends FolkRope {
   }
 
   #expression = '';
-  #function = new Function();
+  #function: Function | null = null;
   get expression() {
     return this.#expression;
   }
@@ -46,12 +46,56 @@ export class EventPropagator extends FolkRope {
     this.mend();
     this.#expression = expression;
     try {
-      this.#function = new Function('$source', '$target', '$event', expression);
+      const processedExp = expression.trim();
+
+      // Process each line, looking for the first ':' to separate key from value
+      const processedProps = processedExp
+        .split('\n')
+        .map((line) => {
+          const line_trimmed = line.trim();
+          if (!line_trimmed || line_trimmed === '{' || line_trimmed === '}') return '';
+
+          // Remove trailing comma if it exists
+          const withoutComma = line_trimmed.replace(/,\s*$/, '');
+
+          const colonIndex = withoutComma.indexOf(':');
+          if (colonIndex === -1) return withoutComma;
+
+          const key = withoutComma.slice(0, colonIndex).trim();
+          const value = withoutComma.slice(colonIndex + 1).trim();
+
+          return `${key}: (function() { const _ = to[${JSON.stringify(key)}]; return ${value}; })()`;
+        })
+        .filter((line) => line)
+        .join(',\n');
+
+      this.#function = new Function(
+        'from',
+        'to',
+        'event',
+        `
+      return {
+        ${processedProps}
+      };
+    `
+      );
+
+      console.log(processedProps);
+
+      this.#function = new Function(
+        'from',
+        'to',
+        'event',
+        `
+        return {
+          ${processedProps}
+        };
+      `
+      );
     } catch (error) {
       console.warn('Failed to parse expression:', error);
-      // Use no-op function when parsing fails
       this.cut();
-      this.#function = () => {};
+      this.#function = null;
     }
   }
 
@@ -133,13 +177,16 @@ export class EventPropagator extends FolkRope {
     super.unobserveTarget();
   }
 
-  // Do we need the event at all?
   evaluateExpression = (event?: Event) => {
     if (this.sourceElement === null || this.targetElement === null) return;
     this.stroke = 'black';
+    if (!this.#function) return;
+
     try {
-      this.#function(this.sourceElement, this.targetElement, event);
+      const assignments = this.#function(this.sourceElement, this.targetElement, event);
+      Object.assign(this.targetElement, assignments);
     } catch (error) {
+      console.warn('Failed to parse expression:', error);
       this.stroke = 'red';
     }
   };
