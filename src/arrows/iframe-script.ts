@@ -1,6 +1,8 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
 import { ClientRectObserverManager, ClientRectObserverEntry } from '../client-rect-observer.ts';
 
+const clientRectObserver = new ClientRectObserverManager();
+
 interface ObservedElementEntry {
   selector: string;
   element: Element;
@@ -51,7 +53,13 @@ if (window.parent !== window) {
   const observedElements = new Map();
   const observedSelectors = new Map();
 
-  function boundingBoxCallback(entry: ClientRectObserverEntry) {}
+  function boundingBoxCallback(entry: ClientRectObserverEntry) {
+    window.parent.postMessage({
+      type: 'folk-element-change',
+      selector: observedSelectors.get(entry.target),
+      boundingBox: entry.contentRect,
+    });
+  }
 
   function onGeometryChange(event) {
     window.parent.postMessage({
@@ -82,7 +90,7 @@ if (window.parent !== window) {
             boundingBox: element.getClientRect(),
           });
         } else {
-          // use BoundingBoxObserver
+          clientRectObserver.observe(element, boundingBoxCallback);
         }
         return;
       }
@@ -98,6 +106,7 @@ if (window.parent !== window) {
           observedElements.delete(selector);
           observedSelectors.delete(element);
         } else {
+          clientRectObserver.unobserve(element, boundingBoxCallback);
         }
 
         return;
