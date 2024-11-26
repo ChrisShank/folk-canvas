@@ -90,7 +90,7 @@ s-columns, s-rows, s-body {
   gap: 1px;
 }
 
-::slotted(s-cell) {
+::slotted(folk-cell) {
   box-sizing: border-box;
   align-items: center;
   background-color: rgb(255, 255, 255);
@@ -101,11 +101,11 @@ s-columns, s-rows, s-body {
   overflow: hidden;
 }
 
-::slotted(s-cell[type='number']) {
+::slotted(folk-cell[type='number']) {
   justify-content: end;
 }
 
-::slotted(s-cell:focus) {
+::slotted(folk-cell:focus) {
   outline: 2px solid #1b73e8;
   z-index: 4;
 }
@@ -134,9 +134,9 @@ export function templateCells(numberOfRows: number, numberOfColumns: number, exp
       const row = i + 1;
       const expression = expressions[`${column}${row}`];
       cells.push(
-        `<s-cell column="${column}" row="${row}" tabindex="0" ${
+        `<folk-cell column="${column}" row="${row}" tabindex="0" ${
           expression ? `expression="${expression}"` : ''
-        }></s-cell>`
+        }></folk-cell>`
       );
     }
   }
@@ -145,16 +145,16 @@ export function templateCells(numberOfRows: number, numberOfColumns: number, exp
 
 declare global {
   interface HTMLElementTagNameMap {
-    's-table': SpreadsheetTable;
+    'folk-spreadsheet': FolkSpreadsheet;
   }
 }
 
-export class SpreadsheetTable extends HTMLElement {
-  static tagName = 's-table';
+export class FolkSpreadsheet extends HTMLElement {
+  static tagName = 'folk-spreadsheet';
 
   static register() {
-    SpreadsheetCell.register();
-    SpreadsheetHeader.register();
+    FolkSpreadSheetCell.register();
+    FolkSpreadsheetHeader.register();
     customElements.define(this.tagName, this);
   }
 
@@ -162,7 +162,7 @@ export class SpreadsheetTable extends HTMLElement {
 
   #textarea;
 
-  #editedCell: SpreadsheetCell | null = null;
+  #editedCell: FolkSpreadSheetCell | null = null;
 
   constructor() {
     super();
@@ -182,7 +182,7 @@ export class SpreadsheetTable extends HTMLElement {
     const columnNames = new Set();
     const rowNames = new Set();
 
-    const cells = this.querySelectorAll('s-cell');
+    const cells = this.querySelectorAll('folk-cell');
 
     cells.forEach((cell) => {
       columnNames.add(cell.column);
@@ -199,12 +199,14 @@ export class SpreadsheetTable extends HTMLElement {
       ${columns
         .map(
           (column) =>
-            `s-header[column="${column}"], ::slotted(s-cell[column="${column}"]) { grid-column: ${
+            `s-header[column="${column}"], ::slotted(folk-cell[column="${column}"]) { grid-column: ${
               getColumnIndex(column) + 1
             }; }`
         )
         .join('\n')}
-      ${rows.map((row) => `s-header[row="${row}"], ::slotted(s-cell[row="${row}"]) { grid-row: ${row}; }`).join('\n')}
+      ${rows
+        .map((row) => `s-header[row="${row}"], ::slotted(folk-cell[row="${row}"]) { grid-row: ${row}; }`)
+        .join('\n')}
     </style>`;
 
     this.#shadow.innerHTML = `
@@ -227,8 +229,8 @@ export class SpreadsheetTable extends HTMLElement {
     this.#range = range;
   }
 
-  getCell(column: string, row: number | string): SpreadsheetCell | null {
-    return this.querySelector(`s-cell[column="${column}"][row="${row}"]`);
+  getCell(column: string, row: number | string): FolkSpreadSheetCell | null {
+    return this.querySelector(`folk-cell[column="${column}"][row="${row}"]`);
   }
 
   handleEvent(event: Event) {
@@ -238,7 +240,7 @@ export class SpreadsheetTable extends HTMLElement {
 
         const { target } = event;
 
-        if (target instanceof SpreadsheetCell) {
+        if (target instanceof FolkSpreadSheetCell) {
           event.preventDefault(); // dont scroll as we change focus
 
           switch (event.code) {
@@ -276,13 +278,13 @@ export class SpreadsheetTable extends HTMLElement {
         return;
       }
       case 'dblclick': {
-        if (event.target instanceof SpreadsheetCell) {
+        if (event.target instanceof FolkSpreadSheetCell) {
           this.#focusTextarea(event.target);
         }
         return;
       }
       case 'focusin': {
-        if (event.target instanceof SpreadsheetCell) {
+        if (event.target instanceof FolkSpreadSheetCell) {
           this.#getHeader('column', event.target.column).selected = true;
           this.#getHeader('row', event.target.row).selected = true;
           this.range = event.target.name;
@@ -291,7 +293,7 @@ export class SpreadsheetTable extends HTMLElement {
         return;
       }
       case 'focusout': {
-        if (event.target instanceof SpreadsheetCell) {
+        if (event.target instanceof FolkSpreadSheetCell) {
           this.#getHeader('column', event.target.column).selected = false;
           this.#getHeader('row', event.target.row).selected = false;
           this.range = event.target.name;
@@ -308,11 +310,11 @@ export class SpreadsheetTable extends HTMLElement {
     }
   }
 
-  #getHeader(type: 'row' | 'column', value: string | number): SpreadsheetHeader {
+  #getHeader(type: 'row' | 'column', value: string | number): FolkSpreadsheetHeader {
     return this.#shadow.querySelector(`s-header[${type}="${value}"]`)!;
   }
 
-  #focusTextarea(cell: SpreadsheetCell) {
+  #focusTextarea(cell: FolkSpreadSheetCell) {
     this.#editedCell = cell;
     const gridColumn = getColumnIndex(cell.column) + 2;
     const gridRow = cell.row + 1;
@@ -337,11 +339,11 @@ export class SpreadsheetTable extends HTMLElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    's-header': SpreadsheetHeader;
+    's-header': FolkSpreadsheetHeader;
   }
 }
 
-export class SpreadsheetHeader extends HTMLElement {
+export class FolkSpreadsheetHeader extends HTMLElement {
   static tagName = 's-header';
 
   static register() {
@@ -367,12 +369,12 @@ export class SpreadsheetHeader extends HTMLElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    's-cell': SpreadsheetCell;
+    'folk-cell': FolkSpreadSheetCell;
   }
 }
 
-export class SpreadsheetCell extends HTMLElement {
-  static tagName = 's-cell';
+export class FolkSpreadSheetCell extends HTMLElement {
+  static tagName = 'folk-cell';
 
   static register() {
     customElements.define(this.tagName, this);
@@ -413,7 +415,7 @@ export class SpreadsheetCell extends HTMLElement {
 
   #expression = '';
 
-  #dependencies: ReadonlyArray<SpreadsheetCell> = [];
+  #dependencies: ReadonlyArray<FolkSpreadSheetCell> = [];
 
   get dependencies() {
     return this.#dependencies;
@@ -459,8 +461,8 @@ export class SpreadsheetCell extends HTMLElement {
     return this.#value;
   }
 
-  #getCell(column: string, row: number | string): SpreadsheetCell | null {
-    return this.parentElement!.querySelector(`s-cell[column="${column}"][row="${row}"]`);
+  #getCell(column: string, row: number | string): FolkSpreadSheetCell | null {
+    return this.parentElement!.querySelector(`folk-cell[column="${column}"][row="${row}"]`);
   }
 
   get cellAbove() {
