@@ -39,8 +39,6 @@ export class FolkRope extends AbstractArrow {
   #lastTime = 0;
   #currentTime = 0;
   #deltaTime = 0;
-  #previousDelta = 0;
-  #interval = 1000 / 60; // ms per frame
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
@@ -83,32 +81,33 @@ export class FolkRope extends AbstractArrow {
     this.draw();
   };
 
-  #tick = (timestamp: number = performance.now()) => {
-    this.#currentTime = timestamp;
+  #dtAccumulator = 0;
+  #fixedTimestep = 1 / 60;
 
+  #tick = (timestamp: number = performance.now()) => {
     this.#rAFId = requestAnimationFrame(this.#tick);
 
-    this.#deltaTime = this.#currentTime - this.#lastTime;
+    const actualDelta = (timestamp - this.#lastTime) * 0.001;
+    this.#lastTime = timestamp;
 
-    if (this.#deltaTime > this.#interval) {
-      const dts = this.#deltaTime * 0.001; // delta time in seconds
-
+    // Accumulate delta time, but clamp to avoid spiral of death
+    this.#dtAccumulator = Math.min(this.#dtAccumulator + actualDelta, 0.2);
+    while (this.#dtAccumulator >= this.#fixedTimestep) {
       for (const point of this.#points) {
-        this.#integratePoint(point, this.#gravity, dts, this.#previousDelta);
+        this.#integratePoint(point, this.#gravity);
       }
 
-      for (let iteration = 0; iteration < 100; iteration++) {
+      // 3 constraint iterations is enough for fixed timestep
+      for (let iteration = 0; iteration < 3; iteration++) {
         for (const point of this.#points) {
           this.#constrainPoint(point);
         }
       }
 
-      this.#previousDelta = dts;
-
-      this.draw();
-
-      this.#lastTime = this.#currentTime - (this.#deltaTime % this.#interval);
+      this.#dtAccumulator -= this.#fixedTimestep;
     }
+
+    this.draw();
   };
 
   override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
@@ -192,22 +191,16 @@ export class FolkRope extends AbstractArrow {
     return points;
   }
 
-  // Integrate motion equations per node without taking into account relationship with other nodes...
-  #integratePoint(point: RopePoint, gravity: Vector2, dt: number, previousFrameDt: number) {
+  #integratePoint(point: RopePoint, gravity: Vector2) {
     if (!point.isFixed) {
       point.velocity = Vector.sub(point.pos, point.oldPos);
       point.oldPos = { ...point.pos };
 
-      // Drastically improves stability
-      const timeCorrection = previousFrameDt !== 0.0 ? dt / previousFrameDt : 0.0;
-
       const accel = Vector.add(gravity, { x: 0, y: point.mass });
+      const tsSq = this.#fixedTimestep * this.#fixedTimestep;
 
-      const velCoef = timeCorrection * point.damping;
-      const accelCoef = Math.pow(dt, 2);
-
-      point.pos.x += point.velocity.x * velCoef + accel.x * accelCoef;
-      point.pos.y += point.velocity.y * velCoef + accel.y * accelCoef;
+      point.pos.x += point.velocity.x * point.damping + accel.x * tsSq;
+      point.pos.y += point.velocity.y * point.damping + accel.y * tsSq;
     } else {
       point.velocity = Vector.zero();
       point.oldPos = { ...point.pos };
@@ -219,9 +212,13 @@ export class FolkRope extends AbstractArrow {
     const applyConstraint = (p1: RopePoint, p2: RopePoint) => {
       const delta = Vector.sub(p2.pos, p1.pos);
       const len = Vector.mag(delta);
+
+      // Prevent division by zero
+      if (len < 0.0001) return;
+
       const diff = len - p1.distanceToNextPoint;
       const normal = Vector.normalized(delta);
-      const adjustment = Vector.scale(normal, diff * 0.25);
+      const adjustment = Vector.scale(normal, diff * 0.75);
 
       if (!p1.isFixed) {
         p1.pos = Vector.add(p1.pos, adjustment);
