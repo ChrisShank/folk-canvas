@@ -1,5 +1,5 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
-import { VisualObserverManager, VisualObserverEntry } from './visual-observer.ts';
+import { ClientRectObserverManager, ClientRectObserverEntry } from './visual-observer.ts';
 
 interface ObservedElementEntry {
   selector: string;
@@ -51,7 +51,7 @@ if (window.parent !== window) {
   const observedElements = new Map();
   const observedSelectors = new Map();
 
-  function boundingBoxCallback(entry: VisualObserverEntry) {}
+  function boundingBoxCallback(entry: ClientRectObserverEntry) {}
 
   function onGeometryChange(event) {
     window.parent.postMessage({

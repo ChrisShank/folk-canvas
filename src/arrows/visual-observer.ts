@@ -1,14 +1,14 @@
-export interface VisualObserverEntry {
+export interface ClientRectObserverEntry {
   target: Element;
   contentRect: DOMRectReadOnly;
   isAppearing: boolean;
 }
 
-export interface VisualObserverCallback {
-  (this: VisualObserver, entries: VisualObserverEntry[], observer: VisualObserver): void;
+export interface ClientRectObserverCallback {
+  (this: ClientRectObserver, entries: ClientRectObserverEntry[], observer: ClientRectObserver): void;
 }
 
-interface VisualObserverElement {
+interface ClientRectObserverElement {
   io: IntersectionObserver | null;
   threshold: number;
   isFirstUpdate: boolean;
@@ -17,20 +17,20 @@ interface VisualObserverElement {
 /**
  * Create an observer that notifies when an element is resized, moved, or added/removed from the DOM.
  */
-export class VisualObserver {
+export class ClientRectObserver {
   #root = document.documentElement;
   #rootRect = this.#root.getBoundingClientRect();
 
-  #entries: VisualObserverEntry[] = [];
+  #entries: ClientRectObserverEntry[] = [];
   #rafId = 0;
 
-  #callback: VisualObserverCallback;
+  #callback: ClientRectObserverCallback;
 
-  constructor(callback: VisualObserverCallback) {
+  constructor(callback: ClientRectObserverCallback) {
     this.#callback = callback;
   }
 
-  #elements = new Map<Element, VisualObserverElement>();
+  #elements = new Map<Element, ClientRectObserverElement>();
 
   #resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
     const rootEntry = entries.find((entry) => entry.target === this.#root);
@@ -49,7 +49,7 @@ export class VisualObserver {
     }
   });
 
-  #appendEntry(entry: VisualObserverEntry) {
+  #appendEntry(entry: ClientRectObserverEntry) {
     // deduplicate the same target
     this.#entries.push(entry);
 
@@ -66,9 +66,7 @@ export class VisualObserver {
   };
 
   // We should be guaranteed that each `IntersectionObserver` only observes one element.
-  #onIntersection = ([
-    { target, intersectionRatio, boundingClientRect },
-  ]: IntersectionObserverEntry[]) => {
+  #onIntersection = ([{ target, intersectionRatio, boundingClientRect }]: IntersectionObserverEntry[]) => {
     const el = this.#elements.get(target);
 
     if (el === undefined) return;
@@ -100,7 +98,7 @@ export class VisualObserver {
   #refreshElement(
     target: Element,
     contentRect: DOMRectReadOnly = target.getBoundingClientRect()
-  ): VisualObserverEntry {
+  ): ClientRectObserverEntry {
     // Assume el exists
     const el = this.#elements.get(target)!;
 
@@ -176,7 +174,7 @@ export class VisualObserver {
     this.#resizeObserver.observe(target);
   }
 
-  takeRecords(): VisualObserverEntry[] {
+  takeRecords(): ClientRectObserverEntry[] {
     if (this.#rafId === 0) return [];
 
     const entries = this.#entries;
@@ -203,12 +201,12 @@ export class VisualObserver {
   }
 }
 
-export type VisualObserverEntryCallback = (entry: VisualObserverEntry) => void;
+export type ClientRectObserverEntryCallback = (entry: ClientRectObserverEntry) => void;
 
-export class VisualObserverManager {
-  #elementMap = new WeakMap<Element, Set<VisualObserverEntryCallback>>();
+export class ClientRectObserverManager {
+  #elementMap = new WeakMap<Element, Set<ClientRectObserverEntryCallback>>();
 
-  #vo = new VisualObserver((entries) => {
+  #vo = new ClientRectObserver((entries) => {
     for (const entry of entries) {
       const callbacks = this.#elementMap.get(entry.target);
 
@@ -218,7 +216,7 @@ export class VisualObserverManager {
     }
   });
 
-  observe(target: Element, callback: VisualObserverEntryCallback): void {
+  observe(target: Element, callback: ClientRectObserverEntryCallback): void {
     let callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) {
@@ -231,7 +229,7 @@ export class VisualObserverManager {
     callbacks.add(callback);
   }
 
-  unobserve(target: Element, callback: VisualObserverEntryCallback): void {
+  unobserve(target: Element, callback: ClientRectObserverEntryCallback): void {
     let callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) return;

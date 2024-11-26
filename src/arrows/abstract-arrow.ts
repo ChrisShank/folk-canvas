@@ -1,8 +1,8 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
 import { Vertex } from './utils';
-import { VisualObserverEntry, VisualObserverManager } from './visual-observer';
+import { ClientRectObserverEntry, ClientRectObserverManager } from './visual-observer';
 
-const visualObserver = new VisualObserverManager();
+const clientRectObserver = new ClientRectObserverManager();
 
 const vertexRegex = /(?<x>-?([0-9]*[.])?[0-9]+),\s*(?<y>-?([0-9]*[.])?[0-9]+)/;
 
@@ -50,7 +50,7 @@ export class AbstractArrow extends HTMLElement {
     return this.#sourceElement;
   }
 
-  #sourceCallback = (entry: VisualObserverEntry) => {
+  #sourceCallback = (entry: ClientRectObserverEntry) => {
     this.#sourceRect = entry.contentRect;
     this.#update();
   };
@@ -88,7 +88,7 @@ export class AbstractArrow extends HTMLElement {
     }
   };
 
-  #sourceIframeCallback = (entry: VisualObserverEntry) => {
+  #sourceIframeCallback = (entry: ClientRectObserverEntry) => {
     this.#sourceIframeRect = entry.contentRect;
     this.#updateSourceIframeRect();
   };
@@ -124,7 +124,7 @@ export class AbstractArrow extends HTMLElement {
     return this.#targetElement;
   }
 
-  #targetCallback = (entry: VisualObserverEntry) => {
+  #targetCallback = (entry: ClientRectObserverEntry) => {
     this.#targetRect = entry.contentRect;
     this.#update();
   };
@@ -162,7 +162,7 @@ export class AbstractArrow extends HTMLElement {
     }
   };
 
-  #targetIframeCallback = (entry: VisualObserverEntry) => {
+  #targetIframeCallback = (entry: ClientRectObserverEntry) => {
     this.#targetIframeRect = entry.contentRect;
     this.#updateTargetIframeRect();
   };
@@ -214,13 +214,13 @@ export class AbstractArrow extends HTMLElement {
         this.#sourceRect = this.#sourceElement.getBoundingClientRect();
       } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
         window.addEventListener('message', this.#sourcePostMessage);
-        visualObserver.observe(this.#sourceElement, this.#sourceIframeCallback);
+        clientRectObserver.observe(this.#sourceElement, this.#sourceIframeCallback);
         this.#sourceElement.contentWindow?.postMessage({
           type: 'folk-observe-element',
           selector: this.#sourceIframeSelector,
         });
       } else {
-        visualObserver.observe(this.#sourceElement, this.#sourceCallback);
+        clientRectObserver.observe(this.#sourceElement, this.#sourceCallback);
         this.#sourceRect = this.#sourceElement.getBoundingClientRect();
       }
     }
@@ -234,13 +234,13 @@ export class AbstractArrow extends HTMLElement {
       this.#sourceElement.removeEventListener('move', this.#sourceHandler);
     } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
       window.removeEventListener('message', this.#sourcePostMessage);
-      visualObserver.unobserve(this.#sourceElement, this.#sourceIframeCallback);
+      clientRectObserver.unobserve(this.#sourceElement, this.#sourceIframeCallback);
       this.#sourceElement.contentWindow?.postMessage({
         type: 'folk-unobserve-element',
         selector: this.#sourceIframeSelector,
       });
     } else {
-      visualObserver.unobserve(this.#sourceElement, this.#sourceCallback);
+      clientRectObserver.unobserve(this.#sourceElement, this.#sourceCallback);
     }
   }
 
@@ -264,13 +264,13 @@ export class AbstractArrow extends HTMLElement {
         this.#targetElement.addEventListener('move', this.#targetHandler);
       } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
         window.addEventListener('message', this.#targetPostMessage);
-        visualObserver.observe(this.#targetElement, this.#targetIframeCallback);
+        clientRectObserver.observe(this.#targetElement, this.#targetIframeCallback);
         this.#targetElement.contentWindow?.postMessage({
           type: 'folk-observe-element',
           selector: this.#targetIframeSelector,
         });
       } else {
-        visualObserver.observe(this.#targetElement, this.#targetCallback);
+        clientRectObserver.observe(this.#targetElement, this.#targetCallback);
       }
       this.#targetRect = this.#targetElement.getBoundingClientRect();
     }
@@ -284,13 +284,13 @@ export class AbstractArrow extends HTMLElement {
       this.#targetElement.removeEventListener('move', this.#targetHandler);
     } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
       window.removeEventListener('message', this.#targetPostMessage);
-      visualObserver.unobserve(this.#targetElement, this.#targetIframeCallback);
+      clientRectObserver.unobserve(this.#targetElement, this.#targetIframeCallback);
       this.#targetElement.contentWindow?.postMessage({
         type: 'folk-unobserve-element',
         selector: this.#targetIframeSelector,
       });
     } else {
-      visualObserver.unobserve(this.#targetElement, this.#targetCallback);
+      clientRectObserver.unobserve(this.#targetElement, this.#targetCallback);
     }
   }
 
