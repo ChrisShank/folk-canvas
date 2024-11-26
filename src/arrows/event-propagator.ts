@@ -5,7 +5,7 @@ styles.replaceSync(`
 textarea {
   position: absolute;
   width: auto;
-  min-width: 60px;
+  min-width: 3ch;
   height: auto;
   resize: none;
   background: rgba(256, 256, 256, 0.8);
@@ -15,18 +15,26 @@ textarea {
   overflow: hidden;
   field-sizing: content;
   translate: -50% -50%;
+  border-radius: 5px;
 }  
 `);
 
 export class EventPropagator extends FolkRope {
   static override tagName = 'event-propagator';
 
-  #triggers = (this.getAttribute('triggers') || '').split(',');
+  #triggers: string[] = [];
   get triggers() {
     return this.#triggers;
   }
-  set triggers(triggers) {
+  set triggers(triggers: string | string[]) {
+    if (typeof triggers === 'string') {
+      triggers = triggers.split(',');
+    }
+    this.#removeEventListenersToSource();
+
     this.#triggers = triggers;
+
+    this.#addEventListenersToSource();
   }
 
   #expression = '';
@@ -47,62 +55,78 @@ export class EventPropagator extends FolkRope {
     }
   }
 
-  #textarea = document.createElement('textarea');
+  #triggerTextarea = document.createElement('textarea');
+  #expressionTextarea = document.createElement('textarea');
 
   constructor() {
     super();
 
     this.shadowRoot?.adoptedStyleSheets.push(styles);
 
-    this.#textarea.addEventListener('input', () => {
-      this.expression = this.#textarea.value;
+    this.#triggerTextarea.addEventListener('change', () => {
+      this.triggers = this.#triggerTextarea.value;
+    });
+    this.triggers = this.#triggerTextarea.value = this.getAttribute('triggers') || '';
+
+    this.shadowRoot?.appendChild(this.#triggerTextarea);
+
+    this.#expressionTextarea.addEventListener('input', () => {
+      this.expression = this.#expressionTextarea.value;
     });
 
-    this.shadowRoot?.appendChild(this.#textarea);
+    this.shadowRoot?.appendChild(this.#expressionTextarea);
 
-    this.expression = this.#textarea.value = this.getAttribute('expression') || '';
+    this.expression = this.#expressionTextarea.value = this.getAttribute('expression') || '';
   }
 
   override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
     super.render(sourceRect, targetRect);
-
-    // Position textarea between source and target
-    const midX = (sourceRect.x + targetRect.x) / 2;
-    const midY = (sourceRect.y + targetRect.y) / 2;
   }
 
   override draw() {
     super.draw();
 
-    const point = this.points[Math.floor(this.points.length / 2)];
-    // Center the textarea by subtracting half its width and height
-    this.#textarea.style.left = `${point.pos.x}px`;
-    this.#textarea.style.top = `${point.pos.y}px`;
+    const triggerPoint = this.points[Math.floor(this.points.length / 5)];
+
+    if (triggerPoint) {
+      this.#triggerTextarea.style.left = `${triggerPoint.pos.x}px`;
+      this.#triggerTextarea.style.top = `${triggerPoint.pos.y}px`;
+    }
+
+    const expressionPoint = this.points[Math.floor((this.points.length * 3) / 5)];
+
+    if (expressionPoint) {
+      this.#expressionTextarea.style.left = `${expressionPoint.pos.x}px`;
+      this.#expressionTextarea.style.top = `${expressionPoint.pos.y}px`;
+    }
   }
 
   override observeSource() {
     super.observeSource();
 
+    this.#addEventListenersToSource();
+  }
+
+  #addEventListenersToSource() {
     for (const trigger of this.#triggers) {
       // TODO: add special triggers for intersection, rAF, etc.
       this.sourceElement?.addEventListener(trigger, this.evaluateExpression);
     }
-    //should we evaluate them immediately?
-    // this.evaluateExpression();
   }
 
   override unobserveSource() {
     super.unobserveSource();
+    this.#removeEventListenersToSource();
+  }
 
+  #removeEventListenersToSource() {
     for (const trigger of this.#triggers) {
-      // TODO: add special triggers for intersection, rAF, etc.
       this.sourceElement?.removeEventListener(trigger, this.evaluateExpression);
     }
   }
 
   override observeTarget() {
     super.observeTarget();
-    // this.evaluateExpression();
   }
 
   override unobserveTarget() {

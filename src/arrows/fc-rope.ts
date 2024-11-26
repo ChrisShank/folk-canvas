@@ -100,9 +100,9 @@ export class FolkRope extends AbstractArrow {
   };
 
   #tick = (timestamp: number = performance.now()) => {
-    this.#rAFId = requestAnimationFrame(this.#tick);
-
     this.#currentTime = timestamp;
+
+    this.#rAFId = requestAnimationFrame(this.#tick);
 
     this.#deltaTime = this.#currentTime - this.#lastTime;
 
@@ -130,8 +130,8 @@ export class FolkRope extends AbstractArrow {
   override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
     if (this.#points.length === 0) {
       this.#points = this.#generatePoints(
-        { x: sourceRect.x, y: sourceRect.y },
-        { x: targetRect.right, y: targetRect.bottom }
+        { x: sourceRect.x + sourceRect.width / 2, y: sourceRect.bottom },
+        { x: targetRect.x + targetRect.width / 2, y: targetRect.bottom }
       );
 
       this.#lastTime = 0;
@@ -183,7 +183,7 @@ export class FolkRope extends AbstractArrow {
         x: lerp(start.x, end.x, percentage),
         y: lerp(start.y, end.y, percentage),
       };
-      // new RopePoint({ x: lerpX, y: lerpY }, resolution, mass, damping, isFixed)
+
       points.push({
         pos,
         oldPos: { ...pos },
@@ -217,7 +217,7 @@ export class FolkRope extends AbstractArrow {
       point.oldPos = { ...point.pos };
 
       // Drastically improves stability
-      const timeCorrection = previousFrameDt != 0.0 ? dt / previousFrameDt : 0.0;
+      const timeCorrection = previousFrameDt !== 0.0 ? dt / previousFrameDt : 0.0;
 
       const accel = Vector.add(gravity, { x: 0, y: point.mass });
 
