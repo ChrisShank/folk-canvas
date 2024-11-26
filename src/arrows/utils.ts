@@ -94,18 +94,8 @@ function getPointsOnBezierCurveWithSplitting(
 
     const red = lerp(r1, r2, t);
 
-    getPointsOnBezierCurveWithSplitting(
-      [p1, q1, r1, red],
-      0,
-      tolerance,
-      outPoints
-    );
-    getPointsOnBezierCurveWithSplitting(
-      [red, r2, q3, p4],
-      0,
-      tolerance,
-      outPoints
-    );
+    getPointsOnBezierCurveWithSplitting([p1, q1, r1, red], 0, tolerance, outPoints);
+    getPointsOnBezierCurveWithSplitting([red, r2, q3, p4], 0, tolerance, outPoints);
   }
   return outPoints;
 }
@@ -152,11 +142,7 @@ export function simplifyPoints(
   return outPoints;
 }
 
-export function pointsOnBezierCurves(
-  points: readonly Point[],
-  tolerance: number = 0.15,
-  distance?: number
-): Point[] {
+export function pointsOnBezierCurves(points: readonly Point[], tolerance: number = 0.15, distance?: number): Point[] {
   const newPoints: Point[] = [];
   const numSegments = (points.length - 1) / 3;
   for (let i = 0; i < numSegments; i++) {
@@ -188,4 +174,10 @@ export function getSvgPathFromStroke(stroke: number[][]): string {
 
   d.push('Z');
   return d.join(' ');
+}
+
+export function verticesToPolygon(vertices: Vertex[]): string {
+  if (vertices.length === 0) return '';
+
+  return `polygon(${vertices.map((vertex) => `${vertex.x}px ${vertex.y}px`).join(', ')})`;
 }
