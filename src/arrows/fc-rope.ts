@@ -197,7 +197,7 @@ export class FolkRope extends AbstractArrow {
       });
     }
 
-    //Link nodes into a doubly linked list
+    // Link nodes into a doubly linked list
     for (let i = 0; i < pointsLen; i++) {
       const prev = i != 0 ? points[i - 1] : null;
       const curr = points[i];

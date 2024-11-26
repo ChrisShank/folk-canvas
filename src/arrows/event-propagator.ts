@@ -93,7 +93,7 @@ export class EventPropagator extends FolkRope {
       this.#triggerTextarea.style.top = `${triggerPoint.pos.y}px`;
     }
 
-    const expressionPoint = this.points[Math.floor((this.points.length * 3) / 5)];
+    const expressionPoint = this.points[Math.floor(this.points.length / 2)];
 
     if (expressionPoint) {
       this.#expressionTextarea.style.left = `${expressionPoint.pos.x}px`;
