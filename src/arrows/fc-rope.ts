@@ -1,28 +1,11 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
 import { ResizeObserverManager } from '../resize-observer.ts';
+import { Vector, type Vector2 } from '../utils/Vector2.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
 import { Vertex } from './utils.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
-
-type Vector2 = { x: number; y: number };
-
-class Vector {
-  static zero: () => Vector2 = () => ({ x: 0, y: 0 });
-  static sub: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
-  static add: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
-  static mult: (a: Vector2, b: Vector2) => Vector2 = (a, b) => ({ x: a.x * b.x, y: a.y * b.y });
-  static scale: (v: Vector2, scaleFactor: number) => Vector2 = (v, scaleFactor) => ({
-    x: v.x * scaleFactor,
-    y: v.y * scaleFactor,
-  });
-  static mag: (v: Vector2) => number = (v) => Math.sqrt(v.x * v.x + v.y * v.y);
-  static normalized: (v: Vector2) => Vector2 = (v) => {
-    const mag = Vector.mag(v);
-    return mag === 0 ? Vector.zero() : { x: v.x / mag, y: v.y / mag };
-  };
-}
 
 // Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!
 interface RopePoint {
@@ -48,8 +31,8 @@ declare global {
 export class FolkRope extends AbstractArrow {
   static override tagName = 'fc-rope';
 
-  #canvas = document.createElement('canvas');
-  #context = this.#canvas.getContext('2d')!;
+  #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #shadow = this.attachShadow({ mode: 'open' });
 
   #rAFId = -1;
@@ -77,7 +60,8 @@ export class FolkRope extends AbstractArrow {
   constructor() {
     super();
 
-    this.#shadow.appendChild(this.#canvas);
+    this.#svg.appendChild(this.#path);
+    this.#shadow.appendChild(this.#svg);
   }
 
   override connectedCallback(): void {
@@ -94,8 +78,8 @@ export class FolkRope extends AbstractArrow {
   }
 
   #onResize = (entry: ResizeObserverEntry) => {
-    this.#canvas.width = entry.contentRect.width;
-    this.#canvas.height = entry.contentRect.height;
+    this.#svg.setAttribute('width', entry.contentRect.width.toString());
+    this.#svg.setAttribute('height', entry.contentRect.height.toString());
     this.draw();
   };
 
@@ -154,20 +138,18 @@ export class FolkRope extends AbstractArrow {
   }
 
   draw() {
-    this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+    if (this.#points.length < 2) return;
 
-    for (let i = 0; i < this.#points.length; i++) {
-      const p = this.#points[i];
+    let pathData = `M ${this.#points[0].pos.x} ${this.#points[0].pos.y}`;
 
-      if (p.prev) {
-        this.#context.beginPath();
-        this.#context.moveTo(p.prev.pos.x, p.prev.pos.y);
-        this.#context.lineTo(p.pos.x, p.pos.y);
-        this.#context.lineWidth = 2;
-        this.#context.strokeStyle = this.#stroke;
-        this.#context.stroke();
-      }
+    for (let i = 1; i < this.#points.length; i++) {
+      pathData += ` L ${this.#points[i].pos.x} ${this.#points[i].pos.y}`;
     }
+
+    this.#path.setAttribute('d', pathData);
+    this.#path.setAttribute('stroke', this.#stroke);
+    this.#path.setAttribute('stroke-width', '2');
+    this.#path.setAttribute('fill', 'none');
   }
 
   #generatePoints(start: Vertex, end: Vertex) {
@@ -234,49 +216,34 @@ export class FolkRope extends AbstractArrow {
 
   // Apply constraints related to other nodes next to it (keeps each node within distance)
   #constrainPoint(point: RopePoint) {
-    if (point.next) {
-      const delta = Vector.sub(point.next.pos, point.pos);
+    const applyConstraint = (p1: RopePoint, p2: RopePoint) => {
+      const delta = Vector.sub(p2.pos, p1.pos);
       const len = Vector.mag(delta);
-      const diff = len - point.distanceToNextPoint;
+      const diff = len - p1.distanceToNextPoint;
       const normal = Vector.normalized(delta);
+      const adjustment = Vector.scale(normal, diff * 0.25);
 
-      if (!point.isFixed) {
-        point.pos.x += normal.x * diff * 0.25;
-        point.pos.y += normal.y * diff * 0.25;
+      if (!p1.isFixed) {
+        p1.pos = Vector.add(p1.pos, adjustment);
       }
+      if (!p2.isFixed) {
+        p2.pos = Vector.sub(p2.pos, adjustment);
+      }
+    };
 
-      if (!point.next.isFixed) {
-        point.next.pos.x -= normal.x * diff * 0.25;
-        point.next.pos.y -= normal.y * diff * 0.25;
-      }
-    }
-    if (point.prev) {
-      const delta = Vector.sub(point.prev.pos, point.pos);
-      const len = Vector.mag(delta);
-      const diff = len - point.distanceToNextPoint;
-      const normal = Vector.normalized(delta);
-
-      if (!point.isFixed) {
-        point.pos.x += normal.x * diff * 0.25;
-        point.pos.y += normal.y * diff * 0.25;
-      }
-
-      if (!point.prev.isFixed) {
-        point.prev.pos.x -= normal.x * diff * 0.25;
-        point.prev.pos.y -= normal.y * diff * 0.25;
-      }
-    }
+    if (point.next) applyConstraint(point, point.next);
+    if (point.prev) applyConstraint(point, point.prev);
   }
 
   cut(index = Math.floor(this.#points.length / 2)) {
-    if (this.#points.length === 0) return;
+    if (index < 0 || index >= this.#points.length - 1) return;
 
     this.#points[index].next = null;
     this.#points[index + 1].prev = null;
   }
 
   mend(index = Math.floor(this.#points.length / 2)) {
-    if (this.#points.length === 0) return;
+    if (index < 0 || index >= this.#points.length - 1) return;
 
     this.#points[index].next = this.#points[index + 1];
     this.#points[index + 1].prev = this.#points[index];
