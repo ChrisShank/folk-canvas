@@ -1,6 +1,5 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
-import { ResizeObserverManager } from '../resize-observer.ts';
 import { Vector, type Vector2 } from '../utils/Vector2.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
 import { Vertex } from './utils.ts';
@@ -20,8 +19,6 @@ interface RopePoint {
   next: RopePoint | null;
 }
 
-const resizeObserver = new ResizeObserverManager();
-
 declare global {
   interface HTMLElementTagNameMap {
     'fc-rope': FolkRope;
@@ -37,8 +34,6 @@ export class FolkRope extends AbstractArrow {
 
   #rAFId = -1;
   #lastTime = 0;
-  #currentTime = 0;
-  #deltaTime = 0;
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
@@ -46,40 +41,31 @@ export class FolkRope extends AbstractArrow {
     return this.#points;
   }
 
-  #stroke = this.getAttribute('stroke') || 'black';
+  #stroke = '';
   get stroke() {
     return this.#stroke;
   }
   set stroke(stroke) {
     this.#stroke = stroke;
-    // TODO: redraw rope?
+    this.#path.setAttribute('stroke', this.#stroke);
   }
 
   constructor() {
     super();
-
+    this.#svg.style.height = '100%';
+    this.#svg.style.width = '100%';
     this.#svg.appendChild(this.#path);
     this.#shadow.appendChild(this.#svg);
-  }
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-
-    resizeObserver.observe(this, this.#onResize);
+    this.#path.setAttribute('stroke-width', '2');
+    this.#path.setAttribute('fill', 'none');
+    this.stroke = this.getAttribute('stroke') || 'black';
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    resizeObserver.unobserve(this, this.#onResize);
     cancelAnimationFrame(this.#rAFId);
   }
-
-  #onResize = (entry: ResizeObserverEntry) => {
-    this.#svg.setAttribute('width', entry.contentRect.width.toString());
-    this.#svg.setAttribute('height', entry.contentRect.height.toString());
-    this.draw();
-  };
 
   #dtAccumulator = 0;
   #fixedTimestep = 1 / 60;
@@ -118,8 +104,6 @@ export class FolkRope extends AbstractArrow {
       );
 
       this.#lastTime = 0;
-      this.#currentTime = 0;
-      this.#deltaTime = 0;
 
       this.#tick();
     }
@@ -146,9 +130,6 @@ export class FolkRope extends AbstractArrow {
     }
 
     this.#path.setAttribute('d', pathData);
-    this.#path.setAttribute('stroke', this.#stroke);
-    this.#path.setAttribute('stroke-width', '2');
-    this.#path.setAttribute('fill', 'none');
   }
 
   #generatePoints(start: Vertex, end: Vertex) {
@@ -209,25 +190,6 @@ export class FolkRope extends AbstractArrow {
 
   // Apply constraints related to other nodes next to it (keeps each node within distance)
   #constrainPoint(point: RopePoint) {
-    const applyConstraint = (p1: RopePoint, p2: RopePoint) => {
-      const delta = Vector.sub(p2.pos, p1.pos);
-      const len = Vector.mag(delta);
-
-      // Prevent division by zero
-      if (len < 0.0001) return;
-
-      const diff = len - p1.distanceToNextPoint;
-      const normal = Vector.normalized(delta);
-      const adjustment = Vector.scale(normal, diff * 0.75);
-
-      if (!p1.isFixed) {
-        p1.pos = Vector.add(p1.pos, adjustment);
-      }
-      if (!p2.isFixed) {
-        p2.pos = Vector.sub(p2.pos, adjustment);
-      }
-    };
-
     if (point.next) applyConstraint(point, point.next);
     if (point.prev) applyConstraint(point, point.prev);
   }
@@ -244,5 +206,24 @@ export class FolkRope extends AbstractArrow {
 
     this.#points[index].next = this.#points[index + 1];
     this.#points[index + 1].prev = this.#points[index];
+  }
+}
+
+function applyConstraint(p1: RopePoint, p2: RopePoint) {
+  const delta = Vector.sub(p2.pos, p1.pos);
+  const len = Vector.mag(delta);
+
+  // Prevent division by zero
+  if (len < 0.0001) return;
+
+  const diff = len - p1.distanceToNextPoint;
+  const normal = Vector.normalized(delta);
+  const adjustment = Vector.scale(normal, diff * 0.75);
+
+  if (!p1.isFixed) {
+    p1.pos = Vector.add(p1.pos, adjustment);
+  }
+  if (!p2.isFixed) {
+    p2.pos = Vector.sub(p2.pos, adjustment);
   }
 }
