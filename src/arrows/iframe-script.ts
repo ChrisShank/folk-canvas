@@ -1,5 +1,5 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
-import { ClientRectObserverManager, ClientRectObserverEntry } from './visual-observer.ts';
+import { ClientRectObserverManager, ClientRectObserverEntry } from '../client-rect-observer.ts';
 
 interface ObservedElementEntry {
   selector: string;

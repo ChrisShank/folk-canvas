@@ -1,6 +1,6 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
 import { Vertex } from './utils';
-import { ClientRectObserverEntry, ClientRectObserverManager } from './visual-observer';
+import { ClientRectObserverEntry, ClientRectObserverManager } from '../client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
 
