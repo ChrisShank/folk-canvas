@@ -1,21 +1,8 @@
 import { FolkGeometry } from '../canvas/fc-geometry';
-import { Vertex } from './utils';
+import { parseVertex } from './utils';
 import { ClientRectObserverEntry, ClientRectObserverManager } from '../client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
-
-const vertexRegex = /(?<x>-?([0-9]*[.])?[0-9]+),\s*(?<y>-?([0-9]*[.])?[0-9]+)/;
-
-function parseVertex(str: string): Vertex | null {
-  const results = vertexRegex.exec(str);
-
-  if (results === null) return null;
-
-  return {
-    x: Number(results.groups?.x),
-    y: Number(results.groups?.y),
-  };
-}
 
 function parseCSSSelector(selector: string): string[] {
   return selector.split('>>>').map((s) => s.trim());
@@ -186,11 +173,6 @@ export class AbstractArrow extends HTMLElement {
   disconnectedCallback() {
     this.unobserveSource();
     this.unobserveTarget();
-  }
-
-  // TODO: why reparse the vertex?
-  setSourceVertex(vertex: Vertex) {
-    this.target = `${vertex.x},${vertex.y}`;
   }
 
   observeSource() {

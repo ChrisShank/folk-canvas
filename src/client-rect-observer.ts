@@ -204,6 +204,16 @@ export class ClientRectObserver {
 export type ClientRectObserverEntryCallback = (entry: ClientRectObserverEntry) => void;
 
 export class ClientRectObserverManager {
+  static #instance: ClientRectObserverManager | null = null;
+
+  // singleton so we only observe elements once
+  constructor() {
+    if (ClientRectObserverManager.#instance === null) {
+      ClientRectObserverManager.#instance = this;
+    }
+    return ClientRectObserverManager.#instance;
+  }
+
   #elementMap = new WeakMap<Element, Set<ClientRectObserverEntryCallback>>();
 
   #vo = new ClientRectObserver((entries) => {

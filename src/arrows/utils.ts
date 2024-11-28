@@ -181,3 +181,16 @@ export function verticesToPolygon(vertices: Vertex[]): string {
 
   return `polygon(${vertices.map((vertex) => `${vertex.x}px ${vertex.y}px`).join(', ')})`;
 }
+
+const vertexRegex = /(?<x>-?([0-9]*[.])?[0-9]+),\s*(?<y>-?([0-9]*[.])?[0-9]+)/;
+
+export function parseVertex(str: string): Vertex | null {
+  const results = vertexRegex.exec(str);
+
+  if (results === null) return null;
+
+  return {
+    x: Number(results.groups?.x),
+    y: Number(results.groups?.y),
+  };
+}

@@ -18,17 +18,32 @@
       fc-geometry {
         background: rgb(187, 178, 178);
       }
+
+      folk-hull {
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+        background-color: #b4d8f669;
+      }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
+    <fc-geometry x="50" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry x="200" y="200" width="50" height="50"></fc-geometry>
     <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
+
+    <folk-hull sources="fc-geometry"></folk-hull>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkHull } from '../src/folk-hull.ts';
 
       FolkGeometry.register();
+      FolkHull.register();
     </script>
   </body>
 </html>
