@@ -4,6 +4,12 @@ import { Vertex, verticesToPolygon } from './arrows/utils';
 export class FolkHull extends FolkSet {
   static tagName = 'folk-hull';
 
+  #hull: Vertex[] = [];
+
+  get hull(): ReadonlyArray<Vertex> {
+    return this.#hull;
+  }
+
   update() {
     if (this.sourcesMap.size === 0) {
       this.style.clipPath = '';
@@ -11,8 +17,8 @@ export class FolkHull extends FolkSet {
     }
 
     const rects = Array.from(this.sourcesMap.values());
-    const hull = makeHull(rects);
-    this.style.clipPath = verticesToPolygon(hull);
+    this.#hull = makeHull(rects);
+    this.style.clipPath = verticesToPolygon(this.#hull);
   }
 }
 

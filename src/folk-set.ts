@@ -25,6 +25,10 @@ export class FolkSet extends HTMLElement {
     return this.#sourcesMap;
   }
 
+  get sourceElements() {
+    return Array.from(this.#sourcesMap.keys());
+  }
+
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
     this.#sourcesMap.set(entry.target, entry.contentRect);
     this.update();

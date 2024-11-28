@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Maps</title>
+    <title>Proximity Maps</title>
     <style>
       * {
         box-sizing: border-box;
@@ -27,6 +27,7 @@
       }
 
       geo-wiki {
+        background: white;
         border: solid 2px black;
         border-radius: 5px;
         ul {
@@ -37,7 +38,7 @@
         }
       }
 
-      olk-hull {
+      folk-cluster {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -47,17 +48,19 @@
     </style>
   </head>
   <body>
-    <fc-geometry id="1" x="25" y="100" width="400" height="200">
-      <folk-map coordinates="52.09, 5.12" zoom="13"></folk-map>
-    </fc-geometry>
+    <folk-proximity>
+      <fc-geometry id="g1" x="25" y="100" width="400" height="200">
+        <folk-map coordinates="52.09, 5.12" zoom="13"></folk-map>
+      </fc-geometry>
 
-    <fc-geometry id="2" x="50" y="550" width="400" height="250">
-      <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
-    </fc-geometry>
+      <fc-geometry id="g2" x="50" y="550" width="400" height="250">
+        <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
+      </fc-geometry>
 
-    <fc-geometry id="3" x="500" y="400" width="500" height="300">
-      <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
-    </fc-geometry>
+      <fc-geometry id="g3" x="500" y="400" width="500" height="300">
+        <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
+      </fc-geometry>
+    </folk-proximity>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
@@ -68,39 +71,6 @@
       FolkGeometry.register();
       FolkMap.register();
       FolkHull.register();
-
-      const geometries = Array.from(document.querySelectorAll('fc-geometry'));
-
-      const proximityMap = new Map(geometries.map((el) => [el, new Set()]));
-
-      function handleProximity(e) {
-        proximityMap.forEach((set, el) => {
-          if (el !== e.target) {
-            const alreadyIntersection = set.has(e.target);
-            // TODO: refactor this hack once resizing and the vertices API are figured out
-            const isNowIntersecting = collisionDetection(el.getClientRect(), e.target.getClientRect(), 100);
-            if (isNowIntersecting && !alreadyIntersection) {
-              set.add(e.target);
-              proximityMap.get(e.target)?.add(el);
-            } else if (alreadyIntersection && !isNowIntersecting) {
-              set.delete(e.target);
-              proximityMap.get(e.target)?.delete(el);
-            }
-          }
-        });
-      }
-
-      document.addEventListener('move', handleProximity);
-      document.addEventListener('resize', handleProximity);
-      document.addEventListener('recenter', (e) => {
-        proximityMap.get(e.target.parentElement)?.forEach((el) => {
-          const content = el.firstElementChild;
-          if (content instanceof GeoWiki) {
-            const { lat, lng } = e.target.coordinates;
-            content.coordinates = [lat, lng];
-          }
-        });
-      });
 
       class GeoWiki extends HTMLElement {
         static tagName = 'geo-wiki';
@@ -166,6 +136,136 @@
       }
 
       GeoWiki.register();
+
+      const PROXIMITY = 50;
+
+      class FolkCluster extends FolkHull {
+        static tagName = 'folk-cluster';
+
+        #data = new Map();
+
+        isElementInCluster(element) {
+          return this.sourceElements.includes(element);
+        }
+
+        isElementInProximity(element) {
+          for (const el of this.sourceElements) {
+            if (collisionDetection(el.getClientRect(), element.getClientRect(), PROXIMITY)) return true;
+          }
+          return false;
+        }
+
+        addElements(...elements) {
+          this.sources += elements.map((el) => `#${el.id}`).join(', ');
+        }
+
+        removeElement(element) {
+          this.sources = this.sourceElements
+            .filter((el) => el !== element)
+            .map((el) => `#${el.id}`)
+            .join(', ');
+        }
+      }
+
+      FolkCluster.register();
+
+      class FolkProximity extends HTMLElement {
+        static tagName = 'folk-proximity';
+
+        static register() {
+          customElements.define(this.tagName, this);
+        }
+
+        #clusters = new Set();
+        #geometries = Array.from(this.querySelectorAll('fc-geometry'));
+
+        constructor() {
+          super();
+
+          this.addEventListener('move', this.#handleProximity);
+          this.addEventListener('resize', this.#handleProximity);
+          // document.addEventListener('recenter', (e) => {
+          //   proximityMap.get(e.target.parentElement)?.forEach((el) => {
+          //     const content = el.firstElementChild;
+          //     if (content instanceof GeoWiki) {
+          //       const { lat, lng } = e.target.coordinates;
+          //       content.coordinates = [lat, lng];
+          //     }
+          //   });
+          // });
+        }
+
+        #handleProximity = (e) => {
+          const el = e.target;
+          const cluster = this.#findCluster(el);
+
+          if (cluster === null) {
+            for (const cluster of this.#clusters) {
+              // what if its in proximity to multiple clusters?
+              if (cluster.isElementInProximity(element)) {
+                cluster.addElements(element);
+                return;
+              }
+            }
+
+            for (const geometry of this.#geometries) {
+              if (geometry === el) break;
+
+              if (collisionDetection(geometry.getClientRect(), el.getClientRect(), PROXIMITY)) {
+                const cluster = document.createElement('folk-cluster');
+                cluster.addElements(geometry, el);
+                this.#clusters.add(cluster);
+                this.appendChild(cluster);
+                return;
+              }
+            }
+          } else {
+            const isInCluster = cluster.sourceElements
+              .filter((element) => el !== element)
+              .some((element) => collisionDetection(el.getClientRect(), element.getClientRect(), PROXIMITY));
+
+            if (!isInCluster) {
+              cluster.removeElement(el);
+
+              if (cluster.sourcesMap.size === 1) {
+                this.#clusters.delete(cluster);
+                cluster.remove();
+              }
+            }
+          }
+        };
+
+        #findCluster(element) {
+          for (const cluster of this.#clusters) {
+            if (cluster.isElementInCluster(element)) return cluster;
+          }
+          return null;
+        }
+      }
+
+      FolkProximity.register();
+
+      /* proximityMap.forEach((set, el) => {
+        if (el !== e.target) {
+          const alreadyIntersection = set.has(e.target);
+          // TODO: refactor this hack once resizing and the vertices API are figured out
+          const isNowIntersecting = collisionDetection(el.getClientRect(), e.target.getClientRect(), 100);
+          if (isNowIntersecting && !alreadyIntersection) {
+            console.log('create cluster');
+            set.add(e.target);
+            proximityMap.get(e.target)?.add(el);
+            // hull = document.createElement('folk-hull');
+            // hull.sources = `#${el.id}, #${e.target.id}`;
+            // document.body.append(hull);
+          } else if (alreadyIntersection && !isNowIntersecting) {
+            console.log('delete cluster');
+            set.delete(e.target);
+            proximityMap.get(e.target)?.delete(el);
+            // hull.remove();
+            // hull = null;
+          }
+        }
+      }); */
     </script>
   </body>
 </html>
