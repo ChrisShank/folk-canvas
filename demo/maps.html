@@ -27,6 +27,8 @@
       }
 
       geo-wiki {
+        border: solid 2px black;
+        border-radius: 5px;
         ul {
           height: 100%;
           overflow: auto;
@@ -34,67 +36,49 @@
           scroll-padding-block-end: 1rem;
         }
       }
+
+      olk-hull {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+        background-color: #b4d8f63b;
+      }
     </style>
   </head>
   <body>
-    <fc-geometry x="25" y="100" width="400" height="200">
+    <fc-geometry id="1" x="25" y="100" width="400" height="200">
       <folk-map coordinates="52.09, 5.12" zoom="13"></folk-map>
     </fc-geometry>
 
-    <fc-geometry x="50" y="550" width="400" height="250">
+    <fc-geometry id="2" x="50" y="550" width="400" height="250">
       <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
     </fc-geometry>
 
-    <fc-geometry x="500" y="400" width="500" height="300">
+    <fc-geometry id="3" x="500" y="400" width="500" height="300">
       <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
     </fc-geometry>
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { FolkMap } from '../src/folk-map.ts';
+      import { FolkHull } from '../src/folk-hull.ts';
+      import { collisionDetection } from '../src/collision.ts';
 
       FolkGeometry.register();
       FolkMap.register();
+      FolkHull.register();
 
-      function collisionDetection(rect1, rect2) {
-        return (
-          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
-        );
-      }
+      const geometries = Array.from(document.querySelectorAll('fc-geometry'));
 
-      function proximityDetection(rect1, rect2, distance = 100) {
-        return collisionDetection(
-          DOMRectReadOnly.fromRect({
-            x: rect1.x - distance,
-            y: rect1.y - distance,
-            height: rect1.height + distance * 2,
-            width: rect1.width + distance * 2,
-          }),
-          rect2
-        );
-      }
-
-      const proximityMap = new Map(Array.from(document.querySelectorAll('fc-geometry')).map((el) => [el, new Set()]));
+      const proximityMap = new Map(geometries.map((el) => [el, new Set()]));
 
       function handleProximity(e) {
         proximityMap.forEach((set, el) => {
           if (el !== e.target) {
             const alreadyIntersection = set.has(e.target);
             // TODO: refactor this hack once resizing and the vertices API are figured out
-            const isNowIntersecting = proximityDetection(
-              DOMRectReadOnly.fromRect({
-                x: el.x,
-                y: el.y,
-                height: el.height,
-                width: el.width,
-              }),
-              DOMRectReadOnly.fromRect({
-                x: e.target.x,
-                y: e.target.y,
-                height: e.target.height,
-                width: e.target.width,
-              })
-            );
+            const isNowIntersecting = collisionDetection(el.getClientRect(), e.target.getClientRect(), 100);
             if (isNowIntersecting && !alreadyIntersection) {
               set.add(e.target);
               proximityMap.get(e.target)?.add(el);

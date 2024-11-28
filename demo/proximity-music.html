@@ -62,6 +62,7 @@
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { RecordPlayer } from '../src/music/record-player.ts';
+      import { collisionDetection } from '../src/collision.ts';
 
       FolkGeometry.register();
       RecordPlayer.register();
@@ -87,40 +88,12 @@
         el.firstElementChild.addEventListener('canplay', setPlayback);
       });
 
-      function collisionDetection(rect1, rect2) {
-        return (
-          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
-        );
-      }
-
-      function proximityDetection(rect1, rect2, distance = 30) {
-        return collisionDetection(
-          DOMRectReadOnly.fromRect({
-            x: rect1.x - distance,
-            y: rect1.y - distance,
-            height: rect1.height + distance * 2,
-            width: rect1.width + distance * 2,
-          }),
-          rect2
-        );
-      }
-
       function updateFlowerProximity(flower) {
         const alreadyIntersection = proximitySet.has(flower);
         // TODO: refactor this hack once resizing and the vertices API are figured out
-        const isNowIntersecting = proximityDetection(
-          DOMRectReadOnly.fromRect({
-            x: recordPlayerGeometry.x,
-            y: recordPlayerGeometry.y,
-            height: recordPlayerGeometry.height,
-            width: recordPlayerGeometry.width,
-          }),
-          DOMRectReadOnly.fromRect({
-            x: flower.x,
-            y: flower.y,
-            height: flower.height,
-            width: flower.width,
-          }),
+        const isNowIntersecting = collisionDetection(
+          recordPlayerGeometry.getClientRect(),
+          flower.getClientRect(),
           proximityDistance
         );
 

@@ -30,37 +30,15 @@
 
     <script type="module">
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { collisionDetection } from '../src/collision.ts';
 
       FolkGeometry.register();
 
       const geometryElements = document.querySelectorAll('fc-geometry');
 
-      function collisionDetection(rect1, rect2) {
-        return (
-          rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top
-        );
-      }
-
       function handleCollision(e) {
         geometryElements.forEach((el) => {
-          if (
-            el !== e.target &&
-            collisionDetection(
-              // TODO: refactor this hack once resizing and the vertices API are figured out
-              DOMRectReadOnly.fromRect({
-                x: el.x,
-                y: el.y,
-                height: el.height,
-                width: el.width,
-              }),
-              DOMRectReadOnly.fromRect({
-                x: e.target.x,
-                y: e.target.y,
-                height: e.target.height,
-                width: e.target.width,
-              })
-            )
-          ) {
+          if (el !== e.target && collisionDetection(el.getClientRect(), e.target.getClientRect())) {
             e.preventDefault();
           }
         });
