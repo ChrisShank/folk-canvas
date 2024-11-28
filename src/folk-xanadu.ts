@@ -17,8 +17,9 @@ export class FolkXanadu extends AbstractArrow {
       targetRect = temp;
     }
 
-    let sourceVertices = computeInlineVertices(Array.from(this.sourceElement.getClientRects()));
-    const targetVertices = computeInlineVertices(Array.from(this.targetElement.getClientRects()));
+    // TODO: add getClientRects to iframe protocol.
+    let sourceVertices = computeInlineVertices(Array.from([sourceRect]));
+    const targetVertices = computeInlineVertices(Array.from([targetRect]));
 
     if (sourceVertices.length === 0 || targetVertices.length === 0) {
       this.style.clipPath = '';

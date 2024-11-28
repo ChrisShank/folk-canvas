@@ -16,7 +16,7 @@ const linkGenerator = (): Plugin => {
       if (!ctx.filename.endsWith('index.html')) return;
 
       const links = files
-        .filter((file) => !file.includes('index'))
+        .filter((file) => !file.includes('index') || file.startsWith('_'))
         .sort()
         .map((file) => {
           const title = file.replace('.html', '').replaceAll('-', ' ');
