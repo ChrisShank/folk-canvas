@@ -30,6 +30,7 @@ export class FolkRope extends AbstractArrow {
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  #path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #shadow = this.attachShadow({ mode: 'open' });
 
   #rAFId = -1;
@@ -48,6 +49,7 @@ export class FolkRope extends AbstractArrow {
   set stroke(stroke) {
     this.#stroke = stroke;
     this.#path.setAttribute('stroke', this.#stroke);
+    this.#path2.setAttribute('stroke', this.#stroke);
   }
 
   constructor() {
@@ -55,9 +57,16 @@ export class FolkRope extends AbstractArrow {
     this.#svg.style.height = '100%';
     this.#svg.style.width = '100%';
     this.#svg.appendChild(this.#path);
+    this.#svg.appendChild(this.#path2);
+
     this.#shadow.appendChild(this.#svg);
+
     this.#path.setAttribute('stroke-width', '2');
     this.#path.setAttribute('fill', 'none');
+
+    this.#path2.setAttribute('stroke-width', '2');
+    this.#path2.setAttribute('fill', 'none');
+
     this.stroke = this.getAttribute('stroke') || 'black';
   }
 
@@ -125,11 +134,29 @@ export class FolkRope extends AbstractArrow {
 
     let pathData = `M ${this.#points[0].pos.x} ${this.#points[0].pos.y}`;
 
+    let path2Data = '';
+    let isBroken = false;
+
     for (let i = 1; i < this.#points.length; i++) {
-      pathData += ` L ${this.#points[i].pos.x} ${this.#points[i].pos.y}`;
+      const point = this.#points[i];
+
+      if (point.prev === null) {
+        isBroken = true;
+        path2Data = `M ${point.pos.x} ${point.pos.y}`;
+      } else if (isBroken) {
+        path2Data += ` L ${point.pos.x} ${point.pos.y}`;
+      } else {
+        pathData += ` L ${point.pos.x} ${point.pos.y}`;
+      }
     }
 
     this.#path.setAttribute('d', pathData);
+
+    if (path2Data) {
+      this.#path2.setAttribute('d', path2Data);
+    } else {
+      this.#path2.removeAttribute('d');
+    }
   }
 
   #generatePoints(start: Vertex, end: Vertex) {
