@@ -2,7 +2,7 @@ import { collisionDetection } from './collision';
 import { FolkHull } from './folk-hull';
 import { FolkGeometry } from './canvas/fc-geometry.ts';
 
-// TODO dont hard code this
+// TODO don't hard code this
 const PROXIMITY = 50;
 
 declare global {
@@ -46,7 +46,7 @@ export class FolkCluster extends FolkHull {
 export class FolkProximity extends HTMLElement {
   static tagName = 'folk-proximity';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

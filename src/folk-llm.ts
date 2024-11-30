@@ -14,7 +14,7 @@ declare global {
 export class FolkLLM extends HTMLElement {
   static tagName = 'folk-llm';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

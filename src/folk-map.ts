@@ -24,7 +24,7 @@ export class RecenterEvent extends Event {
 export class FolkMap extends HTMLElement {
   static tagName = 'folk-map';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

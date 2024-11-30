@@ -11,7 +11,7 @@ declare global {
 export class FolkSet extends HTMLElement {
   static tagName = 'folk-set';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

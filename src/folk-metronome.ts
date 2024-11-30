@@ -7,7 +7,7 @@ declare global {
 export class FolkMetronome extends HTMLElement {
   static tagName = 'folk-metronome';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

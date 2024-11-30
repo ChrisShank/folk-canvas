@@ -171,10 +171,10 @@
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
-      FolkMap.register();
-      FolkGeometry.register();
-      FolkSpreadsheet.register();
-      EventPropagator.register();
+      FolkMap.define();
+      FolkGeometry.define();
+      FolkSpreadsheet.define();
+      EventPropagator.define();
 
       window.round = (number, digits = 0) => {
         const base = Number('1'.padEnd(digits + 1, '0'));

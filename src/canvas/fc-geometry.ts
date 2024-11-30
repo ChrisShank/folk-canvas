@@ -149,7 +149,7 @@ declare global {
 export class FolkGeometry extends HTMLElement {
   static tagName = 'fc-geometry';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

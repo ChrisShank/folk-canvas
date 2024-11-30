@@ -170,9 +170,9 @@
       import { FolkConnection } from '../src/arrows/fc-connection.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
-      FolkGeometry.register();
-      FolkConnection.register();
-      FolkSpreadsheet.register();
+      FolkGeometry.define();
+      FolkConnection.define();
+      FolkSpreadsheet.define();
 
       let isProjected = false;
       const button = document.querySelector('button');

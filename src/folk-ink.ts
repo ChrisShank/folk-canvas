@@ -32,7 +32,7 @@ declare global {
 export class FolkInk extends HTMLElement {
   static tagName = 'folk-ink';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

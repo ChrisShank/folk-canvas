@@ -218,7 +218,7 @@ styles.replaceSync(`
 export class RecordPlayer extends HTMLElement {
   static tagName = 'record-player';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

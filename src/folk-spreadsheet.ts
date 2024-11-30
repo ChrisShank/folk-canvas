@@ -152,9 +152,9 @@ declare global {
 export class FolkSpreadsheet extends HTMLElement {
   static tagName = 'folk-spreadsheet';
 
-  static register() {
-    FolkSpreadSheetCell.register();
-    FolkSpreadsheetHeader.register();
+  static define() {
+    FolkSpreadSheetCell.define();
+    FolkSpreadsheetHeader.define();
     customElements.define(this.tagName, this);
   }
 
@@ -346,7 +346,7 @@ declare global {
 export class FolkSpreadsheetHeader extends HTMLElement {
   static tagName = 's-header';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 
@@ -376,7 +376,7 @@ declare global {
 export class FolkSpreadSheetCell extends HTMLElement {
   static tagName = 'folk-cell';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

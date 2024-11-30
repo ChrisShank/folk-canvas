@@ -11,7 +11,7 @@ function parseCSSSelector(selector: string): string[] {
 export class AbstractArrow extends HTMLElement {
   static tagName = 'abstract-arrow';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

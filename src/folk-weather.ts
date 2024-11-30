@@ -12,7 +12,7 @@ declare global {
 export class FolkWeather extends HTMLElement {
   static tagName = 'folk-weather';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 

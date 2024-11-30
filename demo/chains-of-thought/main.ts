@@ -11,7 +11,7 @@ declare global {
 class FolkThought extends HTMLElement {
   static tagName = 'fc-thought';
 
-  static register() {
+  static define() {
     customElements.define(this.tagName, this);
   }
 
@@ -44,9 +44,9 @@ class FolkThought extends HTMLElement {
   }
 }
 
-FolkGeometry.register();
-FolkThought.register();
-FolkConnection.register();
+FolkGeometry.define();
+FolkThought.define();
+FolkConnection.define();
 
 interface Thought {
   id: string;

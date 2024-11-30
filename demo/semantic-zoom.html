@@ -153,8 +153,8 @@
       import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
       import { FolkConnection } from '../src/arrows/fc-connection.ts';
 
-      FolkGeometry.register();
-      FolkConnection.register();
+      FolkGeometry.define();
+      FolkConnection.define();
 
       document.body.querySelectorAll('fc-geometry').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
       document.body.querySelectorAll('fc-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));

@@ -52,6 +52,7 @@
         background: white;
         border: solid 2px black;
         border-radius: 5px;
+        padding: 1rem;
       }
     </style>
   </head>
@@ -80,16 +81,16 @@
       import { FolkWeather } from '../src/folk-weather.ts';
       import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
 
-      FolkGeometry.register();
-      FolkMap.register();
-      FolkCluster.register();
-      FolkProximity.register();
-      FolkWeather.register();
+      FolkGeometry.define();
+      FolkMap.define();
+      FolkCluster.define();
+      FolkProximity.define();
+      FolkWeather.define();
 
       class GeoWiki extends HTMLElement {
         static tagName = 'geo-wiki';
 
-        static register() {
+        static define() {
           customElements.define(this.tagName, this);
         }
 
@@ -149,7 +150,7 @@
         }
       }
 
-      GeoWiki.register();
+      GeoWiki.define();
     </script>
   </body>
 </html>
