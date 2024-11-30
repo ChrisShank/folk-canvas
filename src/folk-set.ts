@@ -2,6 +2,12 @@ import { ClientRectObserverEntry, ClientRectObserverManager } from './client-rec
 
 const clientRectObserver = new ClientRectObserverManager();
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'folk-set': FolkSet;
+  }
+}
+
 export class FolkSet extends HTMLElement {
   static tagName = 'folk-set';
 

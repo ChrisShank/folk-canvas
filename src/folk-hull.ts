@@ -1,6 +1,12 @@
 import { FolkSet } from './folk-set';
 import { Vertex, verticesToPolygon } from './arrows/utils';
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'folk-hull': FolkHull;
+  }
+}
+
 export class FolkHull extends FolkSet {
   static tagName = 'folk-hull';
 
