@@ -148,14 +148,14 @@
       source="#map1"
       target="folk-cell[column='A'][row='1']"
       triggers="recenter"
-      expression="expression: from.coordinates.lat"
+      expression="expression: round(from.coordinates.lat, 3)"
     ></event-propagator>
 
     <event-propagator
       source="#map1"
       target="folk-cell[column='A'][row='2']"
       triggers="recenter"
-      expression="expression: from.coordinates.lng"
+      expression="expression: round(from.coordinates.lng, 3)"
     ></event-propagator>
 
     <event-propagator
@@ -175,6 +175,11 @@
       FolkGeometry.register();
       FolkSpreadsheet.register();
       EventPropagator.register();
+
+      window.round = (number, digits = 0) => {
+        const base = Number('1'.padEnd(digits + 1, '0'));
+        return Math.round(number * base) / base;
+      };
     </script>
   </body>
 </html>
