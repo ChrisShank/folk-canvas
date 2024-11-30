@@ -88,7 +88,7 @@
       source="#recipe"
       target="folk-llm"
       triggers="click"
-      expression="$target.prompt = `double this list of ingredients '${$source.innerHTML}'`"
+      expression="prompt: `double this list of ingredients '${from.innerHTML}'`"
     ></event-propagator>
 
     <event-propagator

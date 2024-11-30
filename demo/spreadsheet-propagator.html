@@ -148,21 +148,21 @@
       source="#map1"
       target="folk-cell[column='A'][row='1']"
       triggers="recenter"
-      expression="$target.expression = $source.coordinates.lat"
+      expression="expression: from.coordinates.lat"
     ></event-propagator>
 
     <event-propagator
       source="#map1"
       target="folk-cell[column='A'][row='2']"
       triggers="recenter"
-      expression="$target.expression = $source.coordinates.lng"
+      expression="expression: from.coordinates.lng"
     ></event-propagator>
 
     <event-propagator
       source="folk-cell[column='A'][row='3']"
       target="#map2"
       triggers="propagate"
-      expression="$target.coordinates = $source.value"
+      expression="coordinates: from.value"
     ></event-propagator>
 
     <script type="module">
