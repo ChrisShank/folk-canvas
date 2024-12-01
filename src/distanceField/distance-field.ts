@@ -2,16 +2,14 @@ import type { FolkGeometry } from '../canvas/fc-geometry.ts';
 import type { Vector2 } from '../utils/Vector2.ts';
 import { Fields } from './fields.ts';
 
-export class CellRenderer extends HTMLElement {
-  static tagName = 'cell-renderer';
+export class DistanceField extends HTMLElement {
+  static tagName = 'distance-field';
 
   static define() {
     customElements.define(this.tagName, this);
   }
 
-  static observedAttributes = ['resolution', 'image-smoothing'];
-
-  private canvas: HTMLCanvasElement;
+  private canvas!: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private offscreenCtx: CanvasRenderingContext2D;
   private fields: Fields;
@@ -24,7 +22,7 @@ export class CellRenderer extends HTMLElement {
   constructor() {
     super();
 
-    this.resolution = 2000; // default resolution
+    this.resolution = 800; // default resolution
     this.imageSmoothing = true;
     this.fields = new Fields(this.resolution);
 
