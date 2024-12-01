@@ -1,6 +1,5 @@
 import type { FolkGeometry } from '../canvas/fc-geometry.ts';
 import type { Vector2 } from '../utils/Vector2.ts';
-import { Fields } from './fields.ts';
 
 export class DistanceField extends HTMLElement {
   static tagName = 'distance-field';
@@ -11,12 +10,14 @@ export class DistanceField extends HTMLElement {
 
   private canvas!: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private offscreenCanvas: HTMLCanvasElement;
   private offscreenCtx: CanvasRenderingContext2D;
-  private fields: Fields;
   private resolution: number;
   private imageSmoothing: boolean;
+  private worker!: Worker;
+  private geometryShapeIds: Map<HTMLElement, string> = new Map();
 
-  // Get all geometry elements and create points for the distance field
+  // Get all geometry elements
   private geometries = document.querySelectorAll('fc-geometry');
 
   constructor() {
@@ -24,9 +25,8 @@ export class DistanceField extends HTMLElement {
 
     this.resolution = 800; // default resolution
     this.imageSmoothing = true;
-    this.fields = new Fields(this.resolution);
 
-    const { ctx, offscreenCtx } = this.createCanvas(
+    const { ctx, offscreenCtx, offscreenCanvas } = this.createCanvas(
       window.innerWidth,
       window.innerHeight,
       this.resolution,
@@ -35,6 +35,16 @@ export class DistanceField extends HTMLElement {
 
     this.ctx = ctx;
     this.offscreenCtx = offscreenCtx;
+    this.offscreenCanvas = offscreenCanvas;
+
+    // Initialize the Web Worker
+    try {
+      this.worker = new Worker(new URL('./distance-field.worker.ts', import.meta.url).href, { type: 'module' });
+      this.worker.onmessage = this.handleWorkerMessage;
+      this.worker.postMessage({ type: 'initialize', data: { resolution: this.resolution } });
+    } catch (error) {
+      console.error('Error initializing worker', error);
+    }
 
     this.renderDistanceField();
   }
@@ -48,17 +58,19 @@ export class DistanceField extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Update distance field when geometries move or resize
+    // Remove event listeners and terminate the worker
     this.geometries.forEach((geometry) => {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
     });
+    this.worker.terminate();
   }
 
   attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     if (name === 'resolution') {
       this.resolution = parseInt(newValue, 10);
-      this.fields = new Fields(this.resolution);
+      // Re-initialize the worker with the new resolution
+      this.worker.postMessage({ type: 'initialize', data: { resolution: this.resolution } });
     } else if (name === 'image-smoothing') {
       this.imageSmoothing = newValue === 'true';
       if (this.ctx) {
@@ -68,30 +80,39 @@ export class DistanceField extends HTMLElement {
   }
 
   private renderDistanceField() {
-    // Get the computed ImageData from Fields
-    const imageData = this.fields.generateImageData();
-
-    // Put the ImageData onto the offscreen canvas
-    this.offscreenCtx.putImageData(imageData, 0, 0);
-
-    // Draw scaled version to main canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(
-      this.offscreenCtx.canvas,
-      0,
-      0,
-      this.resolution,
-      this.resolution,
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height
-    );
+    // Request the worker to generate ImageData
+    this.worker.postMessage({ type: 'generateImageData' });
   }
 
-  // Public methods
+  // Handle messages from the worker
+  private handleWorkerMessage = (event: MessageEvent) => {
+    const { type, imageData } = event.data;
+
+    if (type === 'imageData') {
+      // Reconstruct ImageData from the transferred buffer
+      const imgData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+
+      // Update the canvas with the new image data
+      this.offscreenCtx.putImageData(imgData, 0, 0);
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(
+        this.offscreenCanvas,
+        0,
+        0,
+        this.resolution,
+        this.resolution,
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
+    }
+  };
+
+  // Public method to reset fields
   reset() {
-    this.fields = new Fields(this.resolution);
+    // Reset the fields in the worker
+    this.worker.postMessage({ type: 'initialize', data: { resolution: this.resolution } });
   }
 
   private transformToFieldCoordinates(point: Vector2): Vector2 {
@@ -103,14 +124,15 @@ export class DistanceField extends HTMLElement {
   }
 
   addShape(points: Vector2[]) {
-    // Transform each point from screen coordinates to field coordinates
+    // Transform and send points to the worker
     const transformedPoints = points.map((point) => this.transformToFieldCoordinates(point));
-    this.fields.addShape(transformedPoints);
+    this.worker.postMessage({ type: 'addShape', data: { points: transformedPoints } });
     this.renderDistanceField();
   }
 
   removeShape(index: number) {
-    this.fields.removeShape(index);
+    // Inform the worker to remove a shape
+    this.worker.postMessage({ type: 'removeShape', data: { index } });
     this.renderDistanceField();
   }
 
@@ -118,7 +140,7 @@ export class DistanceField extends HTMLElement {
     this.canvas = document.createElement('canvas');
     const offscreenCanvas = document.createElement('canvas');
 
-    // Set canvas styles to ensure it stays behind other elements
+    // Set canvas styles
     this.canvas.style.position = 'absolute';
     this.canvas.style.top = '0';
     this.canvas.style.left = '0';
@@ -140,14 +162,12 @@ export class DistanceField extends HTMLElement {
     ctx.imageSmoothingEnabled = this.imageSmoothing;
 
     this.appendChild(this.canvas);
-    return { ctx, offscreenCtx };
+    return { ctx, offscreenCtx, offscreenCanvas };
   }
 
   handleGeometryUpdate = (event: Event) => {
     const geometry = event.target as HTMLElement;
-    // TODO: store as array from getgo
-    const index = Array.from(this.geometries).indexOf(geometry as FolkGeometry);
-    if (index === -1) return;
+    const shapeId = this.geometryShapeIds.get(geometry);
 
     const rect = geometry.getBoundingClientRect();
     const points = [
@@ -157,10 +177,20 @@ export class DistanceField extends HTMLElement {
       { x: rect.x, y: rect.y + rect.height },
     ];
 
-    if (index < this.fields.shapes.length) {
-      this.fields.updateShape(index, this.transformPoints(points));
+    const transformedPoints = this.transformPoints(points);
+
+    if (shapeId) {
+      this.worker.postMessage({
+        type: 'updateShape',
+        data: { id: shapeId, points: transformedPoints },
+      });
     } else {
-      this.fields.addShape(this.transformPoints(points));
+      const newId = crypto.randomUUID();
+      this.geometryShapeIds.set(geometry, newId);
+      this.worker.postMessage({
+        type: 'addShape',
+        data: { id: newId, points: transformedPoints },
+      });
     }
 
     this.renderDistanceField();

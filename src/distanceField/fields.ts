@@ -1,6 +1,12 @@
 import type { Vector2 } from '../utils/Vector2.ts';
 import { computeCPT } from './cpt.ts';
 
+interface Shape {
+  id: string;
+  points: Vector2[];
+  color: number;
+}
+
 export class Fields {
   private edt: Float32Array[] = [];
   private cpt: Vector2[][] = [];
@@ -8,15 +14,11 @@ export class Fields {
   private xcoords: Float32Array[] = [];
   private ycoords: Float32Array[] = [];
   private resolution: number;
-  shapes: Array<{
-    points: Vector2[];
-    color: number;
-  }> = [];
+  private shapes: Map<string, Shape> = new Map();
 
   constructor(resolution: number) {
     this.resolution = resolution + 1;
     this.initializeArrays();
-    this.updateFields();
   }
 
   private initializeArrays() {
@@ -39,15 +41,24 @@ export class Fields {
     return this.colorField[x][y];
   }
 
-  addShape(points: Vector2[], color?: number) {
+  addShape(id: string, points: Vector2[], color?: number) {
     const shapeColor = color ?? Math.floor(Math.random() * 255);
-    this.shapes.push({ points, color: shapeColor });
+    this.shapes.set(id, { id, points, color: shapeColor });
     this.updateFields();
   }
 
-  removeShape(index: number) {
-    this.shapes.splice(index, 1);
-    this.updateFields();
+  removeShape(id: string) {
+    if (this.shapes.delete(id)) {
+      this.updateFields();
+    }
+  }
+
+  updateShape(id: string, points: Vector2[]) {
+    const shape = this.shapes.get(id);
+    if (shape) {
+      shape.points = points;
+      this.updateFields();
+    }
   }
 
   updateFields() {
@@ -66,7 +77,7 @@ export class Fields {
     }
   }
 
-  boolifyFields(distanceField: Float32Array[], colorField: Float32Array[]): void {
+  private boolifyFields(distanceField: Float32Array[], colorField: Float32Array[]): void {
     const LARGE_NUMBER = 1000000000000;
     const size = distanceField.length;
     const cellSize = 1;
@@ -126,22 +137,13 @@ export class Fields {
       }
     };
 
-    for (const shape of this.shapes) {
+    for (const shape of this.shapes.values()) {
       const { points, color } = shape;
-
       for (let i = 0; i < points.length; i++) {
         const start = points[i];
         const end = points[(i + 1) % points.length];
         drawLine(start, end, color);
       }
-    }
-  }
-
-  updateShape(index: number, points: Vector2[]) {
-    if (index >= 0 && index < this.shapes.length) {
-      const existingColor = this.shapes[index].color;
-      this.shapes[index] = { points, color: existingColor };
-      this.updateFields();
     }
   }
 
