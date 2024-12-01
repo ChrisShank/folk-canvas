@@ -1,8 +1,6 @@
 import type { Vector2 } from '../utils/Vector2.ts';
 import { computeCPT } from './cpt.ts';
 
-type ColorFunc = (d: number) => { r: number; g: number; b: number };
-
 export class Fields {
   private edt: Float32Array[] = [];
   private cpt: Vector2[][] = [];
@@ -147,66 +145,26 @@ export class Fields {
     }
   }
 
-  private renderEDT(colorFunc: ColorFunc): ImageData {
-    const imageData = new ImageData(this.resolution, this.resolution);
-    for (let row = 0; row < this.resolution; row++) {
-      for (let col = 0; col < this.resolution; col++) {
-        const index = (col * this.resolution + row) * 4;
-        const distance = this.edt[row][col];
-        const color = colorFunc(distance);
-        imageData.data[index] = color.r;
-        imageData.data[index + 1] = color.g;
-        imageData.data[index + 2] = color.b;
-        imageData.data[index + 3] = 255;
-      }
-    }
-    return imageData;
-  }
-
-  private renderCPT(): ImageData {
-    const imageData = new ImageData(this.resolution, this.resolution);
-
-    for (let row = 0; row < this.resolution; row++) {
-      for (let col = 0; col < this.resolution; col++) {
-        const { x, y } = this.cpt[row][col];
-        const shapeColor = this.colorField[x][y];
-        const color = {
-          r: (shapeColor * 7) % 150,
-          g: (shapeColor * 13) % 200,
-          b: (shapeColor * 19) % 250,
-        };
-        const index = (col * this.resolution + row) * 4;
-        imageData.data[index] = color.r;
-        imageData.data[index + 1] = color.g;
-        imageData.data[index + 2] = color.b;
-        imageData.data[index + 3] = 255;
-      }
-    }
-    return imageData;
-  }
-
-  private renderCombined(): ImageData {
+  private renderer(
+    pixelRenderer: (
+      distance: number,
+      closestX: number,
+      closestY: number,
+      shapeColor: number,
+      row: number,
+      col: number
+    ) => { r: number; g: number; b: number }
+  ): ImageData {
     const imageData = new ImageData(this.resolution, this.resolution);
 
     for (let row = 0; row < this.resolution; row++) {
       for (let col = 0; col < this.resolution; col++) {
         const index = (col * this.resolution + row) * 4;
         const distance = this.edt[row][col];
-        const { x, y } = this.cpt[row][col];
-        const shapeColor = this.colorField[x][y] % 200;
+        const { x: closestX, y: closestY } = this.cpt[row][col];
+        const shapeColor = this.colorField[closestX][closestY];
 
-        const maxDistance = 10;
-        const normalizedDistance = Math.sqrt(distance) / maxDistance;
-        const baseColor = {
-          r: (shapeColor * 7) % 256,
-          g: (shapeColor * 13) % 256,
-          b: (shapeColor * 19) % 256,
-        };
-        const color = {
-          r: baseColor.r * (1 - normalizedDistance),
-          g: baseColor.g * (1 - normalizedDistance),
-          b: baseColor.b * (1 - normalizedDistance),
-        };
+        const color = pixelRenderer(distance, closestX, closestY, shapeColor, row, col);
 
         imageData.data[index] = color.r;
         imageData.data[index + 1] = color.g;
@@ -214,42 +172,60 @@ export class Fields {
         imageData.data[index + 3] = 255;
       }
     }
+
     return imageData;
   }
 
   public generateImageData(): ImageData {
-    return this.renderCombined();
-    // return this.renderCPT();
-    // return this.renderEDT(Color.rainbowColorFunc);
+    // combined
+    return this.renderer((distance, _, __, shapeColor) => {
+      const normalizedDistance = Math.sqrt(distance) / 10;
+      const baseColor = {
+        r: (shapeColor * 7) % 256,
+        g: (shapeColor * 13) % 256,
+        b: (shapeColor * 19) % 256,
+      };
+      return {
+        r: baseColor.r * (1 - normalizedDistance),
+        g: baseColor.g * (1 - normalizedDistance),
+        b: baseColor.b * (1 - normalizedDistance),
+      };
+    });
+
+    // rainbow distance
+    // return this.generateImage((distance) => ColorMap.rainbow(distance));
+
+    // closest point
+    // return this.generateImage((_, __, ___, shapeColor) => ({
+    //   r: (shapeColor * 7) % 150,
+    //   g: (shapeColor * 13) % 200,
+    //   b: (shapeColor * 19) % 250,
+    // }));
   }
 }
 
-const Color = {
-  simpleColorFunc: (d: number) => {
+const ColorMap = {
+  simple: (d: number) => {
     return { r: 250 - d * 2, g: 250 - d * 5, b: 250 - d * 3 };
   },
-  simpleModuloColorFunc: (d: number) => {
+  modulo: (d: number) => {
     const period = 18;
     const modulo = d % period;
     return { r: modulo * period, g: (modulo * period) / 3, b: (modulo * period) / 2 };
   },
-  moduloColorFunc: (d: number) => {
-    const dPeriod = d % 15;
-    return { r: dPeriod * 10, g: dPeriod * 20, b: dPeriod * 30 };
-  },
-  grayscaleColorFunc: (d: number) => {
+  grayscale: (d: number) => {
     const value = 255 - Math.abs(d) * 10;
     return { r: value, g: value, b: value };
   },
-  heatmapColorFunc: (d: number) => {
+  heatmap: (d: number) => {
     const value = Math.min(255, Math.max(0, 255 - Math.abs(d) * 10));
     return { r: value, g: 0, b: 255 - value };
   },
-  invertedColorFunc: (d: number) => {
+  inverted: (d: number) => {
     const value = Math.abs(d) % 255;
     return { r: 255 - value, g: 255 - value, b: 255 - value };
   },
-  rainbowColorFunc: (d: number) => {
+  rainbow: (d: number) => {
     const value = Math.abs(d) % 255;
     return { r: (value * 5) % 255, g: (value * 3) % 255, b: (value * 7) % 255 };
   },
