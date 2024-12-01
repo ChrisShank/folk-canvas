@@ -147,47 +147,6 @@ export class Fields {
     }
   }
 
-  private renderer(
-    pixelRenderer: (
-      distance: number,
-      closestX: number,
-      closestY: number,
-      shapeColor: number,
-      row: number,
-      col: number
-    ) => { r: number; g: number; b: number }
-  ): ImageData {
-    const imageData = new ImageData(this.resolution, this.resolution);
-    const data = imageData.data;
-    const resolution = this.resolution;
-
-    // Pre-cache arrays to avoid repeated property access
-    const edt = this.edt;
-    const cpt = this.cpt;
-    const colorField = this.colorField;
-
-    // Process pixels in a single loop
-    for (let i = 0; i < resolution * resolution; i++) {
-      const row = i % resolution;
-      const col = (i / resolution) | 0; // Faster integer division
-      const index = i * 4;
-
-      const distance = edt[row][col];
-      const { x: closestX, y: closestY } = cpt[row][col];
-      const shapeColor = colorField[closestX][closestY];
-
-      const color = pixelRenderer(distance, closestX, closestY, shapeColor, row, col);
-
-      // Direct array access is faster than property access
-      data[index] = color.r;
-      data[index + 1] = color.g;
-      data[index + 2] = color.b;
-      data[index + 3] = 255;
-    }
-
-    return imageData;
-  }
-
   public generateImageData(): ImageData {
     const imageData = new ImageData(this.resolution, this.resolution);
     const data = imageData.data;
