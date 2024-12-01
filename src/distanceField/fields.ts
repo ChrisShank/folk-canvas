@@ -1,6 +1,8 @@
 import type { Vector2 } from '../utils/Vector2.ts';
 import { computeCPT } from './cpt.ts';
 
+type ColorFunc = (d: number) => { r: number; g: number; b: number };
+
 export class Fields {
   private edt: Float32Array[] = [];
   private cpt: Vector2[][] = [];
@@ -137,54 +139,32 @@ export class Fields {
     }
   }
 
-  Color = {
-    simpleColorFunc: (d: number) => {
-      return { r: 250 - d * 2, g: 250 - d * 5, b: 250 - d * 3 };
-    },
-    simpleModuloColorFunc: (d: number) => {
-      const period = 18;
-      const modulo = d % period;
-      return { r: modulo * period, g: (modulo * period) / 3, b: (modulo * period) / 2 };
-    },
-    moduloColorFunc: (d: number) => {
-      const dPeriod = d % 15;
-      return { r: dPeriod * 10, g: dPeriod * 20, b: dPeriod * 30 };
-    },
-    grayscaleColorFunc: (d: number) => {
-      const value = 255 - Math.abs(d) * 10;
-      return { r: value, g: value, b: value };
-    },
-    heatmapColorFunc: (d: number) => {
-      const value = Math.min(255, Math.max(0, 255 - Math.abs(d) * 10));
-      return { r: value, g: 0, b: 255 - value };
-    },
-    invertedColorFunc: (d: number) => {
-      const value = Math.abs(d) % 255;
-      return { r: 255 - value, g: 255 - value, b: 255 - value };
-    },
-    rainbowColorFunc: (d: number) => {
-      const value = Math.abs(d) % 255;
-      return { r: (value * 5) % 255, g: (value * 3) % 255, b: (value * 7) % 255 };
-    },
-  };
+  updateShape(index: number, points: Vector2[]) {
+    if (index >= 0 && index < this.shapes.length) {
+      const existingColor = this.shapes[index].color;
+      this.shapes[index] = { points, color: existingColor };
+      this.updateFields();
+    }
+  }
 
-  public renderEDT(canvas: CanvasRenderingContext2D): void {
-    const imageData = canvas.getImageData(0, 0, this.resolution, this.resolution);
+  private renderEDT(colorFunc: ColorFunc): ImageData {
+    const imageData = new ImageData(this.resolution, this.resolution);
     for (let row = 0; row < this.resolution; row++) {
       for (let col = 0; col < this.resolution; col++) {
         const index = (col * this.resolution + row) * 4;
         const distance = this.edt[row][col];
-        const color = this.Color.simpleColorFunc(distance);
+        const color = colorFunc(distance);
         imageData.data[index] = color.r;
         imageData.data[index + 1] = color.g;
         imageData.data[index + 2] = color.b;
         imageData.data[index + 3] = 255;
       }
     }
-    canvas.putImageData(imageData, 0, 0);
+    return imageData;
   }
-  public renderCPT(canvas: CanvasRenderingContext2D): void {
-    const imageData = canvas.getImageData(0, 0, this.resolution, this.resolution);
+
+  private renderCPT(): ImageData {
+    const imageData = new ImageData(this.resolution, this.resolution);
 
     for (let row = 0; row < this.resolution; row++) {
       for (let col = 0; col < this.resolution; col++) {
@@ -202,11 +182,11 @@ export class Fields {
         imageData.data[index + 3] = 255;
       }
     }
-    canvas.putImageData(imageData, 0, 0);
+    return imageData;
   }
 
-  public renderBoth(canvas: CanvasRenderingContext2D): void {
-    const imageData = canvas.getImageData(0, 0, this.resolution, this.resolution);
+  private renderCombined(): ImageData {
+    const imageData = new ImageData(this.resolution, this.resolution);
 
     for (let row = 0; row < this.resolution; row++) {
       for (let col = 0; col < this.resolution; col++) {
@@ -234,44 +214,43 @@ export class Fields {
         imageData.data[index + 3] = 255;
       }
     }
-    canvas.putImageData(imageData, 0, 0);
-  }
-
-  updateShape(index: number, points: Vector2[]) {
-    if (index >= 0 && index < this.shapes.length) {
-      const existingColor = this.shapes[index].color;
-      this.shapes[index] = { points, color: existingColor };
-      this.updateFields();
-    }
-  }
-
-  /**
-   * Generates ImageData for rendering, encapsulating all computational logic.
-   */
-  public generateImageData(): ImageData {
-    const imageData = new ImageData(this.resolution, this.resolution);
-
-    for (let row = 0; row < this.resolution; row++) {
-      for (let col = 0; col < this.resolution; col++) {
-        const index = (col * this.resolution + row) * 4;
-        const distance = this.getDistance(row, col);
-        const color = this.getColor(row, col);
-
-        const maxDistance = 10;
-        const normalizedDistance = Math.sqrt(distance) / maxDistance;
-        const baseColor = {
-          r: (color * 7) % 256,
-          g: (color * 13) % 256,
-          b: (color * 19) % 256,
-        };
-
-        imageData.data[index] = baseColor.r * (1 - normalizedDistance);
-        imageData.data[index + 1] = baseColor.g * (1 - normalizedDistance);
-        imageData.data[index + 2] = baseColor.b * (1 - normalizedDistance);
-        imageData.data[index + 3] = 255;
-      }
-    }
-
     return imageData;
   }
+
+  public generateImageData(): ImageData {
+    return this.renderCombined();
+    // return this.renderCPT();
+    // return this.renderEDT(Color.rainbowColorFunc);
+  }
 }
+
+const Color = {
+  simpleColorFunc: (d: number) => {
+    return { r: 250 - d * 2, g: 250 - d * 5, b: 250 - d * 3 };
+  },
+  simpleModuloColorFunc: (d: number) => {
+    const period = 18;
+    const modulo = d % period;
+    return { r: modulo * period, g: (modulo * period) / 3, b: (modulo * period) / 2 };
+  },
+  moduloColorFunc: (d: number) => {
+    const dPeriod = d % 15;
+    return { r: dPeriod * 10, g: dPeriod * 20, b: dPeriod * 30 };
+  },
+  grayscaleColorFunc: (d: number) => {
+    const value = 255 - Math.abs(d) * 10;
+    return { r: value, g: value, b: value };
+  },
+  heatmapColorFunc: (d: number) => {
+    const value = Math.min(255, Math.max(0, 255 - Math.abs(d) * 10));
+    return { r: value, g: 0, b: 255 - value };
+  },
+  invertedColorFunc: (d: number) => {
+    const value = Math.abs(d) % 255;
+    return { r: 255 - value, g: 255 - value, b: 255 - value };
+  },
+  rainbowColorFunc: (d: number) => {
+    const value = Math.abs(d) % 255;
+    return { r: (value * 5) % 255, g: (value * 3) % 255, b: (value * 7) % 255 };
+  },
+};
