@@ -11,7 +11,6 @@ export class Fields {
   shapes: Array<{
     points: Vector2[];
     color: number;
-    isClosed: boolean;
   }> = [];
 
   constructor(resolution: number) {
@@ -40,9 +39,9 @@ export class Fields {
     return this.colorField[x][y];
   }
 
-  addShape(points: Vector2[], isClosed: boolean = true) {
+  addShape(points: Vector2[]) {
     const color = Math.floor(Math.random() * 255);
-    this.shapes.push({ points, color, isClosed });
+    this.shapes.push({ points, color });
     this.updateFields();
     console.log(this.shapes);
   }
@@ -129,10 +128,9 @@ export class Fields {
     };
 
     for (const shape of this.shapes) {
-      const { points, color, isClosed } = shape;
-      const length = isClosed ? points.length : points.length - 1;
+      const { points, color } = shape;
 
-      for (let i = 0; i < length; i++) {
+      for (let i = 0; i < points.length; i++) {
         const start = points[i];
         const end = points[(i + 1) % points.length];
         drawLine(start, end, color);
@@ -240,10 +238,10 @@ export class Fields {
     canvas.putImageData(imageData, 0, 0);
   }
 
-  updateShape(index: number, points: Vector2[], isClosed: boolean = true) {
+  updateShape(index: number, points: Vector2[]) {
     if (index >= 0 && index < this.shapes.length) {
       const existingColor = this.shapes[index].color;
-      this.shapes[index] = { points, color: existingColor, isClosed };
+      this.shapes[index] = { points, color: existingColor };
       this.updateFields();
     }
   }

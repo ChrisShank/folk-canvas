@@ -121,10 +121,10 @@ export class DistanceField extends HTMLElement {
     };
   }
 
-  addShape(points: Vector2[], isClosed = true) {
+  addShape(points: Vector2[]) {
     // Transform each point from screen coordinates to field coordinates
     const transformedPoints = points.map((point) => this.transformToFieldCoordinates(point));
-    this.fields.addShape(transformedPoints, isClosed);
+    this.fields.addShape(transformedPoints);
     this.renderDistanceField();
   }
 
@@ -176,16 +176,16 @@ export class DistanceField extends HTMLElement {
     ];
 
     if (index < this.fields.shapes.length) {
-      this.updateShape(index, points, true);
+      this.updateShape(index, points);
     } else {
-      this.addShape(points, true);
+      this.addShape(points);
     }
   };
 
-  updateShape(index: number, points: Vector2[], isClosed = true) {
+  updateShape(index: number, points: Vector2[]) {
     // Transform each point from screen coordinates to field coordinates
     const transformedPoints = points.map((point) => this.transformToFieldCoordinates(point));
-    this.fields.updateShape(index, transformedPoints, isClosed);
+    this.fields.updateShape(index, transformedPoints);
     this.renderDistanceField();
   }
 }
