@@ -8,6 +8,8 @@ declare global {
   }
 }
 
+const defaultRect = DOMRectReadOnly.fromRect();
+
 export class FolkSet extends HTMLElement {
   static tagName = 'folk-set';
 
@@ -60,6 +62,7 @@ export class FolkSet extends HTMLElement {
     this.unobserveSources(elementsToUnobserve);
 
     for (const el of elementsToObserve) {
+      this.#sourcesMap.set(el, defaultRect);
       clientRectObserver.observe(el, this.#sourcesCallback);
     }
 

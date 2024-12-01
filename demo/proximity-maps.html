@@ -59,7 +59,7 @@
   <body>
     <folk-proximity>
       <fc-geometry id="g1" x="25" y="100" width="400" height="200">
-        <folk-map coordinates="52.09, 5.12" zoom="13"></folk-map>
+        <folk-map coordinates="40.76845173617708, -73.97983074188234" zoom="15"></folk-map>
       </fc-geometry>
 
       <fc-geometry id="g2" x="50" y="600" width="400" height="250">
@@ -67,11 +67,11 @@
       </fc-geometry>
 
       <fc-geometry id="g3" x="500" y="500" width="500" height="300">
-        <geo-wiki coordinates="51.50404120260676, -0.14007568359375003"></geo-wiki>
+        <geo-wiki></geo-wiki>
       </fc-geometry>
 
       <fc-geometry id="g4" x="450" y="100">
-        <folk-weather coordinates="51.50404120260676, -0.14007568359375003"></folk-weather>
+        <folk-weather></folk-weather>
       </fc-geometry>
     </folk-proximity>
 
@@ -80,12 +80,6 @@
       import { FolkMap } from '../src/folk-map.ts';
       import { FolkWeather } from '../src/folk-weather.ts';
       import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
-
-      FolkGeometry.define();
-      FolkMap.define();
-      FolkCluster.define();
-      FolkProximity.define();
-      FolkWeather.define();
 
       class GeoWiki extends HTMLElement {
         static tagName = 'geo-wiki';
@@ -150,6 +144,50 @@
         }
       }
 
+      FolkCluster.registerElement({
+        constructor: FolkMap,
+        events: {
+          recenter: (e) => ({
+            lat: e.target.coordinates.lat,
+            lng: e.target.coordinates.lng,
+          }),
+        },
+        onAdd: (element) => ({
+          lat: element.coordinates.lat,
+          lng: element.coordinates.lng,
+        }),
+      });
+
+      FolkCluster.registerElement({
+        constructor: FolkWeather,
+        onAdd: console.log,
+        onUpdate(element, data, changes) {
+          const lat = data.get('lat');
+          const lng = data.get('lng');
+
+          if (lat && lng) {
+            element.coordinates = [lat, lng];
+          }
+        },
+      });
+
+      FolkCluster.registerElement({
+        constructor: GeoWiki,
+        onUpdate(element, data, changes) {
+          const lat = data.get('lat');
+          const lng = data.get('lng');
+
+          if (lat && lng) {
+            element.coordinates = [lat, lng];
+          }
+        },
+      });
+
+      FolkGeometry.define();
+      FolkMap.define();
+      FolkCluster.define();
+      FolkProximity.define();
+      FolkWeather.define();
       GeoWiki.define();
     </script>
   </body>
