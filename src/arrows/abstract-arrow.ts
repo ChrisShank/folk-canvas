@@ -1,5 +1,5 @@
-import { FolkGeometry } from '../canvas/fc-geometry';
-import { parseVertex } from './utils';
+import { FolkGeometry } from '../canvas/fc-geometry.ts';
+import { parseVertex } from './utils.ts';
 import { ClientRectObserverEntry, ClientRectObserverManager } from '../client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();

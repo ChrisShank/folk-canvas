@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distance Field Demo</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      fc-geometry {
+        background: transparent;
+        position: absolute;
+      }
+
+      cell-renderer canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+    </style>
+  </head>
+  <body>
+    <cell-renderer resolution="800" image-smoothing="true"></cell-renderer>
+    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
+    <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
+    <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
+    <fc-geometry x="300" y="150" width="80" height="40"></fc-geometry>
+    <fc-geometry x="400" y="250" width="60" height="90"></fc-geometry>
+    <fc-geometry x="200" y="400" width="100" height="100"></fc-geometry>
+    <fc-geometry x="500" y="100" width="30" height="70"></fc-geometry>
+
+    <script type="module">
+      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { CellRenderer } from '../src/distanceField/cellRenderer.ts';
+
+      FolkGeometry.define();
+      CellRenderer.define();
+
+      // Get all geometry elements and create points for the distance field
+      const geometries = document.querySelectorAll('fc-geometry');
+      const renderer = document.querySelector('cell-renderer');
+
+      // Update distance field when geometries move or resize
+      geometries.forEach((geometry) => {
+        geometry.addEventListener('move', (e) => renderer.handleGeometryUpdate(e));
+        geometry.addEventListener('resize', (e) => renderer.handleGeometryUpdate(e));
+      });
+    </script>
+  </body>
+</html>
