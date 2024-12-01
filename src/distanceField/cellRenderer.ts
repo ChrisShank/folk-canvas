@@ -3,16 +3,27 @@ import type { Vector2 } from '../utils/Vector2.ts';
 import { Fields } from './fields.ts';
 
 export class CellRenderer extends HTMLElement {
+  static tagName = 'cell-renderer';
+
+  static define() {
+    customElements.define(this.tagName, this);
+  }
+
+  static observedAttributes = ['resolution', 'image-smoothing'];
+
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private offscreenCtx: CanvasRenderingContext2D;
   private fields: Fields;
   private resolution: number;
   private imageSmoothing: boolean;
-  static tagName = 'cell-renderer';
+
+  // Get all geometry elements and create points for the distance field
+  private geometries = document.querySelectorAll('fc-geometry');
 
   constructor() {
     super();
+
     this.resolution = 2000; // default resolution
     this.imageSmoothing = true;
     this.fields = new Fields(this.resolution);
@@ -30,12 +41,20 @@ export class CellRenderer extends HTMLElement {
     this.renderDistanceField();
   }
 
-  static define() {
-    customElements.define(this.tagName, this);
+  connectedCallback() {
+    // Update distance field when geometries move or resize
+    this.geometries.forEach((geometry) => {
+      geometry.addEventListener('move', this.handleGeometryUpdate);
+      geometry.addEventListener('resize', this.handleGeometryUpdate);
+    });
   }
 
-  static get observedAttributes() {
-    return ['resolution', 'image-smoothing'];
+  disconnectedCallback() {
+    // Update distance field when geometries move or resize
+    this.geometries.forEach((geometry) => {
+      geometry.removeEventListener('move', this.handleGeometryUpdate);
+      geometry.removeEventListener('resize', this.handleGeometryUpdate);
+    });
   }
 
   attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -145,7 +164,7 @@ export class CellRenderer extends HTMLElement {
     return { ctx, offscreenCtx };
   }
 
-  handleGeometryUpdate(event: Event) {
+  handleGeometryUpdate = (event: Event) => {
     const geometry = event.target as HTMLElement;
     const index = Array.from(document.querySelectorAll('fc-geometry')).indexOf(geometry as FolkGeometry);
     if (index === -1) return;
@@ -163,7 +182,7 @@ export class CellRenderer extends HTMLElement {
     } else {
       this.addShape(points, true);
     }
-  }
+  };
 
   updateShape(index: number, points: Vector2[], isClosed = true) {
     // Transform each point from screen coordinates to field coordinates
