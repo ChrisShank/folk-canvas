@@ -158,51 +158,75 @@ export class Fields {
     ) => { r: number; g: number; b: number }
   ): ImageData {
     const imageData = new ImageData(this.resolution, this.resolution);
+    const data = imageData.data;
+    const resolution = this.resolution;
 
-    for (let row = 0; row < this.resolution; row++) {
-      for (let col = 0; col < this.resolution; col++) {
-        const index = (col * this.resolution + row) * 4;
-        const distance = this.edt[row][col];
-        const { x: closestX, y: closestY } = this.cpt[row][col];
-        const shapeColor = this.colorField[closestX][closestY];
+    // Pre-cache arrays to avoid repeated property access
+    const edt = this.edt;
+    const cpt = this.cpt;
+    const colorField = this.colorField;
 
-        const color = pixelRenderer(distance, closestX, closestY, shapeColor, row, col);
+    // Process pixels in a single loop
+    for (let i = 0; i < resolution * resolution; i++) {
+      const row = i % resolution;
+      const col = (i / resolution) | 0; // Faster integer division
+      const index = i * 4;
 
-        imageData.data[index] = color.r;
-        imageData.data[index + 1] = color.g;
-        imageData.data[index + 2] = color.b;
-        imageData.data[index + 3] = 255;
-      }
+      const distance = edt[row][col];
+      const { x: closestX, y: closestY } = cpt[row][col];
+      const shapeColor = colorField[closestX][closestY];
+
+      const color = pixelRenderer(distance, closestX, closestY, shapeColor, row, col);
+
+      // Direct array access is faster than property access
+      data[index] = color.r;
+      data[index + 1] = color.g;
+      data[index + 2] = color.b;
+      data[index + 3] = 255;
     }
 
     return imageData;
   }
 
   public generateImageData(): ImageData {
-    // combined
-    return this.renderer((distance, _, __, shapeColor) => {
+    const imageData = new ImageData(this.resolution, this.resolution);
+    const data = imageData.data;
+    const resolution = this.resolution;
+    const edt = this.edt;
+    const cpt = this.cpt;
+    const colorField = this.colorField;
+
+    // Pre-calculate color lookup table
+    const colorLookup = new Float32Array(256 * 3);
+    for (let i = 0; i < 256; i++) {
+      colorLookup[i * 3] = (i * 7) % 256; // r
+      colorLookup[i * 3 + 1] = (i * 13) % 256; // g
+      colorLookup[i * 3 + 2] = (i * 19) % 256; // b
+    }
+
+    // Unrolled inner loop with direct calculations
+    const len = resolution * resolution;
+    for (let i = 0; i < len; i++) {
+      const row = i % resolution;
+      const col = (i / resolution) | 0;
+      const index = i * 4;
+
+      const distance = edt[row][col];
+      const { x: closestX, y: closestY } = cpt[row][col];
+      const shapeColor = colorField[closestX][closestY];
+
+      // Direct color calculation without function call
       const normalizedDistance = Math.sqrt(distance) / 10;
-      const baseColor = {
-        r: (shapeColor * 7) % 256,
-        g: (shapeColor * 13) % 256,
-        b: (shapeColor * 19) % 256,
-      };
-      return {
-        r: baseColor.r * (1 - normalizedDistance),
-        g: baseColor.g * (1 - normalizedDistance),
-        b: baseColor.b * (1 - normalizedDistance),
-      };
-    });
+      const colorIndex = shapeColor * 3;
+      const factor = 1 - normalizedDistance;
 
-    // rainbow distance
-    // return this.generateImage((distance) => ColorMap.rainbow(distance));
+      data[index] = colorLookup[colorIndex] * factor; // r
+      data[index + 1] = colorLookup[colorIndex + 1] * factor; // g
+      data[index + 2] = colorLookup[colorIndex + 2] * factor; // b
+      data[index + 3] = 255;
+    }
 
-    // closest point
-    // return this.generateImage((_, __, ___, shapeColor) => ({
-    //   r: (shapeColor * 7) % 150,
-    //   g: (shapeColor * 13) % 200,
-    //   b: (shapeColor * 19) % 250,
-    // }));
+    return imageData;
   }
 }
 
