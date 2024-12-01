@@ -68,29 +68,10 @@ export class DistanceField extends HTMLElement {
   }
 
   private renderDistanceField() {
-    const imageData = this.offscreenCtx.getImageData(0, 0, this.resolution, this.resolution);
+    // Get the computed ImageData from Fields
+    const imageData = this.fields.generateImageData();
 
-    for (let row = 0; row < this.resolution; row++) {
-      for (let col = 0; col < this.resolution; col++) {
-        const index = (col * this.resolution + row) * 4;
-        const distance = this.fields.getDistance(row, col);
-        const color = this.fields.getColor(row, col);
-
-        const maxDistance = 10;
-        const normalizedDistance = Math.sqrt(distance) / maxDistance;
-        const baseColor = {
-          r: (color * 7) % 256,
-          g: (color * 13) % 256,
-          b: (color * 19) % 256,
-        };
-
-        imageData.data[index] = baseColor.r * (1 - normalizedDistance);
-        imageData.data[index + 1] = baseColor.g * (1 - normalizedDistance);
-        imageData.data[index + 2] = baseColor.b * (1 - normalizedDistance);
-        imageData.data[index + 3] = 255;
-      }
-    }
-
+    // Put the ImageData onto the offscreen canvas
     this.offscreenCtx.putImageData(imageData, 0, 0);
 
     // Draw scaled version to main canvas
@@ -164,7 +145,8 @@ export class DistanceField extends HTMLElement {
 
   handleGeometryUpdate = (event: Event) => {
     const geometry = event.target as HTMLElement;
-    const index = Array.from(document.querySelectorAll('fc-geometry')).indexOf(geometry as FolkGeometry);
+    // TODO: store as array from getgo
+    const index = Array.from(this.geometries).indexOf(geometry as FolkGeometry);
     if (index === -1) return;
 
     const rect = geometry.getBoundingClientRect();
@@ -176,16 +158,15 @@ export class DistanceField extends HTMLElement {
     ];
 
     if (index < this.fields.shapes.length) {
-      this.updateShape(index, points);
+      this.fields.updateShape(index, this.transformPoints(points));
     } else {
-      this.addShape(points);
+      this.fields.addShape(this.transformPoints(points));
     }
+
+    this.renderDistanceField();
   };
 
-  updateShape(index: number, points: Vector2[]) {
-    // Transform each point from screen coordinates to field coordinates
-    const transformedPoints = points.map((point) => this.transformToFieldCoordinates(point));
-    this.fields.updateShape(index, transformedPoints);
-    this.renderDistanceField();
+  private transformPoints(points: Vector2[]): Vector2[] {
+    return points.map((point) => this.transformToFieldCoordinates(point));
   }
 }

@@ -39,11 +39,10 @@ export class Fields {
     return this.colorField[x][y];
   }
 
-  addShape(points: Vector2[]) {
-    const color = Math.floor(Math.random() * 255);
-    this.shapes.push({ points, color });
+  addShape(points: Vector2[], color?: number) {
+    const shapeColor = color ?? Math.floor(Math.random() * 255);
+    this.shapes.push({ points, color: shapeColor });
     this.updateFields();
-    console.log(this.shapes);
   }
 
   removeShape(index: number) {
@@ -244,5 +243,35 @@ export class Fields {
       this.shapes[index] = { points, color: existingColor };
       this.updateFields();
     }
+  }
+
+  /**
+   * Generates ImageData for rendering, encapsulating all computational logic.
+   */
+  public generateImageData(): ImageData {
+    const imageData = new ImageData(this.resolution, this.resolution);
+
+    for (let row = 0; row < this.resolution; row++) {
+      for (let col = 0; col < this.resolution; col++) {
+        const index = (col * this.resolution + row) * 4;
+        const distance = this.getDistance(row, col);
+        const color = this.getColor(row, col);
+
+        const maxDistance = 10;
+        const normalizedDistance = Math.sqrt(distance) / maxDistance;
+        const baseColor = {
+          r: (color * 7) % 256,
+          g: (color * 13) % 256,
+          b: (color * 19) % 256,
+        };
+
+        imageData.data[index] = baseColor.r * (1 - normalizedDistance);
+        imageData.data[index + 1] = baseColor.g * (1 - normalizedDistance);
+        imageData.data[index + 2] = baseColor.b * (1 - normalizedDistance);
+        imageData.data[index + 3] = 255;
+      }
+    }
+
+    return imageData;
   }
 }
