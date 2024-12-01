@@ -9,6 +9,7 @@ declare global {
   }
 }
 
+// https://open-meteo.com/
 export class FolkWeather extends HTMLElement {
   static tagName = 'folk-weather';
 
