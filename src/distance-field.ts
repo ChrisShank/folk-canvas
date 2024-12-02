@@ -9,15 +9,16 @@ import { WebGLUtils } from './utils/webgl.ts';
 export class DistanceField extends HTMLElement {
   static tagName = 'distance-field';
 
-  private geometries: NodeListOf<Element>;
   private textures: WebGLTexture[] = [];
   private pingPongIndex: number = 0;
 
+  private shapes!: NodeListOf<Element>;
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
   private shapeVAO!: WebGLVertexArrayObject;
+  private offsetCache: Map<number, Float32Array> = new Map();
 
   private jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
   private renderProgram!: WebGLProgram; // Shader program for final rendering
@@ -25,11 +26,13 @@ export class DistanceField extends HTMLElement {
 
   private static readonly MAX_DISTANCE = 99999.0;
 
-  constructor() {
-    super();
+  static define() {
+    customElements.define(this.tagName, this);
+  }
 
+  connectedCallback() {
     // Collect all geometry elements to process
-    this.geometries = document.querySelectorAll('fc-geometry');
+    this.shapes = document.querySelectorAll('fc-geometry');
 
     // Initialize WebGL context and canvas
     const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight, this);
@@ -53,15 +56,9 @@ export class DistanceField extends HTMLElement {
 
     // Start the Jump Flooding Algorithm
     this.runJFA();
-  }
 
-  static define() {
-    customElements.define(this.tagName, this);
-  }
-
-  connectedCallback() {
     window.addEventListener('resize', this.handleResize);
-    this.geometries.forEach((geometry) => {
+    this.shapes.forEach((geometry) => {
       geometry.addEventListener('move', this.handleGeometryUpdate);
       geometry.addEventListener('resize', this.handleGeometryUpdate);
     });
@@ -69,7 +66,7 @@ export class DistanceField extends HTMLElement {
 
   disconnectedCallback() {
     window.removeEventListener('resize', this.handleResize);
-    this.geometries.forEach((geometry) => {
+    this.shapes.forEach((geometry) => {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
     });
@@ -146,6 +143,13 @@ export class DistanceField extends HTMLElement {
     if (!this.framebuffer) {
       this.framebuffer = gl.createFramebuffer()!;
     }
+
+    // Check if framebuffer is complete
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.error('Framebuffer is not complete:', status);
+      return;
+    }
   }
 
   /**
@@ -163,7 +167,7 @@ export class DistanceField extends HTMLElement {
 
     // Collect positions and assign unique IDs to all shapes
     const positions: number[] = [];
-    this.geometries.forEach((geometry, index) => {
+    this.shapes.forEach((geometry, index) => {
       const rect = geometry.getBoundingClientRect();
 
       // Convert DOM coordinates to Normalized Device Coordinates (NDC)
@@ -239,7 +243,7 @@ export class DistanceField extends HTMLElement {
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(this.shapeVAO);
-    gl.drawArrays(gl.TRIANGLES, 0, this.geometries.length * 6);
+    gl.drawArrays(gl.TRIANGLES, 0, this.shapes.length * 6);
 
     // Unbind VAO and framebuffer
     gl.bindVertexArray(null);
@@ -251,15 +255,11 @@ export class DistanceField extends HTMLElement {
    * It progressively reduces step sizes to refine the distance calculations.
    */
   private runJFA() {
-    const maxDimension = Math.max(this.canvas.width, this.canvas.height);
-    let stepSize = Math.pow(2, Math.floor(Math.log2(maxDimension)));
-
-    const minStepSize = 1;
+    let stepSize = 1 << Math.floor(Math.log2(Math.max(this.canvas.width, this.canvas.height)));
 
     // Perform passes with decreasing step sizes
-    while (stepSize >= minStepSize) {
+    for (; stepSize >= 1; stepSize >>= 1) {
       this.renderPass(stepSize);
-      stepSize = Math.floor(stepSize / 2);
     }
 
     // Render the final result to the screen
@@ -403,13 +403,19 @@ export class DistanceField extends HTMLElement {
    * @returns A Float32Array of offsets.
    */
   private computeOffsets(stepSize: number): Float32Array {
-    const offsets: number[] = [];
+    if (this.offsetCache.has(stepSize)) {
+      return this.offsetCache.get(stepSize)!;
+    }
+
+    const offsets = [];
     for (let y = -1; y <= 1; y++) {
       for (let x = -1; x <= 1; x++) {
         offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
       }
     }
-    return new Float32Array(offsets);
+    const offsetArray = new Float32Array(offsets);
+    this.offsetCache.set(stepSize, offsetArray);
+    return offsetArray;
   }
 
   /**
@@ -448,7 +454,7 @@ export class DistanceField extends HTMLElement {
     }
 
     // Clear other references
-    this.geometries = null!;
+    this.shapes = null!;
   }
 }
 
@@ -526,6 +532,12 @@ out vec4 outColor;
 
 uniform sampler2D u_texture;
 
+vec3 hsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 void main() {
     vec4 texel = texture(u_texture, v_texCoord);
 
@@ -533,12 +545,9 @@ void main() {
     float shapeID = texel.z;
     float distance = texel.a;
 
-    // Generate a hash-based color for each shape
-    vec3 shapeColor = vec3(
-      fract(sin(shapeID * 12.9898) * 43758.5453),
-      fract(sin(shapeID * 78.233) * 43758.5453),
-      fract(sin(shapeID * 93.433) * 43758.5453)
-    );
+    float hue = fract(shapeID * 0.61803398875); // Golden ratio conjugate
+    vec3 shapeColor = hsv2rgb(vec3(hue, 0.5, 0.95));
+ 
 
     // Visualize distance as intensity
     float intensity = exp(-distance * 10.0);

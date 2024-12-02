@@ -41,10 +41,7 @@ export class WebGLUtils {
 
     // Set canvas styles
     canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
+    canvas.style.inset = '0';
     canvas.style.zIndex = '-1';
 
     canvas.width = width;
