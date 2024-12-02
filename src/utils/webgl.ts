@@ -1,0 +1,63 @@
+export class WebGLUtils {
+  static createShader(gl: WebGL2RenderingContext, type: GLenum, source: string): WebGLShader {
+    const shader = gl.createShader(type)!;
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (!success) {
+      const error = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error(`Shader compilation failed: ${error}`);
+    }
+    return shader;
+  }
+
+  static createProgram(
+    gl: WebGL2RenderingContext,
+    vertexShader: WebGLShader,
+    fragmentShader: WebGLShader
+  ): WebGLProgram {
+    const program = gl.createProgram()!;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!success) {
+      const error = gl.getProgramInfoLog(program);
+      gl.deleteProgram(program);
+      throw new Error(`Program linking failed: ${error}`);
+    }
+    return program;
+  }
+
+  static createWebGLCanvas(
+    width: number,
+    height: number,
+    parent: HTMLElement
+  ): { gl: WebGL2RenderingContext | undefined; canvas: HTMLCanvasElement } {
+    const canvas = document.createElement('canvas');
+
+    // Set canvas styles
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.zIndex = '-1';
+
+    canvas.width = width;
+    canvas.height = height;
+
+    // Initialize WebGL2 context
+    const gl = canvas.getContext('webgl2');
+    if (!gl) {
+      console.error('WebGL2 is not available.');
+      return { gl: undefined, canvas };
+    }
+
+    parent.appendChild(canvas);
+    return { gl, canvas };
+  }
+}

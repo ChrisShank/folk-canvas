@@ -1,37 +1,41 @@
 import { frag, vert } from './utils/tags.ts';
+import { WebGLUtils } from './utils/webgl.ts';
 
 /** Previously used a CPU-based implementation. https://github.com/folk-canvas/folk-canvas/commit/fdd7fb9d84d93ad665875cad25783c232fd17bcc */
 export class DistanceField extends HTMLElement {
   static tagName = 'distance-field';
 
-  static define() {
-    customElements.define(this.tagName, this);
-  }
-
   private geometries: NodeListOf<Element>;
   private textures: WebGLTexture[] = [];
   private pingPongIndex: number = 0;
 
-  private offsets!: Float32Array;
   private canvas!: HTMLCanvasElement;
   private gl!: WebGL2RenderingContext;
-  private program!: WebGLProgram;
-  private displayProgram!: WebGLProgram;
-  private seedProgram!: WebGLProgram;
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
   private shapeVAO!: WebGLVertexArrayObject;
+
+  private jfaProgram!: WebGLProgram; // Jump Flooding Algorithm shader program
+  private renderProgram!: WebGLProgram; // Final rendering shader program
+  private seedProgram!: WebGLProgram; // Seed point shader program
 
   constructor() {
     super();
 
     this.geometries = document.querySelectorAll('fc-geometry');
 
-    const { gl } = this.createWebGLCanvas(window.innerWidth, window.innerHeight);
+    const { gl, canvas } = WebGLUtils.createWebGLCanvas(
+      window.innerWidth,
+      window.innerHeight,
+      this // Pass the parent element
+    );
 
-    if (!gl) {
+    if (!gl || !canvas) {
+      console.error('Failed to initialize WebGL context.');
       return;
     }
+
+    this.canvas = canvas;
     this.gl = gl;
 
     // Initialize shaders
@@ -49,9 +53,11 @@ export class DistanceField extends HTMLElement {
     window.addEventListener('resize', this.handleResize);
   }
 
-  // Lifecycle hooks
+  static define() {
+    customElements.define(this.tagName, this);
+  }
+
   connectedCallback() {
-    // Update distance field when geometries move or resize
     this.geometries.forEach((geometry) => {
       geometry.addEventListener('move', this.handleGeometryUpdate);
       geometry.addEventListener('resize', this.handleGeometryUpdate);
@@ -59,7 +65,6 @@ export class DistanceField extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Remove event listeners
     this.geometries.forEach((geometry) => {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
@@ -68,37 +73,10 @@ export class DistanceField extends HTMLElement {
     window.removeEventListener('resize', this.handleResize);
   }
 
-  // Handle updates from geometries
   private handleGeometryUpdate = () => {
-    // Re-render seed points and rerun JFA
     this.initSeedPointRendering();
     this.runJFA();
   };
-
-  private createWebGLCanvas(width: number, height: number) {
-    this.canvas = document.createElement('canvas');
-
-    // Set canvas styles
-    this.canvas.style.position = 'absolute';
-    this.canvas.style.top = '0';
-    this.canvas.style.left = '0';
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.zIndex = '-1';
-
-    this.canvas.width = width;
-    this.canvas.height = height;
-
-    // Initialize WebGL2 context
-    const gl = this.canvas.getContext('webgl2');
-    if (!gl) {
-      console.error('WebGL2 is not available.');
-      return {};
-    }
-
-    this.appendChild(this.canvas);
-    return { gl };
-  }
 
   private initShaders() {
     // Shader sources
@@ -201,51 +179,18 @@ export class DistanceField extends HTMLElement {
       }
     }
 
-    this.offsets = new Float32Array(offsets);
-
     // Compile JFA shaders using the utility function
-    this.program = this.compileShaderProgram(vertexShaderSource, fragmentShaderSource);
+    this.jfaProgram = this.compileShaderProgram(vertexShaderSource, fragmentShaderSource);
 
     // Compile display shaders using the utility function
-    this.displayProgram = this.compileShaderProgram(displayVertexShaderSource, displayFragmentShaderSource);
+    this.renderProgram = this.compileShaderProgram(displayVertexShaderSource, displayFragmentShaderSource);
   }
 
   private compileShaderProgram(vertexSource: string, fragmentSource: string): WebGLProgram {
     const gl = this.gl;
-    const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexSource);
-    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentSource);
-    return this.createProgram(vertexShader, fragmentShader);
-  }
-
-  private createShader(type: GLenum, source: string): WebGLShader {
-    const gl = this.gl;
-    const shader = gl.createShader(type)!;
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!success) {
-      console.error('Could not compile shader:', gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      throw new Error('Shader compilation failed');
-    }
-    return shader;
-  }
-
-  private createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
-    const gl = this.gl;
-    const program = gl.createProgram()!;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    const success = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!success) {
-      console.error('Program failed to link:', gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      throw new Error('Program linking failed');
-    }
-    return program;
+    const vertexShader = WebGLUtils.createShader(gl, gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = WebGLUtils.createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    return WebGLUtils.createProgram(gl, vertexShader, fragmentShader);
   }
 
   private initPingPongTextures() {
@@ -439,17 +384,17 @@ export class DistanceField extends HTMLElement {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
 
     // Use shader program
-    gl.useProgram(this.program);
+    gl.useProgram(this.jfaProgram);
 
     // Compute and set the offsets uniform
     const offsets = this.computeOffsets(stepSize);
-    const offsetsLocation = gl.getUniformLocation(this.program, 'u_offsets');
+    const offsetsLocation = gl.getUniformLocation(this.jfaProgram, 'u_offsets');
     gl.uniform2fv(offsetsLocation, offsets);
 
     // Bind input texture
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-    gl.uniform1i(gl.getUniformLocation(this.program, 'u_previousTexture'), 0);
+    gl.uniform1i(gl.getUniformLocation(this.jfaProgram, 'u_previousTexture'), 0);
 
     // Draw a fullscreen quad
     this.drawFullscreenQuad();
@@ -466,13 +411,13 @@ export class DistanceField extends HTMLElement {
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
     // Use display shader program
-    gl.useProgram(this.displayProgram);
+    gl.useProgram(this.renderProgram);
 
     // Bind the final texture
     const finalTexture = this.textures[this.pingPongIndex % 2];
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, finalTexture);
-    gl.uniform1i(gl.getUniformLocation(this.displayProgram, 'u_texture'), 0);
+    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_texture'), 0);
 
     // Draw a fullscreen quad
     this.drawFullscreenQuad();
@@ -503,7 +448,7 @@ export class DistanceField extends HTMLElement {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    const positionAttributeLocation = gl.getAttribLocation(this.program, 'a_position');
+    const positionAttributeLocation = gl.getAttribLocation(this.jfaProgram, 'a_position');
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.vertexAttribPointer(
       positionAttributeLocation,
@@ -519,7 +464,6 @@ export class DistanceField extends HTMLElement {
 
   // Handle window resize
   private handleResize = () => {
-    console.log('handleResize');
     const gl = this.gl;
 
     // Update canvas size
@@ -531,9 +475,6 @@ export class DistanceField extends HTMLElement {
 
     // Re-initialize textures with the new dimensions
     this.initPingPongTextures();
-
-    // Update uniforms dependent on canvas size
-    this.updateCanvasSizeUniforms();
 
     // Re-initialize seed point rendering to update positions
     this.initSeedPointRendering();
@@ -550,16 +491,5 @@ export class DistanceField extends HTMLElement {
       }
     }
     return new Float32Array(offsets);
-  }
-
-  private updateCanvasSizeUniforms() {
-    const gl = this.gl;
-
-    // Update seedProgram's canvas size uniform
-    gl.useProgram(this.seedProgram);
-    const canvasSizeLocation = gl.getUniformLocation(this.seedProgram, 'u_canvasSize');
-    gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
-
-    // Update other programs if necessary
   }
 }
