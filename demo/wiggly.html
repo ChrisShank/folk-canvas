@@ -15,12 +15,12 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         background-color: black;
         border-radius: 10%;
       }
 
-      fc-rope {
+      folk-rope {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -29,19 +29,19 @@
     </style>
   </head>
   <body>
-    <fc-geometry id="box1" x="100" y="100" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box2" x="300" y="105" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box3" x="200" y="150" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box4" x="400" y="100" width="30" height="30"></fc-geometry>
-    <fc-rope source="#box1" target="#box2"></fc-rope>
-    <fc-rope source="#box1" target="#box3"></fc-rope>
-    <fc-rope source="#box1" target="#box4"></fc-rope>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="300" y="105" width="30" height="30"></folk-shape>
+    <folk-shape id="box3" x="200" y="150" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="400" y="100" width="30" height="30"></folk-shape>
+    <folk-rope source="#box1" target="#box2"></folk-rope>
+    <folk-rope source="#box1" target="#box3"></folk-rope>
+    <folk-rope source="#box1" target="#box4"></folk-rope>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkRope } from '../src/arrows/fc-rope.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkRope } from '../src/arrows/folk-rope.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkRope.define();
     </script>
   </body>

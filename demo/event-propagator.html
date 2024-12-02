@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         background-color: black;
         border-radius: 5px;
         color: white;
@@ -32,8 +32,8 @@
     </style>
   </head>
   <body>
-    <fc-geometry id="box1" x="100" y="100" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box2" x="200" y="350">Hello World</fc-geometry>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
     <event-propagator
       source="#box1"
       target="#box2"
@@ -41,8 +41,8 @@
       expression="textContent: _ + '!'"
     ></event-propagator>
 
-    <fc-geometry id="box3" x="350" y="200" width="30" height="30"></fc-geometry>
-    <fc-geometry id="box4" x="500" y="250" width="30" height="30"></fc-geometry>
+    <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
     <event-propagator
       source="#box3"
       target="#box4"
@@ -52,10 +52,10 @@ rotate: from.x"
     ></event-propagator>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       EventPropagator.define();
     </script>
   </body>

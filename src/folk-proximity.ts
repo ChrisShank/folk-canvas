@@ -1,6 +1,6 @@
 import { collisionDetection } from './collision';
 import { FolkHull } from './folk-hull';
-import { FolkGeometry } from './canvas/fc-geometry.ts';
+import { FolkShape } from './canvas/folk-shape.ts';
 
 interface ElementConstructor<E extends Element = Element> {
   new (): E;
@@ -35,18 +35,18 @@ export class FolkCluster extends FolkHull {
 
   #data = new Map();
 
-  isElementInCluster(element: FolkGeometry) {
+  isElementInCluster(element: FolkShape) {
     return this.sourceElements.includes(element);
   }
 
-  isElementInProximity(element: FolkGeometry) {
-    for (const el of this.sourceElements as FolkGeometry[]) {
+  isElementInProximity(element: FolkShape) {
+    for (const el of this.sourceElements as FolkShape[]) {
       if (collisionDetection(el.getClientRect(), element.getClientRect(), PROXIMITY)) return true;
     }
     return false;
   }
 
-  addElements(...elements: FolkGeometry[]) {
+  addElements(...elements: FolkShape[]) {
     this.sources = this.sourceElements
       .concat(elements)
       .map((el) => `#${el.id}`)
@@ -101,7 +101,7 @@ export class FolkCluster extends FolkHull {
     }
   }
 
-  removeElement(geometry: FolkGeometry) {
+  removeElement(geometry: FolkShape) {
     this.sources = this.sourceElements
       .filter((el) => el !== geometry)
       .map((el) => `#${el.id}`)
@@ -136,7 +136,7 @@ export class FolkProximity extends HTMLElement {
   }
 
   #clusters = new Set<FolkCluster>();
-  #geometries = Array.from(this.querySelectorAll('fc-geometry'));
+  #geometries = Array.from(this.querySelectorAll('folk-shape'));
 
   constructor() {
     super();
@@ -146,7 +146,7 @@ export class FolkProximity extends HTMLElement {
   }
 
   #handleProximity = (e) => {
-    const el = e.target as FolkGeometry;
+    const el = e.target as FolkShape;
 
     const cluster = this.#findCluster(el);
 
@@ -171,7 +171,7 @@ export class FolkProximity extends HTMLElement {
         }
       }
     } else {
-      const isInCluster = (cluster.sourceElements as FolkGeometry[])
+      const isInCluster = (cluster.sourceElements as FolkShape[])
         .filter((element) => el !== element)
         .some((element) => collisionDetection(el.getClientRect(), element.getClientRect(), PROXIMITY));
 

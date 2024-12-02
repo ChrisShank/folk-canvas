@@ -29,7 +29,7 @@
         overflow-y: hidden;
       }
 
-      fc-geometry {
+      folk-shape {
         background-color: #fefefe;
         width: 400px;
         height: 100%;
@@ -56,7 +56,7 @@
     </style>
   </head>
   <body>
-    <fc-geometry name="1" x="20">
+    <folk-shape name="1" x="20">
       <article>
         <h2>Note 1</h2>
 
@@ -127,9 +127,9 @@
           est laborum.
         </p>
       </article>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry name="2" x="500">
+    <folk-shape name="2" x="500">
       <article>
         <h2>Note 2</h2>
 
@@ -194,17 +194,17 @@
           Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
         </p>
       </article>
-    </fc-geometry>
+    </folk-shape>
 
-    <folk-xanadu source="fc-geometry[name='1'] [link='1']" target="fc-geometry[name='2'] [link='1']"></folk-xanadu>
+    <folk-xanadu source="folk-shape[name='1'] [link='1']" target="folk-shape[name='2'] [link='1']"></folk-xanadu>
 
-    <folk-xanadu source="fc-geometry[name='1'] [link='2']" target="fc-geometry[name='2'] [link='2']"></folk-xanadu>
+    <folk-xanadu source="folk-shape[name='1'] [link='2']" target="folk-shape[name='2'] [link='2']"></folk-xanadu>
 
     <script type="module">
       import { FolkXanadu } from '../src/folk-xanadu.ts';
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkXanadu.define();
 
       // class AnimatedXanaduLink extends FolkXanadu {

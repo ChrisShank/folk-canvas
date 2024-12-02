@@ -1,6 +1,6 @@
 import { frag, vert } from './utils/tags.ts';
 import { WebGLUtils } from './utils/webgl.ts';
-import type { FolkGeometry } from './canvas/fc-geometry.ts';
+import type { FolkShape } from './canvas/folk-shape.ts';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.
@@ -12,7 +12,7 @@ export class DistanceField extends HTMLElement {
 
   private textures: WebGLTexture[] = [];
 
-  private shapes!: NodeListOf<FolkGeometry>;
+  private shapes!: NodeListOf<FolkShape>;
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
@@ -34,7 +34,7 @@ export class DistanceField extends HTMLElement {
   }
 
   connectedCallback() {
-    this.shapes = document.querySelectorAll('fc-geometry');
+    this.shapes = document.querySelectorAll('folk-shape');
     this.initWebGL();
     this.initShaders();
     this.initPingPongTextures();

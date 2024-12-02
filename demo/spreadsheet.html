@@ -17,7 +17,7 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="50" y="50" width="500">
+    <folk-shape x="50" y="50" width="500">
       <folk-spreadsheet>
         <folk-cell column="A" row="1" expression="1"></folk-cell>
         <folk-cell column="B" row="1"></folk-cell>
@@ -120,13 +120,13 @@
         <folk-cell column="I" row="10"></folk-cell>
         <folk-cell column="J" row="10"></folk-cell>
       </folk-spreadsheet>
-    </fc-geometry>
+    </folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkSpreadsheet.define();
     </script>
   </body>

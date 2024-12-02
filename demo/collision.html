@@ -19,22 +19,22 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 2px solid black;
       }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="50" height="50"> Hello World </fc-geometry>
-    <fc-geometry x="200" y="200" width="50" height="50"></fc-geometry>
+    <folk-shape x="100" y="100" width="50" height="50"> Hello World </folk-shape>
+    <folk-shape x="200" y="200" width="50" height="50"></folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { collisionDetection } from '../src/collision.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
 
-      const geometryElements = document.querySelectorAll('fc-geometry');
+      const geometryElements = document.querySelectorAll('folk-shape');
 
       function handleCollision(e) {
         geometryElements.forEach((el) => {

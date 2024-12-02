@@ -52,25 +52,25 @@
         height: 100%;
       }
 
-      fc-geometry {
+      folk-shape {
         background: black;
         color: white;
       }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="50" height="50">
+    <folk-shape x="100" y="100" width="50" height="50">
       <h2>Lorem ipsum</h2>
-    </fc-geometry>
-    <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
-    <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
+    </folk-shape>
+    <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="300" width="50" height="50"></folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
 
-      const geos = document.querySelectorAll('fc-geometry');
+      const geos = document.querySelectorAll('folk-shape');
 
       geos.forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
 

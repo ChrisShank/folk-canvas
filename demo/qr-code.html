@@ -40,21 +40,21 @@
   <body rope-mode>
     <label>Rope Mode: <input type="checkbox" checked /></label>
 
-    <fc-geometry x="275" y="25">
+    <folk-shape x="275" y="25">
       <textarea>https://folk-canvas.github.io/folk-canvas/</textarea>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="300" y="75">
+    <folk-shape x="300" y="75">
       <label>Radius: <input type="range" min="0" max="0.5" step="0.05" value="0" /></label>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="325" y="175">
+    <folk-shape x="325" y="175">
       <label>Color: <input type="color" /></label>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="50" y="50">
+    <folk-shape x="50" y="50">
       <sl-qr-code size="200"></sl-qr-code>
-    </fc-geometry>
+    </folk-shape>
 
     <event-propagator
       source="textarea"
@@ -79,10 +79,10 @@
 
     <script type="module">
       import 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.18.0/cdn/components/qr-code/qr-code.js';
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       EventPropagator.define();
 
       const ropeMode = document.querySelector('input[type="checkbox"]');

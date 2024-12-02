@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      fc-connection {
+      folk-connection {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -45,7 +45,7 @@
   </head>
   <body>
     <button>Toggle</button>
-    <fc-geometry x="50" y="50" width="500">
+    <folk-shape x="50" y="50" width="500">
       <folk-spreadsheet>
         <folk-cell
           column="A"
@@ -163,14 +163,14 @@
         <folk-cell column="I" row="10"></folk-cell>
         <folk-cell column="J" row="10"></folk-cell>
       </folk-spreadsheet>
-    </fc-geometry>
+    </folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkConnection } from '../src/arrows/fc-connection.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkConnection } from '../src/arrows/folk-connection.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkConnection.define();
       FolkSpreadsheet.define();
 
@@ -196,7 +196,7 @@
           for (const dep of cell.dependencies) {
             dep.setAttribute('graph', '');
 
-            const connection = document.createElement('fc-connection');
+            const connection = document.createElement('folk-connection');
             connection.source = `folk-cell[row="${dep.row}"][column="${dep.column}"]`;
             connection.target = `folk-cell[row="${cell.row}"][column="${cell.column}"]`;
 
@@ -208,7 +208,7 @@
       function removeOverlayGraph() {
         document.body.removeAttribute('overlay', '');
 
-        document.querySelectorAll('fc-connection').forEach((arrow) => arrow.remove());
+        document.querySelectorAll('folk-connection').forEach((arrow) => arrow.remove());
 
         document.querySelectorAll('folk-cell').forEach((cell) => {
           cell.removeAttribute('graph', '');

@@ -15,20 +15,20 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         background: rgb(187, 178, 178);
       }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry x="100" y="200" width="50" height="50"></fc-geometry>
-    <fc-geometry x="100" y="300" width="50" height="50" rotate="45"></fc-geometry>
+    <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="300" width="50" height="50" rotate="45"></folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
     </script>
   </body>
 </html>

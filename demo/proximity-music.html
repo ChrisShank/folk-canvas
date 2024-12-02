@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      fc-geometry:has(record-player) {
+      folk-shape:has(record-player) {
         box-shadow: 10px 0px 150px 0px rgba(0, 0, 0, 0.61);
 
         &::part(resize-nw),
@@ -26,45 +26,45 @@
         }
       }
 
-      fc-geometry > video {
+      folk-shape > video {
         height: 100%;
       }
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="75" width="330" height="198">
+    <folk-shape x="100" y="75" width="330" height="198">
       <record-player>
         <audio src="/Feather.mov"></audio>
       </record-player>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="25" y="300" width="166" height="200">
+    <folk-shape x="25" y="300" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="155" y="315" width="166" height="200">
+    <folk-shape x="155" y="315" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="280" y="305" width="166" height="200">
+    <folk-shape x="280" y="305" width="166" height="200">
       <video loop>
         <source src="/dancing-flower.mov" type="video/quicktime" />
         <source src="/dancing-flower.webm" type="video/webm" />
       </video>
-    </fc-geometry>
+    </folk-shape>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { RecordPlayer } from '../src/music/record-player.ts';
       import { collisionDetection } from '../src/collision.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       RecordPlayer.define();
 
       /**
@@ -75,9 +75,9 @@
 
       let proximityDistance = 150;
       const proximitySet = new Set();
-      const recordPlayerGeometry = document.querySelector('fc-geometry:has(record-player)');
+      const recordPlayerGeometry = document.querySelector('folk-shape:has(record-player)');
       const recordPlayer = recordPlayerGeometry.firstElementChild;
-      const flowers = document.querySelectorAll('fc-geometry:has(video)');
+      const flowers = document.querySelectorAll('folk-shape:has(video)');
       // set playback rate when video is ready
       function setPlayback(e) {
         e.target.playbackRate = (91 / 60) * e.target.duration;

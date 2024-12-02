@@ -1,4 +1,4 @@
-import { FolkGeometry } from '../canvas/fc-geometry.ts';
+import { FolkShape } from '../canvas/folk-shape.ts';
 import { parseVertex } from './utils.ts';
 import { ClientRectObserverEntry, ClientRectObserverManager } from '../client-rect-observer.ts';
 
@@ -43,7 +43,7 @@ export class AbstractArrow extends HTMLElement {
   };
 
   #sourceHandler = (e: Event) => {
-    const geometry = e.target as FolkGeometry;
+    const geometry = e.target as FolkShape;
     this.#sourceRect = geometry.getClientRect();
     this.#update();
   };
@@ -117,7 +117,7 @@ export class AbstractArrow extends HTMLElement {
   };
 
   #targetHandler = (e: Event) => {
-    const geometry = e.target as FolkGeometry;
+    const geometry = e.target as FolkShape;
     this.#targetRect = geometry.getClientRect();
     this.#update();
   };
@@ -190,7 +190,7 @@ export class AbstractArrow extends HTMLElement {
 
       if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
-      } else if (this.#sourceElement instanceof FolkGeometry) {
+      } else if (this.#sourceElement instanceof FolkShape) {
         this.#sourceElement.addEventListener('resize', this.#sourceHandler);
         this.#sourceElement.addEventListener('move', this.#sourceHandler);
         this.#sourceRect = this.#sourceElement.getBoundingClientRect();
@@ -211,7 +211,7 @@ export class AbstractArrow extends HTMLElement {
   unobserveSource() {
     if (this.#sourceElement === null) return;
 
-    if (this.#sourceElement instanceof FolkGeometry) {
+    if (this.#sourceElement instanceof FolkShape) {
       this.#sourceElement.removeEventListener('resize', this.#sourceHandler);
       this.#sourceElement.removeEventListener('move', this.#sourceHandler);
     } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
@@ -241,7 +241,7 @@ export class AbstractArrow extends HTMLElement {
 
       if (!this.#targetElement) {
         throw new Error('target is not a valid element');
-      } else if (this.#targetElement instanceof FolkGeometry) {
+      } else if (this.#targetElement instanceof FolkShape) {
         this.#targetElement.addEventListener('resize', this.#targetHandler);
         this.#targetElement.addEventListener('move', this.#targetHandler);
       } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
@@ -261,7 +261,7 @@ export class AbstractArrow extends HTMLElement {
   unobserveTarget() {
     if (this.#targetElement === null) return;
 
-    if (this.#targetElement instanceof FolkGeometry) {
+    if (this.#targetElement instanceof FolkShape) {
       this.#targetElement.removeEventListener('resize', this.#targetHandler);
       this.#targetElement.removeEventListener('move', this.#targetHandler);
     } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {

@@ -15,12 +15,12 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 1px solid black;
         border-radius: 3px;
       }
 
-      fc-rope {
+      folk-rope {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -34,20 +34,20 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="10" y="100" width="250" height="400">
+    <folk-shape x="10" y="100" width="250" height="400">
       <iframe id="frame1" src="./arrows.html"></iframe>
-    </fc-geometry>
-    <fc-geometry x="300" y="100" width="250" height="400">
+    </folk-shape>
+    <folk-shape x="300" y="100" width="250" height="400">
       <iframe id="frame2" src="./arrows.html"></iframe>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-rope source="#frame1 >>> #box1" target="#frame2 >>> #box1"></fc-rope>
+    <folk-rope source="#frame1 >>> #box1" target="#frame2 >>> #box1"></folk-rope>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkRope } from '../src/arrows/fc-rope.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkRope } from '../src/arrows/folk-rope.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkRope.define();
     </script>
   </body>

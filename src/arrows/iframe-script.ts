@@ -1,4 +1,4 @@
-import { FolkGeometry } from '../canvas/fc-geometry';
+import { FolkShape } from '../canvas/folk-shape';
 import { ClientRectObserverManager, ClientRectObserverEntry } from '../client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
@@ -80,7 +80,7 @@ if (window.parent !== window) {
         observedElements.set(selector, element);
         observedSelectors.set(element, selector);
 
-        if (element instanceof FolkGeometry) {
+        if (element instanceof FolkShape) {
           element.addEventListener('move', onGeometryChange);
           element.addEventListener('resize', onGeometryChange);
 
@@ -100,7 +100,7 @@ if (window.parent !== window) {
 
         if (element === undefined) return;
 
-        if (element instanceof FolkGeometry) {
+        if (element instanceof FolkShape) {
           element.removeEventListener('move', onGeometryChange);
           element.removeEventListener('resize', onGeometryChange);
           observedElements.delete(selector);

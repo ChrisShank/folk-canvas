@@ -21,12 +21,12 @@ interface RopePoint {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'fc-rope': FolkRope;
+    'folk-rope': FolkRope;
   }
 }
 
 export class FolkRope extends AbstractArrow {
-  static override tagName = 'fc-rope';
+  static override tagName = 'folk-rope';
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');

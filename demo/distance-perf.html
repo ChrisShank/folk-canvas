@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 2px solid black;
       }
 
@@ -29,9 +29,9 @@
     <distance-field> </distance-field>
     <script type="module">
       import { DistanceField } from '../src/distance-field.ts';
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
 
       const d = document.querySelector('distance-field');
 
@@ -40,7 +40,7 @@
       const now = performance.now();
       for (let i = 0; i < 20; i++) {
         for (let j = 0; j < 20; j++) {
-          const geo = document.createElement('fc-geometry');
+          const geo = document.createElement('folk-shape');
           geo.x = 100 * i + Math.floor(Math.random() * 45);
           geo.y = 100 * j + Math.floor(Math.random() * 45);
           geo.width = geo.height = 45;

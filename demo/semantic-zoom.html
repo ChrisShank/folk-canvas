@@ -75,13 +75,13 @@
         margin: 1rem;
       }
 
-      fc-connection {
+      folk-connection {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
       }
 
-      fc-geometry {
+      folk-shape {
         background: black;
         color: white;
         max-width: 40ch;
@@ -99,14 +99,14 @@
         }
       }
 
-      body[zoom='0'] fc-geometry {
+      body[zoom='0'] folk-shape {
         width: 20px;
         aspect-ratio: 1;
         border-radius: 50%;
       }
 
-      body[zoom='0'] fc-geometry :is(h2, p),
-      body[zoom='50'] fc-geometry p {
+      body[zoom='0'] folk-shape :is(h2, p),
+      body[zoom='50'] folk-shape p {
         display: none;
       }
     </style>
@@ -117,7 +117,7 @@
       <input type="range" min="0" max="100" value="100" style="view-transition-name: slider" />
     </label>
 
-    <fc-geometry id="box1" x="100" y="100">
+    <folk-shape id="box1" x="100" y="100">
       <h2>Lorem ispum</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
@@ -126,38 +126,38 @@
         pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
         laborum.
       </p>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry id="box2" x="400" y="400">
+    <folk-shape id="box2" x="400" y="400">
       <h2>Dolor sit amet</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
         magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
         consequat.
       </p>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry id="box3" x="150" y="600">
+    <folk-shape id="box3" x="150" y="600">
       <h2>Consectetur elit</h2>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
         magna aliqua.
       </p>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-connection source="#box1" target="#box2"></fc-connection>
-    <fc-connection source="#box2" target="#box3"></fc-connection>
-    <fc-connection source="#box1" target="#box3"></fc-connection>
+    <folk-connection source="#box1" target="#box2"></folk-connection>
+    <folk-connection source="#box2" target="#box3"></folk-connection>
+    <folk-connection source="#box1" target="#box3"></folk-connection>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkConnection } from '../src/arrows/fc-connection.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkConnection } from '../src/arrows/folk-connection.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkConnection.define();
 
-      document.body.querySelectorAll('fc-geometry').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
-      document.body.querySelectorAll('fc-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
+      document.body.querySelectorAll('folk-shape').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
+      document.body.querySelectorAll('folk-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
       document.body.querySelectorAll('h2').forEach((el, i) => (el.style.viewTransitionName = `h${i}`));
       document.body.querySelectorAll('p').forEach((el, i) => (el.style.viewTransitionName = `p${i}`));
 

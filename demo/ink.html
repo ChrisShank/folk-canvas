@@ -21,10 +21,10 @@
       <button on:click="DRAW">Draw</button>
     </nav>
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { FolkInk } from '../src/folk-ink.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkInk.define();
 
       const drawButton = document.querySelector('button');
@@ -45,7 +45,7 @@
 
         ink.points = ink.points.map(([x, y, p]) => [x - rect.x, y - rect.y, p]);
 
-        const geometry = document.createElement('fc-geometry');
+        const geometry = document.createElement('folk-shape');
         geometry.x = rect.x;
         geometry.y = rect.y;
         geometry.height = rect.height;

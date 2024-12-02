@@ -35,7 +35,7 @@
         font-style: italic;
       }
 
-      fc-geometry {
+      folk-shape {
         z-index: 2;
       }
     </style>
@@ -100,9 +100,9 @@
     </main>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
 
       function copyStyles(from, to) {
         const styles = getComputedStyle(from);
@@ -115,7 +115,7 @@
       }
 
       document.addEventListener('click', ({ target }) => {
-        if (target.closest('fc-geometry') || target.matches('body, html')) return;
+        if (target.closest('folk-shape') || target.matches('body, html')) return;
 
         const rect = target.getBoundingClientRect();
 
@@ -133,7 +133,7 @@
           copyStyles(el, copiedElements[i]);
         });
 
-        const geometry = document.createElement('fc-geometry');
+        const geometry = document.createElement('folk-shape');
         geometry.x = rect.x;
         geometry.y = rect.y;
         geometry.height = rect.height;

@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         background: rgb(187, 178, 178);
       }
 
@@ -29,17 +29,17 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="50" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry x="200" y="200" width="50" height="50"></fc-geometry>
-    <fc-geometry x="100" y="300" width="50" height="50"></fc-geometry>
+    <folk-shape x="50" y="100" width="50" height="50"></folk-shape>
+    <folk-shape x="200" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="300" width="50" height="50"></folk-shape>
 
-    <folk-hull sources="fc-geometry"></folk-hull>
+    <folk-hull sources="folk-shape"></folk-hull>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { FolkHull } from '../src/folk-hull.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkHull.define();
     </script>
   </body>

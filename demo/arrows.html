@@ -15,12 +15,12 @@
         margin: 0;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 1px solid black;
         border-radius: 3px;
       }
 
-      fc-connection {
+      folk-connection {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -28,16 +28,16 @@
     </style>
   </head>
   <body>
-    <fc-geometry id="box1" x="50" y="100" width="50" height="50"></fc-geometry>
-    <fc-geometry id="box2" x="150" y="300" width="50" height="50"></fc-geometry>
-    <fc-connection source="#box1" target="#box2"></fc-connection>
+    <folk-shape id="box1" x="50" y="100" width="50" height="50"></folk-shape>
+    <folk-shape id="box2" x="150" y="300" width="50" height="50"></folk-shape>
+    <folk-connection source="#box1" target="#box2"></folk-connection>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
-      import { FolkConnection } from '../src/arrows/fc-connection.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkConnection } from '../src/arrows/folk-connection.ts';
       import '../src/arrows/iframe-script.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkConnection.define();
     </script>
   </body>

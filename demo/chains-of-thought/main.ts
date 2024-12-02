@@ -1,5 +1,5 @@
-import { FolkGeometry } from '../../src/canvas/fc-geometry.ts';
-import { FolkConnection } from '../../src/arrows/fc-connection.ts';
+import { FolkShape } from '../../src/canvas/folk-shape.ts';
+import { FolkConnection } from '../../src/arrows/folk-connection.ts';
 import { FileSaver } from '../../src/file-system.ts';
 
 declare global {
@@ -18,7 +18,7 @@ class FolkThought extends HTMLElement {
   #deleteButton = this.querySelector('button[name="delete"]') as HTMLButtonElement;
   #text = this.querySelector('[name="text"]') as HTMLElement;
 
-  #geometry = this.parentElement as FolkGeometry;
+  #geometry = this.parentElement as FolkShape;
 
   constructor() {
     super();
@@ -36,15 +36,15 @@ class FolkThought extends HTMLElement {
 
       document
         .querySelectorAll(
-          `fc-connection[source="fc-geometry[id='${this.#geometry.id}']"], 
-          fc-connection[target="fc-geometry[id='${this.#geometry.id}']"]`
+          `folk-connection[source="folk-shape[id='${this.#geometry.id}']"], 
+          folk-connection[target="folk-shape[id='${this.#geometry.id}']"]`
         )
         .forEach((el) => el.remove());
     }
   }
 }
 
-FolkGeometry.define();
+FolkShape.define();
 FolkThought.define();
 FolkConnection.define();
 
@@ -72,19 +72,19 @@ function parseHTML(html: string): Element {
 }
 
 function renderThought({ id, x, y, text }: Thought) {
-  return html`<fc-geometry id="${id}" x="${x}" y="${y}">
+  return html`<folk-shape id="${id}" x="${x}" y="${y}">
     <fc-thought>
       <div contenteditable="true" name="text">${text}</div>
       <button name="delete">␡</button>
     </fc-thought>
-  </fc-geometry>`;
+  </folk-shape>`;
 }
 
 function renderConnection({ sourceId, targetId }: Connection) {
-  return html`<fc-connection
-    source="fc-geometry[id='${sourceId}']"
-    target="fc-geometry[id='${targetId}']"
-  ></fc-connection>`;
+  return html`<folk-connection
+    source="folk-shape[id='${sourceId}']"
+    target="folk-shape[id='${targetId}']"
+  ></folk-connection>`;
 }
 
 function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
@@ -93,15 +93,15 @@ function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
 
 function parseChainOfThought(): ChainOfThought {
   return {
-    thoughts: Array.from(document.querySelectorAll('fc-geometry')).map((el) => ({
+    thoughts: Array.from(document.querySelectorAll('folk-shape')).map((el) => ({
       id: el.id,
       text: (el.firstElementChild as FolkThought).text,
       x: el.x,
       y: el.y,
     })),
-    connections: Array.from(document.querySelectorAll('fc-connection')).map((el) => ({
-      sourceId: (el.sourceElement as FolkGeometry).id,
-      targetId: (el.targetElement as FolkGeometry).id,
+    connections: Array.from(document.querySelectorAll('folk-connection')).map((el) => ({
+      sourceId: (el.sourceElement as FolkShape).id,
+      targetId: (el.targetElement as FolkShape).id,
     })),
   };
 }

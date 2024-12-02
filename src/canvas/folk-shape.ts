@@ -141,13 +141,13 @@ div {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'fc-geometry': FolkGeometry;
+    'folk-shape': FolkShape;
   }
 }
 
 // TODO: add z coordinate?
-export class FolkGeometry extends HTMLElement {
-  static tagName = 'fc-geometry';
+export class FolkShape extends HTMLElement {
+  static tagName = 'folk-shape';
 
   static define() {
     customElements.define(this.tagName, this);

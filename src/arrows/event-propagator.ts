@@ -1,4 +1,4 @@
-import { FolkRope } from './fc-rope.ts';
+import { FolkRope } from './folk-rope.ts';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(`

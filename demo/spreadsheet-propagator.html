@@ -31,15 +31,15 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="600" y="50" width="300" height="300">
+    <folk-shape x="600" y="50" width="300" height="300">
       <folk-map id="map1" zoom="10" coordinates="48.86,2.35"></folk-map>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="600" y="400" width="300" height="300">
+    <folk-shape x="600" y="400" width="300" height="300">
       <folk-map id="map2" zoom="10"></folk-map>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="25" y="300" width="500">
+    <folk-shape x="25" y="300" width="500">
       <folk-spreadsheet>
         <folk-cell row="1" column="A" expression="0"></folk-cell>
         <folk-cell row="1" column="B"></folk-cell>
@@ -142,7 +142,7 @@
         <folk-cell row="10" column="I"></folk-cell>
         <folk-cell row="10" column="J"></folk-cell>
       </folk-spreadsheet>
-    </fc-geometry>
+    </folk-shape>
 
     <event-propagator
       source="#map1"
@@ -167,12 +167,12 @@
 
     <script type="module">
       import { FolkMap } from '../src/folk-map.ts';
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
       FolkMap.define();
-      FolkGeometry.define();
+      FolkShape.define();
       FolkSpreadsheet.define();
       EventPropagator.define();
 

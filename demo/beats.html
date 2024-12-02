@@ -22,7 +22,7 @@
         pointer-events: none;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 1px solid black;
         border-radius: 4px;
       }
@@ -33,17 +33,17 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100">
+    <folk-shape x="100" y="100">
       <folk-metronome bpm="120"></folk-metronome>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="200" y="100">
+    <folk-shape x="200" y="100">
       <audio id="kick" src="/Kick_Bouncy.wav" controls></audio>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="200" y="200">
+    <folk-shape x="200" y="200">
       <audio id="hat" src="/Hat_Closed.wav" controls></audio>
-    </fc-geometry>
+    </folk-shape>
 
     <event-propagator
       source="folk-metronome"
@@ -60,12 +60,12 @@
     ></event-propagator>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { FolkLLM } from '../src/folk-llm.ts';
       import { FolkMetronome } from '../src/folk-metronome.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkLLM.define();
       FolkMetronome.define();
       EventPropagator.define();

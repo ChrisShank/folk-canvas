@@ -22,7 +22,7 @@
         pointer-events: none;
       }
 
-      fc-geometry {
+      folk-shape {
         border: 1px solid black;
         border-radius: 4px;
       }
@@ -40,7 +40,7 @@
     </style>
   </head>
   <body>
-    <fc-geometry x="100" y="100" width="250">
+    <folk-shape x="100" y="100" width="250">
       <ul id="recipe" class="wprm-recipe-ingredients">
         <li class="wprm-recipe-ingredient" style="list-style-type: disc" data-uid="0">
           <span class="wprm-recipe-ingredient-amount">500</span>
@@ -74,15 +74,15 @@
           <span class="wprm-recipe-ingredient-notes wprm-recipe-ingredient-notes-faded">about 1 Tbsp</span>
         </li>
       </ul>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="400" y="100" width="250">
+    <folk-shape x="400" y="100" width="250">
       <folk-llm system-prompt="Output text as HTML, no backticks"></folk-llm>
-    </fc-geometry>
+    </folk-shape>
 
-    <fc-geometry x="700" y="200">
+    <folk-shape x="700" y="200">
       <folk-timer></folk-timer>
-    </fc-geometry>
+    </folk-shape>
 
     <event-propagator
       source="#recipe"
@@ -107,12 +107,12 @@
     ></event-propagator>
 
     <script type="module">
-      import { FolkGeometry } from '../src/canvas/fc-geometry.ts';
+      import { FolkShape } from '../src/canvas/folk-shape.ts';
       import { FolkLLM } from '../src/folk-llm.ts';
       import { FolkTimer } from '../src/folk-timer.ts';
       import { EventPropagator } from '../src/arrows/event-propagator.ts';
 
-      FolkGeometry.define();
+      FolkShape.define();
       FolkLLM.define();
       FolkTimer.define();
       EventPropagator.define();
