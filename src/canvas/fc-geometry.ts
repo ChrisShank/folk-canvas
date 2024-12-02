@@ -275,7 +275,22 @@ export class FolkGeometry extends HTMLElement {
   }
 
   getClientRect(): DOMRect {
-    return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
+    const { x, y, width, height } = this;
+
+    return {
+      x,
+      y,
+      width,
+      height,
+      left: x,
+      top: y,
+      right: x + width,
+      bottom: y + height,
+      toJSON() {
+        return this;
+      },
+    };
+    // return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
@@ -337,6 +352,7 @@ export class FolkGeometry extends HTMLElement {
         if (part === null) return;
 
         if (part.includes('resize')) {
+          console.log(part, event.movementX, event.movementY);
           // This triggers a move and resize event :(
           if (part.includes('-n')) {
             this.y += event.movementY;
