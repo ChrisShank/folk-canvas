@@ -3,6 +3,7 @@ import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
 const demoDir = resolve(__dirname, 'demo');
+
 const files: string[] = readdirSync(demoDir).filter((file) => file.endsWith('.html'));
 
 const input: Record<string, string> = files.reduce((acc, file) => {

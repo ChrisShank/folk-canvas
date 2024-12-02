@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite demo",
-    "build": "vite build demo --base=/folk-canvas",
-    "preview": "vite build demo && vite preview demo"
+    "build": "vite build . --base=/folk-canvas",
+    "preview": "vite build . && vite preview ."
   },
   "dependencies": {
     "@types/leaflet": "^1.9.14",
