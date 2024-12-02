@@ -1,38 +1,40 @@
 import { frag, vert } from './utils/tags.ts';
+import { WebGLUtils } from './utils/webgl.ts';
 
 /** Previously used a CPU-based implementation. https://github.com/folk-canvas/folk-canvas/commit/fdd7fb9d84d93ad665875cad25783c232fd17bcc */
 export class DistanceField extends HTMLElement {
   static tagName = 'distance-field';
 
-  static define() {
-    customElements.define(this.tagName, this);
-  }
-
   private geometries: NodeListOf<Element>;
   private textures: WebGLTexture[] = [];
   private pingPongIndex: number = 0;
 
-  private offsets!: Float32Array;
   private canvas!: HTMLCanvasElement;
-  private gl!: WebGL2RenderingContext;
-  private program!: WebGLProgram;
-  private displayProgram!: WebGLProgram;
-  private seedProgram!: WebGLProgram;
+  private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
   private shapeVAO!: WebGLVertexArrayObject;
+
+  private jfaProgram!: WebGLProgram; // Jump Flooding Algorithm shader program
+  private renderProgram!: WebGLProgram; // Final rendering shader program
+  private seedProgram!: WebGLProgram; // Seed point shader program
+
+  private static readonly MAX_DISTANCE = 99999.0;
 
   constructor() {
     super();
 
     this.geometries = document.querySelectorAll('fc-geometry');
 
-    const { gl } = this.createWebGLCanvas(window.innerWidth, window.innerHeight);
+    const { gl, canvas } = WebGLUtils.createWebGLCanvas(window.innerWidth, window.innerHeight, this);
 
-    if (!gl) {
+    if (!gl || !canvas) {
+      console.error('Failed to initialize WebGL context.');
       return;
     }
-    this.gl = gl;
+
+    this.canvas = canvas;
+    this.glContext = gl;
 
     // Initialize shaders
     this.initShaders();
@@ -47,9 +49,12 @@ export class DistanceField extends HTMLElement {
     this.runJFA();
   }
 
-  // Lifecycle hooks
+  static define() {
+    customElements.define(this.tagName, this);
+  }
+
   connectedCallback() {
-    // Update distance field when geometries move or resize
+    window.addEventListener('resize', this.handleResize);
     this.geometries.forEach((geometry) => {
       geometry.addEventListener('move', this.handleGeometryUpdate);
       geometry.addEventListener('resize', this.handleGeometryUpdate);
@@ -57,192 +62,35 @@ export class DistanceField extends HTMLElement {
   }
 
   disconnectedCallback() {
-    // Remove event listeners
+    window.removeEventListener('resize', this.handleResize);
     this.geometries.forEach((geometry) => {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
     });
+    this.cleanupWebGLResources();
   }
 
-  // Handle updates from geometries
   private handleGeometryUpdate = () => {
-    // Re-render seed points and rerun JFA
     this.initSeedPointRendering();
     this.runJFA();
   };
 
-  private createWebGLCanvas(width: number, height: number) {
-    this.canvas = document.createElement('canvas');
-
-    // Set canvas styles
-    this.canvas.style.position = 'absolute';
-    this.canvas.style.top = '0';
-    this.canvas.style.left = '0';
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.zIndex = '-1';
-
-    this.canvas.width = width;
-    this.canvas.height = height;
-
-    // Initialize WebGL2 context
-    const gl = this.canvas.getContext('webgl2');
-    if (!gl) {
-      console.error('WebGL2 is not available.');
-      return {};
-    }
-
-    this.appendChild(this.canvas);
-    return { gl };
-  }
-
   private initShaders() {
-    const gl = this.gl;
-
-    // Shader sources
-    const vertexShaderSource = vert`#version 300 es
-    precision highp float;
-    in vec2 a_position;
-    out vec2 v_texCoord;
-
-    void main() {
-      v_texCoord = a_position * 0.5 + 0.5; // Transform to [0, 1] range
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }`;
-
-    const fragmentShaderSource = frag`#version 300 es
-    precision highp float;
-    precision mediump int;
-
-    in vec2 v_texCoord;
-    out vec4 outColor;
-
-    uniform sampler2D u_previousTexture;
-    uniform vec2 u_offsets[9];
-
-    void main() {
-      // Start with the current texel's nearest seed point and distance
-      vec4 nearest = texture(u_previousTexture, v_texCoord);
-
-      // Initialize minDist with the current distance
-      float minDist = nearest.a;
-
-      // Loop through neighbor offsets
-      for (int i = 0; i < 9; ++i) {
-        vec2 sampleCoord = v_texCoord + u_offsets[i];
-
-        // Clamp sampleCoord to [0, 1] to prevent sampling outside texture
-        sampleCoord = clamp(sampleCoord, vec2(0.0), vec2(1.0));
-
-        vec4 sampled = texture(u_previousTexture, sampleCoord);
-
-        // Compute distance to the seed point stored in this neighbor
-        float dist = distance(sampled.xy, v_texCoord);
-
-        if (dist < minDist) {
-          nearest = sampled;
-          nearest.a = dist;
-          minDist = dist;
-        }
-      }
-
-      // Output the nearest seed point and updated distance
-      outColor = nearest;
-    }`;
-
-    const displayVertexShaderSource = vert`#version 300 es
-    in vec2 a_position;
-    out vec2 v_texCoord;
-
-    void main() {
-      v_texCoord = a_position * 0.5 + 0.5;
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }`;
-
-    const displayFragmentShaderSource = frag`#version 300 es
-    precision highp float;
-
-    in vec2 v_texCoord;
-    out vec4 outColor;
-
-    uniform sampler2D u_texture;
-
-    void main() {
-        vec4 texel = texture(u_texture, v_texCoord);
-
-        // Extract shape ID and distance
-        float shapeID = texel.z;
-        float distance = texel.a;
-
-        // Hash-based color for shape
-        vec3 shapeColor = vec3(
-          fract(sin(shapeID * 12.9898) * 43758.5453),
-          fract(sin(shapeID * 78.233) * 43758.5453),
-          fract(sin(shapeID * 93.433) * 43758.5453)
-        );
-
-        // Visualize distance (e.g., as intensity)
-        float intensity = exp(-distance * 10.0);
-
-        outColor = vec4(shapeColor * intensity, 1.0);
-    }`;
-
-    // Compute offsets on the CPU
-    const offsets = [];
-    for (let y = -1; y <= 1; y++) {
-      for (let x = -1; x <= 1; x++) {
-        offsets.push(x, y);
-      }
-    }
-
-    this.offsets = new Float32Array(offsets);
-
-    // Compile JFA shaders
-    const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-    this.program = this.createProgram(vertexShader, fragmentShader);
-
-    // Compile display shaders
-    const displayVertexShader = this.createShader(gl.VERTEX_SHADER, displayVertexShaderSource);
-    const displayFragmentShader = this.createShader(gl.FRAGMENT_SHADER, displayFragmentShaderSource);
-    this.displayProgram = this.createProgram(displayVertexShader, displayFragmentShader);
-  }
-
-  private createShader(type: GLenum, source: string): WebGLShader {
-    const gl = this.gl;
-    const shader = gl.createShader(type)!;
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!success) {
-      console.error('Could not compile shader:', gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      throw new Error('Shader compilation failed');
-    }
-    return shader;
-  }
-
-  private createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
-    const gl = this.gl;
-    const program = gl.createProgram()!;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    const success = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!success) {
-      console.error('Program failed to link:', gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      throw new Error('Program linking failed');
-    }
-    return program;
+    this.jfaProgram = WebGLUtils.createShaderProgram(this.glContext, jfaVertShader, jfaFragShader);
+    this.seedProgram = WebGLUtils.createShaderProgram(this.glContext, seedVertexShaderSource, seedFragmentShaderSource);
+    this.renderProgram = WebGLUtils.createShaderProgram(this.glContext, renderVertShader, renderFragShader);
   }
 
   private initPingPongTextures() {
-    const gl = this.gl;
+    const gl = this.glContext;
     const width = this.canvas.width;
     const height = this.canvas.height;
+
+    // Delete existing textures to prevent memory leaks
+    for (const texture of this.textures) {
+      gl.deleteTexture(texture);
+    }
+    this.textures = [];
 
     // Enable the EXT_color_buffer_float extension
     const ext = gl.getExtension('EXT_color_buffer_float');
@@ -277,42 +125,14 @@ export class DistanceField extends HTMLElement {
       this.textures.push(texture);
     }
 
-    // Create framebuffer
-    this.framebuffer = gl.createFramebuffer()!;
+    // Reuse existing framebuffer
+    if (!this.framebuffer) {
+      this.framebuffer = gl.createFramebuffer()!;
+    }
   }
 
   private initSeedPointRendering() {
-    const gl = this.gl;
-
-    // Shader sources for seed point rendering
-    const seedVertexShaderSource = vert`#version 300 es
-    precision highp float;
-
-    in vec3 a_position; // x, y, shapeID
-    flat out float v_shapeID;
-
-    void main() {
-      gl_Position = vec4(a_position.xy, 0.0, 1.0);
-      v_shapeID = a_position.z; // Pass shape ID to fragment shader
-    }`;
-
-    const seedFragmentShaderSource = frag`#version 300 es
-    precision highp float;
-
-    flat in float v_shapeID;
-    uniform vec2 u_resolution;
-
-    out vec4 outColor;
-
-    void main() {
-      vec2 seedCoord = gl_FragCoord.xy / u_resolution;
-      outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords, shape ID, initial distance 0
-    }`;
-
-    // Compile seed shaders
-    const seedVertexShader = this.createShader(gl.VERTEX_SHADER, seedVertexShaderSource);
-    const seedFragmentShader = this.createShader(gl.FRAGMENT_SHADER, seedFragmentShaderSource);
-    this.seedProgram = this.createProgram(seedVertexShader, seedFragmentShader);
+    const gl = this.glContext;
 
     // Set up VAO and buffer for shapes
     this.shapeVAO = gl.createVertexArray()!;
@@ -359,6 +179,7 @@ export class DistanceField extends HTMLElement {
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+    gl.useProgram(this.seedProgram);
     const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
@@ -370,7 +191,7 @@ export class DistanceField extends HTMLElement {
   }
 
   private renderSeedPoints() {
-    const gl = this.gl;
+    const gl = this.glContext;
 
     // Bind framebuffer to render to the seed texture
     const seedTexture = this.textures[this.pingPongIndex % 2];
@@ -379,14 +200,15 @@ export class DistanceField extends HTMLElement {
 
     // Clear the texture with a large initial distance
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.0, 0.0, 0.0, 99999.0); // Max initial distance
+    gl.clearColor(0.0, 0.0, 0.0, DistanceField.MAX_DISTANCE);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Use seed shader program
     gl.useProgram(this.seedProgram);
 
-    // Set uniforms
-    gl.uniform2f(gl.getUniformLocation(this.seedProgram, 'u_resolution'), this.canvas.width, this.canvas.height);
+    // Set the canvas size uniform
+    const canvasSizeLocation = gl.getUniformLocation(this.seedProgram, 'u_canvasSize');
+    gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(this.shapeVAO);
@@ -412,7 +234,7 @@ export class DistanceField extends HTMLElement {
   }
 
   private renderPass(stepSize: number) {
-    const gl = this.gl;
+    const gl = this.glContext;
 
     // Swap textures for ping-pong rendering
     const inputTexture = this.textures[this.pingPongIndex % 2];
@@ -422,36 +244,19 @@ export class DistanceField extends HTMLElement {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
 
-    // Check framebuffer status
-    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    if (status !== gl.FRAMEBUFFER_COMPLETE) {
-      console.error('Framebuffer is incomplete:', status.toString(16));
-      return;
-    }
-
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-
     // Use shader program
-    gl.useProgram(this.program);
+    gl.useProgram(this.jfaProgram);
 
-    // Adjust offsets based on step size and resolution
-    const adjustedOffsets = [];
-    for (let i = 0; i < this.offsets.length; i += 2) {
-      const offsetX = (this.offsets[i] * stepSize) / this.canvas.width;
-      const offsetY = (this.offsets[i + 1] * stepSize) / this.canvas.height;
-      adjustedOffsets.push(offsetX, offsetY);
-    }
-
-    // Set the offsets uniform
-    const offsetsLocation = gl.getUniformLocation(this.program, 'u_offsets');
-    gl.uniform2fv(offsetsLocation, new Float32Array(adjustedOffsets));
+    // Compute and set the offsets uniform
+    const offsets = this.computeOffsets(stepSize);
+    const offsetsLocation = gl.getUniformLocation(this.jfaProgram, 'u_offsets');
+    gl.uniform2fv(offsetsLocation, offsets);
 
     // Bind input texture
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-    gl.uniform1i(gl.getUniformLocation(this.program, 'u_previousTexture'), 0);
+    gl.uniform1i(gl.getUniformLocation(this.jfaProgram, 'u_previousTexture'), 0);
 
-    // Draw a fullscreen quad
     this.drawFullscreenQuad();
 
     // Swap ping-pong index
@@ -459,29 +264,28 @@ export class DistanceField extends HTMLElement {
   }
 
   private renderToScreen() {
-    const gl = this.gl;
+    const gl = this.glContext;
 
     // Unbind framebuffer to render to the canvas
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
     // Use display shader program
-    gl.useProgram(this.displayProgram);
+    gl.useProgram(this.renderProgram);
 
     // Bind the final texture
     const finalTexture = this.textures[this.pingPongIndex % 2];
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, finalTexture);
-    gl.uniform1i(gl.getUniformLocation(this.displayProgram, 'u_texture'), 0);
+    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_texture'), 0);
 
     // Draw a fullscreen quad
     this.drawFullscreenQuad();
   }
 
   private drawFullscreenQuad() {
-    const gl = this.gl;
+    const gl = this.glContext;
 
-    // Initialize VAO if not already done
     if (!this.fullscreenQuadVAO) {
       this.initFullscreenQuad();
     }
@@ -492,7 +296,7 @@ export class DistanceField extends HTMLElement {
   }
 
   private initFullscreenQuad() {
-    const gl = this.gl;
+    const gl = this.glContext;
 
     const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
 
@@ -503,7 +307,7 @@ export class DistanceField extends HTMLElement {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    const positionAttributeLocation = gl.getAttribLocation(this.program, 'a_position');
+    const positionAttributeLocation = gl.getAttribLocation(this.jfaProgram, 'a_position');
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.vertexAttribPointer(
       positionAttributeLocation,
@@ -516,4 +320,185 @@ export class DistanceField extends HTMLElement {
 
     gl.bindVertexArray(null);
   }
+
+  // Handle window resize
+  private handleResize = () => {
+    const gl = this.glContext;
+
+    // Update canvas size
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+
+    // Update the viewport
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+    // Re-initialize textures with the new dimensions
+    this.initPingPongTextures();
+
+    // Re-initialize seed point rendering to update positions
+    this.initSeedPointRendering();
+
+    // Rerun JFA
+    this.runJFA();
+  };
+
+  private computeOffsets(stepSize: number): Float32Array {
+    const offsets: number[] = [];
+    for (let y = -1; y <= 1; y++) {
+      for (let x = -1; x <= 1; x++) {
+        offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
+      }
+    }
+    return new Float32Array(offsets);
+  }
+
+  private cleanupWebGLResources() {
+    const gl = this.glContext;
+
+    // Delete textures
+    this.textures.forEach((texture) => gl.deleteTexture(texture));
+    this.textures = [];
+
+    // Delete framebuffers
+    if (this.framebuffer) {
+      gl.deleteFramebuffer(this.framebuffer);
+    }
+
+    // Delete VAOs
+    if (this.fullscreenQuadVAO) {
+      gl.deleteVertexArray(this.fullscreenQuadVAO);
+    }
+    if (this.shapeVAO) {
+      gl.deleteVertexArray(this.shapeVAO);
+    }
+
+    if (this.jfaProgram) {
+      gl.deleteProgram(this.jfaProgram);
+    }
+    if (this.renderProgram) {
+      gl.deleteProgram(this.renderProgram);
+    }
+    if (this.seedProgram) {
+      gl.deleteProgram(this.seedProgram);
+    }
+
+    // Clear other references
+    this.geometries = null!;
+  }
 }
+
+const jfaVertShader = vert`#version 300 es
+    precision highp float;
+    in vec2 a_position;
+    out vec2 v_texCoord;
+
+    void main() {
+      v_texCoord = a_position * 0.5 + 0.5; // Transform to [0, 1] range
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }`;
+
+const jfaFragShader = frag`#version 300 es
+    precision highp float;
+    precision mediump int;
+
+    in vec2 v_texCoord;
+    out vec4 outColor;
+
+    uniform sampler2D u_previousTexture;
+    uniform vec2 u_offsets[9];
+
+    void main() {
+      // Start with the current texel's nearest seed point and distance
+      vec4 nearest = texture(u_previousTexture, v_texCoord);
+
+      // Initialize minDist with the current distance
+      float minDist = nearest.a;
+
+      // Loop through neighbor offsets
+      for (int i = 0; i < 9; ++i) {
+        vec2 sampleCoord = v_texCoord + u_offsets[i];
+
+        // Clamp sampleCoord to [0, 1] to prevent sampling outside texture
+        sampleCoord = clamp(sampleCoord, vec2(0.0), vec2(1.0));
+
+        vec4 sampled = texture(u_previousTexture, sampleCoord);
+
+        if (sampled.z == 0.0) {
+          continue; // Skip background pixels
+        }
+
+        // Compute distance to the seed point stored in this neighbor
+        float dist = distance(sampled.xy, v_texCoord);
+
+        if (dist < minDist) {
+          nearest = sampled;
+          nearest.a = dist;
+          minDist = dist;
+        }
+      }
+
+      // Output the nearest seed point and updated distance
+      outColor = nearest;
+    }`;
+
+const renderVertShader = vert`#version 300 es
+    in vec2 a_position;
+    out vec2 v_texCoord;
+
+    void main() {
+      v_texCoord = a_position * 0.5 + 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }`;
+
+const renderFragShader = frag`#version 300 es
+    precision highp float;
+
+    in vec2 v_texCoord;
+    out vec4 outColor;
+
+    uniform sampler2D u_texture;
+
+    void main() {
+        vec4 texel = texture(u_texture, v_texCoord);
+
+        // Extract shape ID and distance
+        float shapeID = texel.z;
+        float distance = texel.a;
+
+        // Hash-based color for shape
+        vec3 shapeColor = vec3(
+          fract(sin(shapeID * 12.9898) * 43758.5453),
+          fract(sin(shapeID * 78.233) * 43758.5453),
+          fract(sin(shapeID * 93.433) * 43758.5453)
+        );
+
+        // Visualize distance (e.g., as intensity)
+        float intensity = exp(-distance * 10.0);
+
+        outColor = vec4(shapeColor * intensity, 1.0);
+    }`;
+
+// Shader sources for seed point rendering
+const seedVertexShaderSource = vert`#version 300 es
+    precision highp float;
+
+    in vec3 a_position; // x, y, shapeID
+    flat out float v_shapeID;
+
+    void main() {
+      gl_Position = vec4(a_position.xy, 0.0, 1.0);
+      v_shapeID = a_position.z; // Pass shape ID to fragment shader
+    }`;
+
+const seedFragmentShaderSource = frag`#version 300 es
+    precision highp float;
+
+    flat in float v_shapeID;
+    uniform vec2 u_canvasSize;
+
+    out vec4 outColor;
+
+    void main() {
+      vec2 seedCoord = gl_FragCoord.xy / u_canvasSize;
+      outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords, shape ID, initial distance 0
+    }`;
