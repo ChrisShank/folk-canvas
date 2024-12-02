@@ -1,5 +1,6 @@
 import { css } from './common/tags.ts';
 import { FolkRope } from './folk-rope.ts';
+import * as parser from '@babel/parser';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(css`
@@ -90,6 +91,8 @@ export class FolkEventPropagator extends FolkRope {
     const functionBody = codeLines.join('\n');
 
     try {
+      parseAst(functionBody);
+
       this.#function = new Function('from', 'to', 'event', functionBody);
     } catch (error) {
       console.warn('Failed to parse expression:', error, functionBody);
@@ -207,4 +210,44 @@ export class FolkEventPropagator extends FolkRope {
       this.stroke = 'red';
     }
   };
+}
+
+function parseAst(functionBody: string) {
+  const ast = parser.parse(functionBody, {
+    sourceType: 'script',
+  });
+
+  const toProps = new Set<string>();
+  const fromProps = new Set<string>();
+
+  function walkAst(node: any) {
+    if (!node || typeof node !== 'object') return;
+
+    if (node.type === 'MemberExpression' && node.object?.type === 'Identifier') {
+      const objName = node.object.name;
+      if (objName !== 'to' && objName !== 'from') return;
+
+      const propSet = objName === 'to' ? toProps : fromProps;
+
+      if (node.property?.type === 'Identifier') {
+        propSet.add(node.property.name);
+      } else if (node.property?.type === 'StringLiteral') {
+        propSet.add(node.property.value);
+      }
+    }
+
+    // Recursively walk through all properties
+    for (const key in node) {
+      if (Array.isArray(node[key])) {
+        node[key].forEach(walkAst);
+      } else if (node[key] && typeof node[key] === 'object') {
+        walkAst(node[key]);
+      }
+    }
+  }
+
+  walkAst(ast);
+
+  console.log('Properties accessed on to:', Array.from(toProps));
+  console.log('Properties accessed on from:', Array.from(fromProps));
 }

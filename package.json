@@ -8,6 +8,7 @@
     "preview": "vite build && vite preview"
   },
   "dependencies": {
+    "@babel/parser": "^7.26.2",
     "leaflet": "^1.9.4",
     "perfect-arrows": "^0.3.7",
     "perfect-freehand": "^1.2.2"
