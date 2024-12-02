@@ -8,21 +8,19 @@ export class DistanceFieldGPU extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  private canvas!: HTMLCanvasElement;
-  private gl: WebGL2RenderingContext;
-  private program: WebGLProgram;
-  private displayProgram: WebGLProgram;
-  private seedProgram: WebGLProgram;
-  private framebuffer: WebGLFramebuffer;
+  private geometries: NodeListOf<Element>;
   private textures: WebGLTexture[] = [];
   private pingPongIndex: number = 0;
-  private fullscreenQuadVAO: WebGLVertexArrayObject;
-  private shapeVAO: WebGLVertexArrayObject;
 
-  // Get all geometry elements
-  private geometries: NodeListOf<Element>;
-
-  private offsets: Float32Array;
+  private offsets!: Float32Array;
+  private canvas!: HTMLCanvasElement;
+  private gl!: WebGL2RenderingContext;
+  private program!: WebGLProgram;
+  private displayProgram!: WebGLProgram;
+  private seedProgram!: WebGLProgram;
+  private framebuffer!: WebGLFramebuffer;
+  private fullscreenQuadVAO!: WebGLVertexArrayObject;
+  private shapeVAO!: WebGLVertexArrayObject;
 
   constructor() {
     super();
@@ -401,7 +399,7 @@ export class DistanceFieldGPU extends HTMLElement {
   }
 
   private runJFA() {
-    let maxDimension = Math.max(this.canvas.width, this.canvas.height);
+    const maxDimension = Math.max(this.canvas.width, this.canvas.height);
     let stepSize = Math.pow(2, Math.floor(Math.log2(maxDimension)));
 
     const minStepSize = 1;
