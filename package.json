@@ -8,14 +8,14 @@
     "preview": "vite build && vite preview"
   },
   "dependencies": {
-    "@types/leaflet": "^1.9.14",
-    "@types/node": "^22.10.1",
-    "@webgpu/types": "^0.1.51",
     "leaflet": "^1.9.4",
     "perfect-arrows": "^0.3.7",
     "perfect-freehand": "^1.2.2"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.14",
+    "@types/node": "^22.10.1",
+    "@webgpu/types": "^0.1.51",
     "typescript": "^5.7.2",
     "vite": "^6.0.0"
   }
