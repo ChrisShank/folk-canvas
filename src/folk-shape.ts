@@ -1,25 +1,12 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
-import type { Point } from './common/types';
+import type { Point, RotatedDOMRect } from './common/types';
 import { Vector } from './common/Vector';
 
 const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
-type RotatedDOMRect = DOMRect & {
-  /** in radians */
-  rotation: number;
-
-  /** Returns the center point in worldspace coordinates */
-  center(): Point;
-
-  /** Returns the four corners in worldspace coordinates, in clockwise order */
-  corners(): [Point, Point, Point, Point];
-
-  /** Returns all the vertices in worldspace coordinates */
-  vertices(): Point[];
-};
 export type MoveEventDetail = { movementX: number; movementY: number };
 
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
