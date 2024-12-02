@@ -2,10 +2,11 @@ import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
-const files: string[] = readdirSync(__dirname).filter((file) => file.endsWith('.html'));
+const demoDir = resolve(__dirname, 'demo');
+const files: string[] = readdirSync(demoDir).filter((file) => file.endsWith('.html'));
 
 const input: Record<string, string> = files.reduce((acc, file) => {
-  acc[file.replace('.html', '')] = resolve(__dirname, file);
+  acc[file.replace('.html', '')] = resolve(demoDir, file);
   return acc;
 }, {} as Record<string, string>);
 
@@ -50,13 +51,14 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
+    outDir: 'demo/dist',
   },
   worker: {
     format: 'es',
   },
   server: {
     fs: {
-      allow: [resolve(__dirname, '..')],
+      allow: ['.'],
     },
   },
 });

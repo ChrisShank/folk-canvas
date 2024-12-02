@@ -12,15 +12,13 @@
 
 ## Development
 
-1. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/)
+1. Install [Bun](https://bun.sh/docs/installation)
 
 ```bash
-deno i
+bun i
 # then
-deno task dev
+bun dev
 ```
-
-All config is in `deno.json`.
 
 ## Primitives
 

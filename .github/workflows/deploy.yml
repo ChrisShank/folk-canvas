@@ -17,16 +17,16 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v4
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          deno-version: v2.x
+          bun-version: latest
 
       - name: Install dependencies
-        run: deno i
+        run: bun install
 
       - name: Build
-        run: deno task build
+        run: bun run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -34,7 +34,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./demo/dist"
+          path: './demo/dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
