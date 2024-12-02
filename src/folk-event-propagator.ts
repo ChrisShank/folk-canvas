@@ -1,6 +1,7 @@
 import { css } from './common/tags.ts';
 import { FolkRope } from './folk-rope.ts';
 import * as parser from '@babel/parser';
+import type { Node } from '@babel/types';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(css`
@@ -220,7 +221,7 @@ function parseAst(functionBody: string) {
   const toProps = new Set<string>();
   const fromProps = new Set<string>();
 
-  function walkAst(node: any) {
+  function walkAst(node: Node) {
     if (!node || typeof node !== 'object') return;
 
     if (node.type === 'MemberExpression' && node.object?.type === 'Identifier') {
@@ -237,11 +238,12 @@ function parseAst(functionBody: string) {
     }
 
     // Recursively walk through all properties
-    for (const key in node) {
-      if (Array.isArray(node[key])) {
-        node[key].forEach(walkAst);
-      } else if (node[key] && typeof node[key] === 'object') {
-        walkAst(node[key]);
+    for (const key of Object.keys(node)) {
+      const value = (node as any)[key];
+      if (Array.isArray(value)) {
+        value.forEach(walkAst);
+      } else if (value && typeof value === 'object') {
+        walkAst(value as Node);
       }
     }
   }
