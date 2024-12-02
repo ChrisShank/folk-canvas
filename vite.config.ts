@@ -32,7 +32,6 @@ const linkGenerator = (): Plugin => {
 
 export default defineConfig({
   root: 'demo',
-  base: '/folk-canvas/',
   plugins: [linkGenerator()],
   build: {
     target: 'esnext',

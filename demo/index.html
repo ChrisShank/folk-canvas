@@ -3,23 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Folk Canvas Primitives</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Pixelify+Sans&display=swap"
+      rel="stylesheet"
+    />
+    <title>Folk Canvas Demos</title>
     <style>
       html {
         height: 100%;
+        background: #f5f5f5;
       }
 
-      body {
-        min-height: 100%;
-        position: relative;
+      main {
+        font-family: 'Courier Prime', Courier, monospace;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        background: #fff;
+      }
+
+      h1 {
+        color: #2c3e50;
+        margin: 0;
+      }
+
+      ul {
+        list-style-type: none;
+        line-height: 1.8;
+        padding-left: 0em;
+      }
+
+      li::before {
+        content: '>';
+        color: #666;
+        margin-right: 1em;
+      }
+
+      a {
+        color: #34495e;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <h1>Folk Canvas Demos</h1>
-
-    <ul>
-      {{ LINKS }}
-    </ul>
+    <main>
+      <h1>Folk Canvas Demos</h1>
+      <ul>
+        {{ LINKS }}
+      </ul>
+    </main>
   </body>
 </html>
