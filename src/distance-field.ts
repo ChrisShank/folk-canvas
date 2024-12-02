@@ -76,9 +76,9 @@ export class DistanceField extends HTMLElement {
   };
 
   private initShaders() {
-    this.jfaProgram = WebGLUtils.createShaderProgram(this.glContext, jfaVertShader, jfaFragShader);
-    this.seedProgram = WebGLUtils.createShaderProgram(this.glContext, seedVertexShaderSource, seedFragmentShaderSource);
-    this.renderProgram = WebGLUtils.createShaderProgram(this.glContext, renderVertShader, renderFragShader);
+    this.jfaProgram = WebGLUtils.createShaderProgram(this.glContext, commonVertShader, jfaFragShader);
+    this.renderProgram = WebGLUtils.createShaderProgram(this.glContext, commonVertShader, renderFragShader);
+    this.seedProgram = WebGLUtils.createShaderProgram(this.glContext, seedVertShader, seedFragShader);
   }
 
   private initPingPongTextures() {
@@ -387,7 +387,7 @@ export class DistanceField extends HTMLElement {
   }
 }
 
-const jfaVertShader = vert`#version 300 es
+const commonVertShader = vert`#version 300 es
     precision highp float;
     in vec2 a_position;
     out vec2 v_texCoord;
@@ -441,15 +441,6 @@ const jfaFragShader = frag`#version 300 es
       outColor = nearest;
     }`;
 
-const renderVertShader = vert`#version 300 es
-    in vec2 a_position;
-    out vec2 v_texCoord;
-
-    void main() {
-      v_texCoord = a_position * 0.5 + 0.5;
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }`;
-
 const renderFragShader = frag`#version 300 es
     precision highp float;
 
@@ -478,8 +469,7 @@ const renderFragShader = frag`#version 300 es
         outColor = vec4(shapeColor * intensity, 1.0);
     }`;
 
-// Shader sources for seed point rendering
-const seedVertexShaderSource = vert`#version 300 es
+const seedVertShader = vert`#version 300 es
     precision highp float;
 
     in vec3 a_position; // x, y, shapeID
@@ -490,7 +480,7 @@ const seedVertexShaderSource = vert`#version 300 es
       v_shapeID = a_position.z; // Pass shape ID to fragment shader
     }`;
 
-const seedFragmentShaderSource = frag`#version 300 es
+const seedFragShader = frag`#version 300 es
     precision highp float;
 
     flat in float v_shapeID;
