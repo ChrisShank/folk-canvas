@@ -5,7 +5,6 @@ import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 const demoDir = resolve(__dirname, 'demo');
 
 const files: string[] = readdirSync(demoDir).filter((file) => file.endsWith('.html'));
-
 const input: Record<string, string> = files.reduce((acc, file) => {
   acc[file.replace('.html', '')] = resolve(demoDir, file);
   return acc;
@@ -31,35 +30,17 @@ const linkGenerator = (): Plugin => {
   };
 };
 
-const configureResponseHeaders = (): Plugin => {
-  return {
-    name: 'configure-response-headers',
-    configureServer: (server) => {
-      server.middlewares.use((_req, res, next) => {
-        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-        next();
-      });
-    },
-  };
-};
-
 export default defineConfig({
-  plugins: [linkGenerator(), configureResponseHeaders()],
+  root: 'demo',
+  base: '/folk-canvas/',
+  plugins: [linkGenerator()],
   build: {
     target: 'esnext',
     rollupOptions: { input },
     modulePreload: {
       polyfill: false,
     },
-    outDir: 'demo/dist',
-  },
-  worker: {
-    format: 'es',
-  },
-  server: {
-    fs: {
-      allow: ['.'],
-    },
+    outDir: './dist',
+    emptyOutDir: true,
   },
 });
