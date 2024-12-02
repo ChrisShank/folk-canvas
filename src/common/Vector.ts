@@ -104,4 +104,35 @@ export class Vector {
       y: a.y + (b.y - a.y) * t,
     };
   }
+
+  /**
+   * Rotates a vector by a given angle (in radians)
+   * @param {Point} v - The vector to rotate
+   * @param {number} angle - The angle in radians
+   * @returns {Point} The rotated vector
+   */
+  static rotate(v: Point, angle: number): Point {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      x: v.x * cos - v.y * sin,
+      y: v.x * sin + v.y * cos,
+    };
+  }
+
+  /**
+   * Rotates a point around a pivot point by a given angle (in radians)
+   * @param {Point} point - The point to rotate
+   * @param {Point} pivot - The point to rotate around
+   * @param {number} angle - The angle in radians
+   * @returns {Point} The rotated point
+   */
+  static rotateAround(point: Point, pivot: Point, angle: number): Point {
+    // Translate to origin
+    const translated = Vector.sub(point, pivot);
+    // Rotate around origin
+    const rotated = Vector.rotate(translated, angle);
+    // Translate back
+    return Vector.add(rotated, pivot);
+  }
 }

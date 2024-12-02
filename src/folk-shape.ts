@@ -1,22 +1,23 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import type { Point } from './common/types';
+import { Vector } from './common/Vector';
 
 const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
 type RotatedDOMRect = DOMRect & {
-  // In degrees
+  /** in degrees */
   rotation: number;
 
-  // Returns the center point in worldspace coordinates
+  /** Returns the center point in worldspace coordinates */
   center(): Point;
 
-  // Returns the four corners in worldspace coordinates, in clockwise order
+  /** Returns the four corners in worldspace coordinates, in clockwise order */
   corners(): [Point, Point, Point, Point];
 
-  // Returns all the vertices in worldspace coordinates
+  /** Returns all the vertices in worldspace coordinates */
   vertices(): Point[];
 };
 export type MoveEventDetail = { movementX: number; movementY: number };
@@ -322,26 +323,16 @@ export class FolkShape extends HTMLElement {
         return [];
       },
 
-      corners(): [Point, Point, Point, Point] {
+      corners() {
         const center = this.center();
-        const cos = Math.cos(radians);
-        const sin = Math.sin(radians);
+        const radians = (this.rotation * Math.PI) / 180;
+        const { x, y, width, height } = this;
 
-        const halfWidth = this.width / 2;
-        const halfHeight = this.height / 2;
-
-        // Helper to rotate a point around the center
-        const rotatePoint = (dx: number, dy: number): Point => ({
-          x: center.x + dx * cos - dy * sin,
-          y: center.y + dx * sin + dy * cos,
-        });
-
-        // Return vertices in clockwise order: top-left, top-right, bottom-right, bottom-left
         return [
-          rotatePoint(-halfWidth, -halfHeight), // Top-left
-          rotatePoint(halfWidth, -halfHeight), // Top-right
-          rotatePoint(halfWidth, halfHeight), // Bottom-right
-          rotatePoint(-halfWidth, halfHeight), // Bottom-left
+          Vector.rotateAround({ x, y }, center, radians),
+          Vector.rotateAround({ x: x + width, y }, center, radians),
+          Vector.rotateAround({ x: x + width, y: y + height }, center, radians),
+          Vector.rotateAround({ x, y: y + height }, center, radians),
         ];
       },
 
