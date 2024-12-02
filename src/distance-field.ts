@@ -394,10 +394,12 @@ export class DistanceField extends HTMLElement {
    * @returns A Float32Array of offsets.
    */
   private computeOffsets(stepSize: number): Float32Array {
+    const aspectRatio = this.canvas.width / this.canvas.height;
     const offsets = [];
     for (let y = -1; y <= 1; y++) {
       for (let x = -1; x <= 1; x++) {
-        offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
+        // Adjust x offset by aspect ratio to maintain uniform distances
+        offsets.push((x * stepSize * aspectRatio) / this.canvas.width, (y * stepSize) / this.canvas.height);
       }
     }
     return new Float32Array(offsets);
@@ -472,37 +474,33 @@ uniform sampler2D u_previousTexture;
 uniform vec2 u_offsets[9];
 
 void main() {
-  // Retrieve the current pixel's nearest seed point and distance
-  vec4 nearest = texture(u_previousTexture, v_texCoord);
+    vec4 nearest = texture(u_previousTexture, v_texCoord);
+    float minDist = nearest.a;
 
-  // Initialize minDist with the current distance
-  float minDist = nearest.a;
+    float aspectRatio = float(textureSize(u_previousTexture, 0).x) / float(textureSize(u_previousTexture, 0).y);
+    
+    for (int i = 0; i < 9; ++i) {
+        vec2 sampleCoord = v_texCoord + u_offsets[i];
+        sampleCoord = clamp(sampleCoord, vec2(0.0), vec2(1.0));
+        vec4 sampled = texture(u_previousTexture, sampleCoord);
 
-  // Loop through neighbor offsets
-  for (int i = 0; i < 9; ++i) {
-    vec2 sampleCoord = v_texCoord + u_offsets[i];
+        if (sampled.z == 0.0) {
+            continue;
+        }
 
-    // Clamp sampleCoord to [0, 1] to prevent sampling outside the texture
-    sampleCoord = clamp(sampleCoord, vec2(0.0), vec2(1.0));
+        // Adjust x coordinate by aspect ratio when calculating distance
+        vec2 adjustedCoord = vec2(v_texCoord.x * aspectRatio, v_texCoord.y);
+        vec2 adjustedSampledCoord = vec2(sampled.x * aspectRatio, sampled.y);
+        float dist = distance(adjustedSampledCoord, adjustedCoord);
 
-    vec4 sampled = texture(u_previousTexture, sampleCoord);
-
-    if (sampled.z == 0.0) {
-      continue; // Skip background pixels
+        if (dist < minDist) {
+            nearest = sampled;
+            nearest.a = dist;
+            minDist = dist;
+        }
     }
 
-    // Compute distance to the seed point stored in this neighbor
-    float dist = distance(sampled.xy, v_texCoord);
-
-    if (dist < minDist) {
-      nearest = sampled;
-      nearest.a = dist;
-      minDist = dist;
-    }
-  }
-
-  // Output the nearest seed point and updated distance
-  outColor = nearest;
+    outColor = nearest;
 }`;
 
 /**
