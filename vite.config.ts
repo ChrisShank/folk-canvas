@@ -4,12 +4,12 @@ import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
 const demoDir = resolve(__dirname, 'demo');
 
-const files: string[] = readdirSync(demoDir).filter((file) => file.endsWith('.html') && !file.startsWith('_'));
+const files: string[] = readdirSync(demoDir).filter((file) => file.endsWith('.html'));
 const input: Record<string, string> = files.reduce((acc, file) => {
   acc[file.replace('.html', '')] = resolve(demoDir, file);
   return acc;
 }, {} as Record<string, string>);
-
+console.log(input);
 const linkGenerator = (): Plugin => {
   return {
     name: 'link-generator',
@@ -17,7 +17,9 @@ const linkGenerator = (): Plugin => {
       if (!ctx.filename.endsWith('index.html')) return;
 
       // First, handle ungrouped files
-      const ungroupedFiles = files.filter((file) => !file.includes('index') && !file.match(/^\[([^\]]+)\]/));
+      const ungroupedFiles = files.filter(
+        (file) => !file.includes('index') && !file.startsWith('_') && !file.match(/^\[([^\]]+)\]/)
+      );
 
       // Then handle grouped files
       const groups = files
