@@ -5,6 +5,8 @@ const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
+type RotatedDOMRect = DOMRect & { rotation: number };
+
 export type MoveEventDetail = { movementX: number; movementY: number };
 
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
@@ -239,15 +241,18 @@ export class FolkShape extends HTMLElement {
 
   #initialRotation = 0;
   #startAngle = 0;
-  #previousRotate = 0;
-  #rotate = Number(this.getAttribute('rotate')) || 0;
-  get rotate(): number {
-    return this.#rotate;
+  #previousRotation = 0;
+
+  // TODO: consider using radians instead of degrees
+  #rotation = Number(this.getAttribute('rotate')) || 0;
+
+  get rotation(): number {
+    return this.#rotation;
   }
 
-  set rotate(rotate: number) {
-    this.#previousRotate = this.#rotate;
-    this.#rotate = rotate;
+  set rotation(rotation: number) {
+    this.#previousRotation = this.#rotation;
+    this.#rotation = rotation;
     this.#requestUpdate('rotate');
   }
 
@@ -279,8 +284,8 @@ export class FolkShape extends HTMLElement {
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
   }
 
-  getClientRect(): DOMRect {
-    const { x, y, width, height } = this;
+  getClientRect(): RotatedDOMRect {
+    const { x, y, width, height, rotation } = this;
 
     return {
       x,
@@ -291,6 +296,7 @@ export class FolkShape extends HTMLElement {
       top: y,
       right: x + width,
       bottom: y + height,
+      rotation,
       toJSON: undefined as any,
     };
     // return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
@@ -320,7 +326,7 @@ export class FolkShape extends HTMLElement {
           // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
           // But we also want to preserve the self-sufficient nature of elements' behaviour...
           // Maybe some kind of shared utility, used by both the element and the outside environment?
-          this.#initialRotation = this.#rotate;
+          this.#initialRotation = this.#rotation;
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
           this.#startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
@@ -383,7 +389,7 @@ export class FolkShape extends HTMLElement {
           const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
 
           const deltaAngle = currentAngle - this.#startAngle;
-          this.rotate = this.#initialRotation + (deltaAngle * 180) / Math.PI;
+          this.rotation = this.#initialRotation + (deltaAngle * 180) / Math.PI;
           return;
         }
 
@@ -473,14 +479,14 @@ export class FolkShape extends HTMLElement {
 
     if (updatedProperties.has('rotate')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotate - this.#previousRotate }));
+      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotation - this.#previousRotation }));
 
       if (notCancelled) {
         if (updatedProperties.has('rotate')) {
-          this.style.rotate = `${this.#rotate}deg`;
+          this.style.rotate = `${this.#rotation}deg`;
         }
       } else {
-        this.#rotate = this.#previousRotate;
+        this.#rotation = this.#previousRotation;
       }
     }
   }

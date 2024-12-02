@@ -38,12 +38,13 @@ export class DistanceField extends HTMLElement {
     this.initWebGL();
     this.initShaders();
     this.initPingPongTextures();
-    this.initSeedPointRendering();
+    this.populateSeedPoints();
 
     window.addEventListener('resize', this.handleResize);
     this.shapes.forEach((geometry) => {
       geometry.addEventListener('move', this.handleGeometryUpdate);
       geometry.addEventListener('resize', this.handleGeometryUpdate);
+      geometry.addEventListener('rotate', this.handleGeometryUpdate);
     });
   }
 
@@ -52,6 +53,7 @@ export class DistanceField extends HTMLElement {
     this.shapes.forEach((geometry) => {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
+      geometry.removeEventListener('rotate', this.handleGeometryUpdate);
     });
     this.cleanupWebGLResources();
   }
@@ -71,7 +73,8 @@ export class DistanceField extends HTMLElement {
    * Handles updates to geometry elements by re-initializing seed points and rerunning the JFA.
    */
   private handleGeometryUpdate = () => {
-    this.initSeedPointRendering();
+    console.log('handleGeometryUpdate');
+    this.populateSeedPoints();
     this.runJumpFloodingAlgorithm();
   };
 
@@ -140,7 +143,7 @@ export class DistanceField extends HTMLElement {
    * Initializes rendering of seed points (shapes) into a texture.
    * Seed points are the starting locations for distance calculations.
    */
-  private initSeedPointRendering() {
+  private populateSeedPoints() {
     const gl = this.glContext;
     const positions: number[] = [];
 
@@ -150,12 +153,39 @@ export class DistanceField extends HTMLElement {
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getClientRect();
+      const rotation = (geometry.rotation * Math.PI) / 180; // Convert to radians
 
-      // Convert DOM coordinates to Normalized Device Coordinates (NDC)
-      const x1 = (rect.left / windowWidth) * 2 - 1;
-      const y1 = -((rect.top / windowHeight) * 2 - 1);
-      const x2 = (rect.right / windowWidth) * 2 - 1;
-      const y2 = -((rect.bottom / windowHeight) * 2 - 1);
+      // Calculate the center of the rectangle
+      const centerX = (rect.left + rect.right) / 2;
+      const centerY = (rect.top + rect.bottom) / 2;
+
+      // Function to rotate a point around the center
+      const rotatePoint = (x: number, y: number) => {
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        return {
+          x: centerX + dx * cos - dy * sin,
+          y: centerY + dx * sin + dy * cos,
+        };
+      };
+
+      // Rotate each corner of the rectangle
+      const topLeft = rotatePoint(rect.left, rect.top);
+      const topRight = rotatePoint(rect.right, rect.top);
+      const bottomLeft = rotatePoint(rect.left, rect.bottom);
+      const bottomRight = rotatePoint(rect.right, rect.bottom);
+
+      // Convert rotated coordinates to NDC
+      const x1 = (topLeft.x / windowWidth) * 2 - 1;
+      const y1 = -((topLeft.y / windowHeight) * 2 - 1);
+      const x2 = (topRight.x / windowWidth) * 2 - 1;
+      const y2 = -((topRight.y / windowHeight) * 2 - 1);
+      const x3 = (bottomLeft.x / windowWidth) * 2 - 1;
+      const y3 = -((bottomLeft.y / windowHeight) * 2 - 1);
+      const x4 = (bottomRight.x / windowWidth) * 2 - 1;
+      const y4 = -((bottomRight.y / windowHeight) * 2 - 1);
 
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
@@ -165,20 +195,20 @@ export class DistanceField extends HTMLElement {
         y1,
         shapeID,
         x2,
-        y1,
-        shapeID,
-        x1,
         y2,
+        shapeID,
+        x3,
+        y3,
         shapeID,
 
-        x1,
-        y2,
-        shapeID,
-        x2,
-        y1,
+        x3,
+        y3,
         shapeID,
         x2,
         y2,
+        shapeID,
+        x4,
+        y4,
         shapeID
       );
     });
@@ -376,7 +406,7 @@ export class DistanceField extends HTMLElement {
     this.initPingPongTextures();
 
     // Re-initialize seed point rendering to update positions
-    this.initSeedPointRendering();
+    this.populateSeedPoints();
 
     // Rerun the Jump Flooding Algorithm with the new sizes
     this.runJumpFloodingAlgorithm();
