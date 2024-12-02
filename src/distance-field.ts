@@ -34,31 +34,11 @@ export class DistanceField extends HTMLElement {
   }
 
   connectedCallback() {
-    // Collect all geometry elements to process
     this.shapes = document.querySelectorAll('fc-geometry');
-
-    // Initialize WebGL context and canvas
-    const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight, this);
-
-    if (!gl || !canvas) {
-      console.error('Failed to initialize WebGL context.');
-      return;
-    }
-
-    this.canvas = canvas;
-    this.glContext = gl;
-
-    // Initialize shader programs
+    this.initWebGL();
     this.initShaders();
-
-    // Initialize textures and framebuffer for ping-pong rendering
     this.initPingPongTextures();
-
-    // Render seed points (shapes) into the texture
     this.initSeedPointRendering();
-
-    // Start the Jump Flooding Algorithm
-    this.runJFA();
 
     window.addEventListener('resize', this.handleResize);
     this.shapes.forEach((geometry) => {
@@ -76,12 +56,23 @@ export class DistanceField extends HTMLElement {
     this.cleanupWebGLResources();
   }
 
+  private initWebGL() {
+    const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight, this);
+
+    if (!gl || !canvas) {
+      throw new Error('Failed to initialize WebGL context.');
+    }
+
+    this.canvas = canvas;
+    this.glContext = gl;
+  }
+
   /**
    * Handles updates to geometry elements by re-initializing seed points and rerunning the JFA.
    */
   private handleGeometryUpdate = () => {
     this.initSeedPointRendering();
-    this.runJFA();
+    this.runJumpFloodingAlgorithm();
   };
 
   /**
@@ -249,7 +240,7 @@ export class DistanceField extends HTMLElement {
    * Executes the Jump Flooding Algorithm (JFA) to compute the distance field.
    * It progressively reduces step sizes to refine the distance calculations.
    */
-  private runJFA() {
+  private runJumpFloodingAlgorithm() {
     let stepSize = 1 << Math.floor(Math.log2(Math.max(this.canvas.width, this.canvas.height)));
 
     // Perform passes with decreasing step sizes
@@ -388,7 +379,7 @@ export class DistanceField extends HTMLElement {
     this.initSeedPointRendering();
 
     // Rerun the Jump Flooding Algorithm with the new sizes
-    this.runJFA();
+    this.runJumpFloodingAlgorithm();
   };
 
   /**
