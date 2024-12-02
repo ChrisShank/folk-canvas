@@ -408,25 +408,45 @@ export class FolkShape extends HTMLElement {
         if (part === null) return;
 
         if (part.includes('resize')) {
-          console.log(part, event.movementX, event.movementY);
-          // This triggers a move and resize event :(
+          let newWidth = this.width;
+          let newHeight = this.height;
+          let newX = this.x;
+          let newY = this.y;
+
           if (part.includes('-n')) {
-            this.y += event.movementY;
-            this.height -= event.movementY;
+            const proposedHeight = this.height - event.movementY;
+            if (proposedHeight > 0) {
+              newHeight = proposedHeight;
+              newY = this.y + event.movementY;
+            }
           }
 
           if (part.endsWith('e')) {
-            this.width += event.movementX;
+            const proposedWidth = this.width + event.movementX;
+            if (proposedWidth > 0) {
+              newWidth = proposedWidth;
+            }
           }
 
           if (part.includes('-s')) {
-            this.height += event.movementY;
+            const proposedHeight = this.height + event.movementY;
+            if (proposedHeight > 0) {
+              newHeight = proposedHeight;
+            }
           }
 
           if (part.endsWith('w')) {
-            this.x += event.movementX;
-            this.width -= event.movementX;
+            const proposedWidth = this.width - event.movementX;
+            if (proposedWidth > 0) {
+              newWidth = proposedWidth;
+              newX = this.x + event.movementX;
+            }
           }
+
+          this.width = newWidth;
+          this.height = newHeight;
+          this.x = newX;
+          this.y = newY;
           return;
         }
 
