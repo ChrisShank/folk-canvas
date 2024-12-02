@@ -10,7 +10,6 @@ export class DistanceField extends HTMLElement {
   static tagName = 'distance-field';
 
   private textures: WebGLTexture[] = [];
-  private pingPongIndex: number = 0;
 
   private shapes!: NodeListOf<Element>;
   private canvas!: HTMLCanvasElement;
@@ -18,13 +17,16 @@ export class DistanceField extends HTMLElement {
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
   private shapeVAO!: WebGLVertexArrayObject;
-  private offsetCache: Map<number, Float32Array> = new Map();
 
   private jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
   private renderProgram!: WebGLProgram; // Shader program for final rendering
   private seedProgram!: WebGLProgram; // Shader program for rendering seed points
 
   private static readonly MAX_DISTANCE = 99999.0;
+
+  private positionBuffer: WebGLBuffer | null = null;
+
+  private isPingTexture: boolean = true;
 
   static define() {
     customElements.define(this.tagName, this);
@@ -105,10 +107,10 @@ export class DistanceField extends HTMLElement {
     }
     this.textures = [];
 
-    // Enable the EXT_color_buffer_float extension for high-precision floating-point textures
-    const ext = gl.getExtension('EXT_color_buffer_float');
+    // Enable the EXT_color_buffer_half_float extension for high-precision floating-point textures
+    const ext = gl.getExtension('EXT_color_buffer_half_float');
     if (!ext) {
-      console.error('EXT_color_buffer_float extension is not supported.');
+      console.error('EXT_color_buffer_half_float extension is not supported.');
       return;
     }
 
@@ -124,17 +126,7 @@ export class DistanceField extends HTMLElement {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
       // Use high-precision format for accurate distance calculations
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA32F, // Internal format: 32-bit floating point per channel
-        width,
-        height,
-        0,
-        gl.RGBA, // Format
-        gl.FLOAT, // Type
-        null
-      );
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
 
       this.textures.push(texture);
     }
@@ -158,15 +150,9 @@ export class DistanceField extends HTMLElement {
    */
   private initSeedPointRendering() {
     const gl = this.glContext;
-
-    // Set up Vertex Array Object (VAO) and buffer for shapes
-    this.shapeVAO = gl.createVertexArray()!;
-    gl.bindVertexArray(this.shapeVAO);
-    const positionBuffer = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions: number[] = [];
 
     // Collect positions and assign unique IDs to all shapes
-    const positions: number[] = [];
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getBoundingClientRect();
 
@@ -202,16 +188,21 @@ export class DistanceField extends HTMLElement {
       );
     });
 
-    // Upload positions to the GPU
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    if (!this.shapeVAO) {
+      this.shapeVAO = gl.createVertexArray()!;
+      gl.bindVertexArray(this.shapeVAO);
+      this.positionBuffer = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
 
-    // Configure vertex attributes
-    gl.useProgram(this.seedProgram);
-    const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-
-    gl.bindVertexArray(null);
+      const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+      gl.bindVertexArray(null);
+    } else {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer!);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
+    }
 
     // Render the seed points into the texture
     this.renderSeedPoints();
@@ -225,7 +216,7 @@ export class DistanceField extends HTMLElement {
     const gl = this.glContext;
 
     // Bind framebuffer to render to the seed texture
-    const seedTexture = this.textures[this.pingPongIndex % 2];
+    const seedTexture = this.textures[this.isPingTexture ? 0 : 1];
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, seedTexture, 0);
 
@@ -275,8 +266,8 @@ export class DistanceField extends HTMLElement {
     const gl = this.glContext;
 
     // Swap textures for ping-pong rendering
-    const inputTexture = this.textures[this.pingPongIndex % 2];
-    const outputTexture = this.textures[(this.pingPongIndex + 1) % 2];
+    const inputTexture = this.isPingTexture ? this.textures[0] : this.textures[1];
+    const outputTexture = this.isPingTexture ? this.textures[1] : this.textures[0];
 
     // Bind framebuffer to output texture
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
@@ -298,8 +289,8 @@ export class DistanceField extends HTMLElement {
     // Draw a fullscreen quad to process all pixels
     this.drawFullscreenQuad();
 
-    // Swap ping-pong index for the next pass
-    this.pingPongIndex++;
+    // Toggle the flag
+    this.isPingTexture = !this.isPingTexture;
   }
 
   /**
@@ -316,7 +307,7 @@ export class DistanceField extends HTMLElement {
     gl.useProgram(this.renderProgram);
 
     // Bind the final texture containing the computed distance field
-    const finalTexture = this.textures[this.pingPongIndex % 2];
+    const finalTexture = this.textures[this.isPingTexture ? 0 : 1];
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, finalTexture);
     gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_texture'), 0);
@@ -403,19 +394,13 @@ export class DistanceField extends HTMLElement {
    * @returns A Float32Array of offsets.
    */
   private computeOffsets(stepSize: number): Float32Array {
-    if (this.offsetCache.has(stepSize)) {
-      return this.offsetCache.get(stepSize)!;
-    }
-
     const offsets = [];
     for (let y = -1; y <= 1; y++) {
       for (let x = -1; x <= 1; x++) {
         offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
       }
     }
-    const offsetArray = new Float32Array(offsets);
-    this.offsetCache.set(stepSize, offsetArray);
-    return offsetArray;
+    return new Float32Array(offsets);
   }
 
   /**
@@ -463,7 +448,7 @@ export class DistanceField extends HTMLElement {
  * Transforms vertices to normalized device coordinates and passes texture coordinates to the fragment shader.
  */
 const commonVertShader = vert`#version 300 es
-precision highp float;
+precision mediump float;
 in vec2 a_position;
 out vec2 v_texCoord;
 
@@ -477,7 +462,7 @@ void main() {
  * Updates the nearest seed point and distance for each pixel by examining neighboring pixels.
  */
 const jfaFragShader = frag`#version 300 es
-precision highp float;
+precision mediump float;
 precision mediump int;
 
 in vec2 v_texCoord;
@@ -525,7 +510,7 @@ void main() {
  * Converts distances to colors for visualization.
  */
 const renderFragShader = frag`#version 300 es
-precision highp float;
+precision mediump float;
 
 in vec2 v_texCoord;
 out vec4 outColor;
@@ -560,7 +545,7 @@ void main() {
  * Outputs the shape ID to the fragment shader.
  */
 const seedVertShader = vert`#version 300 es
-precision highp float;
+precision mediump float;
 
 in vec3 a_position; // x, y position and shapeID as z
 flat out float v_shapeID;
@@ -575,7 +560,7 @@ void main() {
  * Initializes the texture with seed point positions and shape IDs.
  */
 const seedFragShader = frag`#version 300 es
-precision highp float;
+precision mediump float;
 
 flat in float v_shapeID;
 uniform vec2 u_canvasSize;

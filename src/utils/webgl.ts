@@ -47,8 +47,7 @@ export class WebGLUtils {
     canvas.width = width;
     canvas.height = height;
 
-    // Initialize WebGL2 context
-    const gl = canvas.getContext('webgl2');
+    const gl = canvas.getContext('webgl2', { antialias: true });
     if (!gl) {
       console.error('WebGL2 is not available.');
       return { gl: undefined, canvas };
