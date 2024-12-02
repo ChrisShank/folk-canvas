@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      event-propagator {
+      folk-event-propagator {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -84,38 +84,38 @@
       <folk-timer></folk-timer>
     </folk-shape>
 
-    <event-propagator
+    <folk-event-propagator
       source="#recipe"
       target="folk-llm"
       triggers="click"
       expression="prompt: `double this list of ingredients '${from.innerHTML}'`"
-    ></event-propagator>
+    ></folk-event-propagator>
 
-    <event-propagator
+    <folk-event-propagator
       source="folk-llm"
       target="folk-timer"
       triggers="started"
       expression="$target.reset(); $target.start()"
     >
-    </event-propagator>
+    </folk-event-propagator>
 
-    <event-propagator
+    <folk-event-propagator
       source="folk-llm"
       target="folk-timer"
       triggers="finished"
       expression="$target.stop();"
-    ></event-propagator>
+    ></folk-event-propagator>
 
     <script type="module">
-      import { FolkShape } from '../src/canvas/folk-shape.ts';
+      import { FolkShape } from '../src/folk-shape.ts';
       import { FolkLLM } from '../src/folk-llm.ts';
       import { FolkTimer } from '../src/folk-timer.ts';
-      import { EventPropagator } from '../src/arrows/event-propagator.ts';
+      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
 
       FolkShape.define();
       FolkLLM.define();
       FolkTimer.define();
-      EventPropagator.define();
+      FolkEventPropagator.define();
     </script>
   </body>
 </html>

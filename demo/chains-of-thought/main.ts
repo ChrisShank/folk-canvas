@@ -1,6 +1,6 @@
-import { FolkShape } from '../../src/canvas/folk-shape.ts';
-import { FolkConnection } from '../../src/arrows/folk-connection.ts';
-import { FileSaver } from '../../src/file-system.ts';
+import { FolkShape } from '../../src/folk-shape.ts';
+import { FolkConnection } from '../../src/folk-connection.ts';
+import { FileSaver } from '../src/file-system.ts';
 
 declare global {
   interface HTMLElementTagNameMap {

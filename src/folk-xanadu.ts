@@ -1,5 +1,5 @@
-import { AbstractArrow } from './arrows/abstract-arrow.js';
-import { Vertex, verticesToPolygon } from './arrows/utils.js';
+import { AbstractArrow } from './abstract-arrow.js';
+import { Vertex, verticesToPolygon } from './common/utils.js';
 
 export class FolkXanadu extends AbstractArrow {
   static tagName = 'folk-xanadu';

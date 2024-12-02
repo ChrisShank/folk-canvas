@@ -1,5 +1,5 @@
-import { FolkShape } from '../canvas/folk-shape';
-import { ClientRectObserverManager, ClientRectObserverEntry } from '../client-rect-observer.ts';
+import { FolkShape } from '../folk-shape.ts';
+import { ClientRectObserverManager, ClientRectObserverEntry } from './client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
 
@@ -38,7 +38,7 @@ class ObservedElements {
     }
   }
 
-  getElement(selector) {
+  getElement(selector: string) {
     return this.#elements.find((e) => e.selector === selector)?.element;
   }
 
@@ -61,11 +61,11 @@ if (window.parent !== window) {
     });
   }
 
-  function onGeometryChange(event) {
+  function onGeometryChange(event: any) {
     window.parent.postMessage({
       type: 'folk-element-change',
       selector: observedSelectors.get(event.target),
-      boundingBox: event.target.getClientRect(),
+      boundingBox: event.target?.getClientRect(),
     });
   }
 

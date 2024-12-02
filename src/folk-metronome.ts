@@ -17,7 +17,7 @@ export class FolkMetronome extends HTMLElement {
     this.addEventListener('click', this);
   }
 
-  #timeoutId = -1;
+  #timeoutId: NodeJS.Timeout | -1 = -1;
 
   get isPlaying() {
     return this.#timeoutId !== -1;

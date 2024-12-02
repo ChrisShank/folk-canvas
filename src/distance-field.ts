@@ -1,6 +1,6 @@
-import { frag, vert } from './utils/tags.ts';
-import { WebGLUtils } from './utils/webgl.ts';
-import type { FolkShape } from './canvas/folk-shape.ts';
+import { frag, vert } from './common/tags.ts';
+import { WebGLUtils } from './common/webgl.ts';
+import type { FolkShape } from './folk-shape.ts';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.

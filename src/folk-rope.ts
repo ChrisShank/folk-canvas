@@ -1,8 +1,8 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
-import { Vector, type Vector2 } from '../utils/Vector2.ts';
+import { Vector, type Vector2 } from './common/Vector2.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
-import { Vertex } from './utils.ts';
+import { Vertex } from './common/utils.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 

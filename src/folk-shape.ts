@@ -1,4 +1,4 @@
-import { ResizeObserverManager } from '../resize-observer';
+import { ResizeObserverManager } from './resize-observer';
 
 const resizeObserver = new ResizeObserverManager();
 

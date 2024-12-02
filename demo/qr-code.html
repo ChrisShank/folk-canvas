@@ -20,14 +20,14 @@
         field-sizing: content;
       }
 
-      event-propagator {
+      folk-event-propagator {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
         pointer-events: none;
       }
 
-      body:not([rope-mode]) event-propagator {
+      body:not([rope-mode]) folk-event-propagator {
         display: none;
       }
 
@@ -56,34 +56,34 @@
       <sl-qr-code size="200"></sl-qr-code>
     </folk-shape>
 
-    <event-propagator
+    <folk-event-propagator
       source="textarea"
       target="sl-qr-code"
       triggers="input"
       expression="value: from.value"
-    ></event-propagator>
+    ></folk-event-propagator>
 
-    <event-propagator
+    <folk-event-propagator
       source="input[type='range']"
       target="sl-qr-code"
       triggers="input"
       expression="radius: from.value"
-    ></event-propagator>
+    ></folk-event-propagator>
 
-    <event-propagator
+    <folk-event-propagator
       source="input[type='color']"
       target="sl-qr-code"
       triggers="input"
       expression="fill: from.value"
-    ></event-propagator>
+    ></folk-event-propagator>
 
     <script type="module">
       import 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.18.0/cdn/components/qr-code/qr-code.js';
-      import { FolkShape } from '../src/canvas/folk-shape.ts';
-      import { EventPropagator } from '../src/arrows/event-propagator.ts';
+      import { FolkShape } from '../src/folk-shape.ts';
+      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
 
       FolkShape.define();
-      EventPropagator.define();
+      FolkEventPropagator.define();
 
       const ropeMode = document.querySelector('input[type="checkbox"]');
 

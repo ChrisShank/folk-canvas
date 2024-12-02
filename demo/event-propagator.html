@@ -23,7 +23,7 @@
         z-index: 10;
       }
 
-      event-propagator {
+      folk-event-propagator {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -34,29 +34,29 @@
   <body>
     <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
     <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
-    <event-propagator
+    <folk-event-propagator
       source="#box1"
       target="#box2"
       triggers="click"
       expression="textContent: _ + '!'"
-    ></event-propagator>
+    ></folk-event-propagator>
 
     <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
     <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
-    <event-propagator
+    <folk-event-propagator
       source="#box3"
       target="#box4"
       triggers="move"
       expression="y: from.x,
 rotate: from.x"
-    ></event-propagator>
+    ></folk-event-propagator>
 
     <script type="module">
-      import { FolkShape } from '../src/canvas/folk-shape.ts';
-      import { EventPropagator } from '../src/arrows/event-propagator.ts';
+      import { FolkShape } from '../src/folk-shape.ts';
+      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
 
       FolkShape.define();
-      EventPropagator.define();
+      FolkEventPropagator.define();
     </script>
   </body>
 </html>

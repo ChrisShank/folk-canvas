@@ -1,6 +1,6 @@
-import { collisionDetection } from './collision';
+import { collisionDetection } from './common/collision.ts';
 import { FolkHull } from './folk-hull';
-import { FolkShape } from './canvas/folk-shape.ts';
+import { FolkShape } from './folk-shape.ts';
 
 interface ElementConstructor<E extends Element = Element> {
   new (): E;
@@ -145,7 +145,7 @@ export class FolkProximity extends HTMLElement {
     this.addEventListener('resize', this.#handleProximity);
   }
 
-  #handleProximity = (e) => {
+  #handleProximity = (e: Event) => {
     const el = e.target as FolkShape;
 
     const cluster = this.#findCluster(el);
@@ -186,7 +186,7 @@ export class FolkProximity extends HTMLElement {
     }
   };
 
-  #findCluster(element) {
+  #findCluster(element: FolkShape) {
     for (const cluster of this.#clusters) {
       if (cluster.isElementInCluster(element)) return cluster;
     }

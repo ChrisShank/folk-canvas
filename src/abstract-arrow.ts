@@ -1,6 +1,6 @@
-import { FolkShape } from '../canvas/folk-shape.ts';
-import { parseVertex } from './utils.ts';
-import { ClientRectObserverEntry, ClientRectObserverManager } from '../client-rect-observer.ts';
+import { FolkShape } from './folk-shape.ts';
+import { parseVertex } from './common/utils.ts';
+import { ClientRectObserverEntry, ClientRectObserverManager } from './common/client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
 

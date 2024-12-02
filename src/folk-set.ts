@@ -1,4 +1,4 @@
-import { ClientRectObserverEntry, ClientRectObserverManager } from './client-rect-observer.ts';
+import { ClientRectObserverEntry, ClientRectObserverManager } from './common/client-rect-observer.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
 

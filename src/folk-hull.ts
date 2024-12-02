@@ -1,5 +1,5 @@
 import { FolkSet } from './folk-set';
-import { Vertex, verticesToPolygon } from './arrows/utils';
+import { Vertex, verticesToPolygon } from './common/utils';
 
 declare global {
   interface HTMLElementTagNameMap {

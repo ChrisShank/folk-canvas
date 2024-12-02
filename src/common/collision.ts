@@ -1,4 +1,4 @@
-export function collisionDetection(rect1, rect2, proximity = 0) {
+export function collisionDetection(rect1: DOMRect, rect2: DOMRect, proximity = 0) {
   return (
     rect1.left - rect2.right < proximity &&
     rect2.left - rect1.right < proximity &&

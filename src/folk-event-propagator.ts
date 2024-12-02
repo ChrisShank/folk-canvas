@@ -1,26 +1,27 @@
+import { css } from './common/tags.ts';
 import { FolkRope } from './folk-rope.ts';
 
 const styles = new CSSStyleSheet();
-styles.replaceSync(`
-textarea {
-  position: absolute;
-  width: auto;
-  min-width: 3ch;
-  height: auto;
-  resize: none;
-  background: rgba(256, 256, 256, 0.8);
-  border: 1px solid #ccc;
-  padding: 4px;
-  pointer-events: auto;
-  overflow: hidden;
-  field-sizing: content;
-  translate: -50% -50%;
-  border-radius: 5px;
-}  
+styles.replaceSync(css`
+  textarea {
+    position: absolute;
+    width: auto;
+    min-width: 3ch;
+    height: auto;
+    resize: none;
+    background: rgba(256, 256, 256, 0.8);
+    border: 1px solid #ccc;
+    padding: 4px;
+    pointer-events: auto;
+    overflow: hidden;
+    field-sizing: content;
+    translate: -50% -50%;
+    border-radius: 5px;
+  }
 `);
 
-export class EventPropagator extends FolkRope {
-  static override tagName = 'event-propagator';
+export class FolkEventPropagator extends FolkRope {
+  static override tagName = 'folk-event-propagator';
 
   #triggers: string[] = [];
   get triggers() {

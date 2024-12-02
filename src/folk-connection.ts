@@ -1,6 +1,6 @@
 import { getBoxToBoxArrow } from 'perfect-arrows';
 import { AbstractArrow } from './abstract-arrow.ts';
-import { getSvgPathFromStroke, pointsOnBezierCurves } from './utils.ts';
+import { getSvgPathFromStroke, pointsOnBezierCurves } from './common/utils.ts';
 import { getStroke, StrokeOptions } from 'perfect-freehand';
 
 export type Arrow = [
