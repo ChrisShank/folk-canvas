@@ -30,12 +30,24 @@
         color: #2c3e50;
         margin: 0;
         margin-bottom: 1em;
+        text-align: center;
       }
 
       h2 {
         color: #2c3e50;
         font-size: 1.2em;
         margin: 1em 0 0;
+      }
+
+      #questions {
+        font-size: 0.75rem;
+        font-style: italic;
+        margin-bottom: 2rem;
+        text-align: center;
+
+        li::before {
+          display: none;
+        }
       }
 
       ul {
@@ -63,7 +75,16 @@
   </head>
   <body>
     <main>
-      <h1>Folk Canvas Demos</h1>
+      <h1>Folk Canvas Demos <a href="https://github.com/folk-canvas/folk-canvas">(Github)</a></h1>
+      <ul id="questions">
+        <li>How do we make the web feel more alive and soft?</li>
+        <li>How can we more easily connect web pages and their data?</li>
+        <li>How easily can we turn a HTML document into a spatial canvas and visa versa?</li>
+        <li>What would it look like if the browser had primitives for building spatial canvases?</li>
+        <li>How can someone annotate, re-layout, and program web pages they did not make or distribute?</li>
+        <li>How can we compose visual programming interfaces, hypermedia, and LLMs that work on any web page?</li>
+      </ul>
+
       <ul>
         {{ LINKS }}
       </ul>

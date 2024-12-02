@@ -2,13 +2,12 @@
 
 ## Explorations
 
+- How do we make the web feel more alive and soft?
+- How can we more easily connect web pages and their data?
+- How easily can we turn a HTML document into a spatial canvas and visa versa?
 - What would it look like if the browser had primitives for building spatial canvases?
-- How easily can we turn a document into a canvas?
-- Can we incrementally change ownership and control of the web from single-origin server to the user?
-- How can someone more easily annotate and re-layout web pages they did not make?
-- How can we more easily compose and connect web pages and their data?
-  - How can we compose together live and visual programming notations?
-- Can we have lightweight visual and live scripting for web pages?
+- How can someone annotate, re-layout, and program web pages they did not make or distribute?
+- How can we compose visual programming interfaces, hypermedia, and LLMs that work on any web page?
 
 ## Development
 

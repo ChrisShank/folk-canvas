@@ -56,16 +56,19 @@ export class FolkRope extends AbstractArrow {
     super();
     this.#svg.style.height = '100%';
     this.#svg.style.width = '100%';
+    this.#svg.style.pointerEvents = 'none';
     this.#svg.appendChild(this.#path);
     this.#svg.appendChild(this.#path2);
 
     this.#shadow.appendChild(this.#svg);
 
-    this.#path.setAttribute('stroke-width', '2');
+    this.#path.setAttribute('stroke-width', '3');
     this.#path.setAttribute('fill', 'none');
+    this.#path.style.pointerEvents = 'auto';
 
-    this.#path2.setAttribute('stroke-width', '2');
+    this.#path2.setAttribute('stroke-width', '3');
     this.#path2.setAttribute('fill', 'none');
+    this.#path2.style.pointerEvents = 'auto';
 
     this.stroke = this.getAttribute('stroke') || 'black';
   }
