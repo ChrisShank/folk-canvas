@@ -9,7 +9,7 @@ const input: Record<string, string> = files.reduce((acc, file) => {
   acc[file.replace('.html', '')] = resolve(demoDir, file);
   return acc;
 }, {} as Record<string, string>);
-console.log(input);
+
 const linkGenerator = (): Plugin => {
   return {
     name: 'link-generator',
