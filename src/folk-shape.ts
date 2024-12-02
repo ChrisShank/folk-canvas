@@ -1,3 +1,4 @@
+import { css, html } from './common/tags';
 import { ResizeObserverManager } from './resize-observer';
 
 const resizeObserver = new ResizeObserverManager();
@@ -31,112 +32,117 @@ export class RotateEvent extends CustomEvent<RotateEventDetail> {
 export type Dimension = number | 'auto';
 
 const styles = new CSSStyleSheet();
-styles.replaceSync(`
-:host {
-  display: block;
-  position: absolute;
-  cursor: var(--fc-move, move);
-  box-sizing: border-box;
-}
+styles.replaceSync(css`
+  :host {
+    display: block;
+    position: absolute;
+    cursor: var(--fc-move, move);
+    box-sizing: border-box;
+  }
 
-:host::before {
-  content: '';
-  position: absolute;
-  inset: -15px -15px -15px -15px;
-  z-index: -1;
-}
+  :host::before {
+    content: '';
+    position: absolute;
+    inset: -15px -15px -15px -15px;
+    z-index: -1;
+  }
 
-div {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  cursor: default;
-}
+  div {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    cursor: default;
+  }
 
-:host(:focus-within) {
-  z-index: calc(infinity - 1);
-  outline: solid 1px hsl(214, 84%, 56%);
-}
+  :host(:focus-within) {
+    z-index: calc(infinity - 1);
+    outline: solid 1px hsl(214, 84%, 56%);
+  }
 
-:host(:hover) {
-  outline: solid 2px hsl(214, 84%, 56%);
-}
+  :host(:hover) {
+    outline: solid 2px hsl(214, 84%, 56%);
+  }
 
-:host(:state(move)),
-:host(:state(rotate)),
-:host(:state(resize-nw)),
-:host(:state(resize-ne)),
-:host(:state(resize-se)),
-:host(:state(resize-sw)), {
-  user-select: none;
-}
+  :host(:state(move)),
+  :host(:state(rotate)),
+  :host(:state(resize-nw)),
+  :host(:state(resize-ne)),
+  :host(:state(resize-se)),
+  :host(:state(resize-sw)) {
+    user-select: none;
+  }
 
-[part="resize-nw"], 
-[part="resize-ne"], 
-[part="resize-se"], 
-[part="resize-sw"] {
-  display: block;
-  position: absolute;
-  box-sizing: border-box;
-  padding: 0;
-  background: hsl(210, 20%, 98%);
-  z-index: calc(infinity);
-  width: 13px;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border: 1.5px solid hsl(214, 84%, 56%);
-  border-radius: 2px;
-}
+  [part='resize-nw'],
+  [part='resize-ne'],
+  [part='resize-se'],
+  [part='resize-sw'] {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    padding: 0;
+    background: hsl(210, 20%, 98%);
+    z-index: calc(infinity);
+    width: 13px;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid hsl(214, 84%, 56%);
+    border-radius: 2px;
+  }
 
-[part="resize-nw"] {
-  top: 0;
-  left: 0;
-}
-  
-[part="resize-ne"] {
-  top: 0;
-  left: 100%;
-}
-  
-[part="resize-se"] {
-  top: 100%;
-  left: 100%;
-}
-    
-[part="resize-sw"] {
-  top: 100%;
-  left: 0;
-}
+  [part='resize-nw'] {
+    top: 0;
+    left: 0;
+  }
 
-[part="resize-nw"], [part="resize-se"] {
-  cursor: var(--fc-nwse-resize, nwse-resize)
-}
-    
-[part="resize-ne"], [part="resize-sw"] {
-  cursor: var(--fc-nesw-resize, nesw-resize)
-}
+  [part='resize-ne'] {
+    top: 0;
+    left: 100%;
+  }
 
-[part="rotate"] {
-  z-index: calc(infinity);
-  display: block;
-  position: absolute;
-  box-sizing: border-box;
-  padding: 0;
-  border: 1.5px solid hsl(214, 84%, 56%);
-  border-radius: 50%;
-  background: hsl(210, 20%, 98%);
-  width: 13px;
-  aspect-ratio: 1;
-  top: 0;
-  left: 50%;
-  translate: -50% -150%;
-  cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>") 16 16, pointer;
-}
+  [part='resize-se'] {
+    top: 100%;
+    left: 100%;
+  }
 
-:host(:not(:focus-within)) [part^="resize"], :host(:not(:focus-within)) [part="rotate"] {
-  opacity: 0;
-  cursor: default;
-}
+  [part='resize-sw'] {
+    top: 100%;
+    left: 0;
+  }
+
+  [part='resize-nw'],
+  [part='resize-se'] {
+    cursor: var(--fc-nwse-resize, nwse-resize);
+  }
+
+  [part='resize-ne'],
+  [part='resize-sw'] {
+    cursor: var(--fc-nesw-resize, nesw-resize);
+  }
+
+  [part='rotate'] {
+    z-index: calc(infinity);
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    padding: 0;
+    border: 1.5px solid hsl(214, 84%, 56%);
+    border-radius: 50%;
+    background: hsl(210, 20%, 98%);
+    width: 13px;
+    aspect-ratio: 1;
+    top: 0;
+    left: 50%;
+    translate: -50% -150%;
+    cursor: url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(45 16 16)' filter='url(%23shadow)'><path d='M22.4789 9.45728L25.9935 12.9942L22.4789 16.5283V14.1032C18.126 14.1502 14.6071 17.6737 14.5675 22.0283H17.05L13.513 25.543L9.97889 22.0283H12.5674C12.6071 16.5691 17.0214 12.1503 22.4789 12.1031L22.4789 9.45728Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M21.4789 7.03223L27.4035 12.9945L21.4789 18.9521V15.1868C18.4798 15.6549 16.1113 18.0273 15.649 21.0284H19.475L13.5128 26.953L7.55519 21.0284H11.6189C12.1243 15.8155 16.2679 11.6677 21.4789 11.1559L21.4789 7.03223ZM22.4789 12.1031C17.0214 12.1503 12.6071 16.5691 12.5674 22.0284H9.97889L13.513 25.543L17.05 22.0284H14.5675C14.5705 21.6896 14.5947 21.3558 14.6386 21.0284C15.1157 17.4741 17.9266 14.6592 21.4789 14.1761C21.8063 14.1316 22.1401 14.1069 22.4789 14.1032V16.5284L25.9935 12.9942L22.4789 9.45729L22.4789 12.1031Z' fill='white'/></g></svg>")
+        16 16,
+      pointer;
+  }
+
+  :host(:not(:focus-within)) [part^='resize'],
+  :host(:not(:focus-within)) [part='rotate'] {
+    opacity: 0;
+    cursor: default;
+  }
 `);
 
 declare global {
@@ -258,13 +264,12 @@ export class FolkShape extends HTMLElement {
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    shadowRoot.innerHTML = `
-  <button part="rotate"></button>
-  <button part="resize-nw"></button>
-  <button part="resize-ne"></button>
-  <button part="resize-se"></button>
-  <button part="resize-sw"></button>
-  <div><slot></slot></div>`;
+    shadowRoot.innerHTML = html` <button part="rotate"></button>
+      <button part="resize-nw"></button>
+      <button part="resize-ne"></button>
+      <button part="resize-se"></button>
+      <button part="resize-sw"></button>
+      <div><slot></slot></div>`;
 
     this.height = Number(this.getAttribute('height')) || 'auto';
     this.width = Number(this.getAttribute('width')) || 'auto';
@@ -286,9 +291,7 @@ export class FolkShape extends HTMLElement {
       top: y,
       right: x + width,
       bottom: y + height,
-      toJSON() {
-        return this;
-      },
+      toJSON: undefined as any,
     };
     // return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
   }
