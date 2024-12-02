@@ -45,6 +45,8 @@ export class DistanceField extends HTMLElement {
 
     // Start the JFA process
     this.runJFA();
+
+    window.addEventListener('resize', this.handleResize);
   }
 
   // Lifecycle hooks
@@ -62,11 +64,12 @@ export class DistanceField extends HTMLElement {
       geometry.removeEventListener('move', this.handleGeometryUpdate);
       geometry.removeEventListener('resize', this.handleGeometryUpdate);
     });
+
+    window.removeEventListener('resize', this.handleResize);
   }
 
   // Handle updates from geometries
   private handleGeometryUpdate = () => {
-    console.log('handleGeometryUpdate');
     // Re-render seed points and rerun JFA
     this.initSeedPointRendering();
     this.runJFA();
@@ -98,8 +101,6 @@ export class DistanceField extends HTMLElement {
   }
 
   private initShaders() {
-    const gl = this.gl;
-
     // Shader sources
     const vertexShaderSource = vert`#version 300 es
     precision highp float;
@@ -198,15 +199,18 @@ export class DistanceField extends HTMLElement {
 
     this.offsets = new Float32Array(offsets);
 
-    // Compile JFA shaders
-    const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-    this.program = this.createProgram(vertexShader, fragmentShader);
+    // Compile JFA shaders using the utility function
+    this.program = this.compileShaderProgram(vertexShaderSource, fragmentShaderSource);
 
-    // Compile display shaders
-    const displayVertexShader = this.createShader(gl.VERTEX_SHADER, displayVertexShaderSource);
-    const displayFragmentShader = this.createShader(gl.FRAGMENT_SHADER, displayFragmentShaderSource);
-    this.displayProgram = this.createProgram(displayVertexShader, displayFragmentShader);
+    // Compile display shaders using the utility function
+    this.displayProgram = this.compileShaderProgram(displayVertexShaderSource, displayFragmentShaderSource);
+  }
+
+  private compileShaderProgram(vertexSource: string, fragmentSource: string): WebGLProgram {
+    const gl = this.gl;
+    const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentSource);
+    return this.createProgram(vertexShader, fragmentShader);
   }
 
   private createShader(type: GLenum, source: string): WebGLShader {
@@ -306,7 +310,7 @@ export class DistanceField extends HTMLElement {
     out vec4 outColor;
 
     void main() {
-      vec2 seedCoord = gl_FragCoord.xy / u_resolution;
+      vec2 seedCoord = gl_FragCoord.xy / vec2(${this.canvas.width.toFixed(1)}, ${this.canvas.height.toFixed(1)});
       outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords, shape ID, initial distance 0
     }`;
 
@@ -423,29 +427,13 @@ export class DistanceField extends HTMLElement {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
 
-    // Check framebuffer status
-    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    if (status !== gl.FRAMEBUFFER_COMPLETE) {
-      console.error('Framebuffer is incomplete:', status.toString(16));
-      return;
-    }
-
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-
     // Use shader program
     gl.useProgram(this.program);
 
-    // Adjust offsets based on step size and resolution
-    const adjustedOffsets = [];
-    for (let i = 0; i < this.offsets.length; i += 2) {
-      const offsetX = (this.offsets[i] * stepSize) / this.canvas.width;
-      const offsetY = (this.offsets[i + 1] * stepSize) / this.canvas.height;
-      adjustedOffsets.push(offsetX, offsetY);
-    }
-
-    // Set the offsets uniform
+    // Compute and set the offsets uniform
+    const offsets = this.computeOffsets(stepSize);
     const offsetsLocation = gl.getUniformLocation(this.program, 'u_offsets');
-    gl.uniform2fv(offsetsLocation, new Float32Array(adjustedOffsets));
+    gl.uniform2fv(offsetsLocation, offsets);
 
     // Bind input texture
     gl.activeTexture(gl.TEXTURE0);
@@ -516,5 +504,27 @@ export class DistanceField extends HTMLElement {
     );
 
     gl.bindVertexArray(null);
+  }
+
+  // Handle window resize
+  private handleResize = () => {
+    // Update canvas size
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+
+    // Re-initialize WebGL resources
+    this.initPingPongTextures();
+    this.renderSeedPoints();
+    this.runJFA();
+  };
+
+  private computeOffsets(stepSize: number): Float32Array {
+    const offsets = [];
+    for (let y = -1; y <= 1; y++) {
+      for (let x = -1; x <= 1; x++) {
+        offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
+      }
+    }
+    return new Float32Array(offsets);
   }
 }

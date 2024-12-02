@@ -1,19 +1,29 @@
-export function glsl(strings: TemplateStringsArray) {
-  return strings[0];
+export function glsl(strings: TemplateStringsArray, ...values: any[]) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] || '');
+  }, '');
 }
 
-export function vert(strings: TemplateStringsArray) {
-  return strings[0];
+export function vert(strings: TemplateStringsArray, ...values: any[]) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] || '');
+  }, '');
 }
 
-export function frag(strings: TemplateStringsArray) {
-  return strings[0];
+export function frag(strings: TemplateStringsArray, ...values: any[]) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] || '');
+  }, '');
 }
 
-export function css(strings: TemplateStringsArray) {
-  return strings[0];
+export function css(strings: TemplateStringsArray, ...values: any[]) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] || '');
+  }, '');
 }
 
-export function html(strings: TemplateStringsArray) {
-  return strings[0];
+export function html(strings: TemplateStringsArray, ...values: any[]) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] || '');
+  }, '');
 }
