@@ -1,5 +1,6 @@
 import { frag, vert } from './utils/tags.ts';
 import { WebGLUtils } from './utils/webgl.ts';
+import type { FolkGeometry } from './canvas/fc-geometry.ts';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.
@@ -11,7 +12,7 @@ export class DistanceField extends HTMLElement {
 
   private textures: WebGLTexture[] = [];
 
-  private shapes!: NodeListOf<Element>;
+  private shapes!: NodeListOf<FolkGeometry>;
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
@@ -154,13 +155,14 @@ export class DistanceField extends HTMLElement {
 
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
-      const rect = geometry.getBoundingClientRect();
+      const rect = geometry.getClientRect();
 
+      const windowWidth = window.innerWidth;
       // Convert DOM coordinates to Normalized Device Coordinates (NDC)
-      const x1 = (rect.left / window.innerWidth) * 2 - 1;
-      const y1 = -((rect.top / window.innerHeight) * 2 - 1);
-      const x2 = (rect.right / window.innerWidth) * 2 - 1;
-      const y2 = -((rect.bottom / window.innerHeight) * 2 - 1);
+      const x1 = (rect.left / windowWidth) * 2 - 1;
+      const y1 = -((rect.top / windowWidth) * 2 - 1);
+      const x2 = (rect.right / windowWidth) * 2 - 1;
+      const y2 = -((rect.bottom / windowWidth) * 2 - 1);
 
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
@@ -394,7 +396,7 @@ export class DistanceField extends HTMLElement {
    * @returns A Float32Array of offsets.
    */
   private computeOffsets(stepSize: number): Float32Array {
-    const offsets = [];
+    const offsets: number[] = [];
     for (let y = -1; y <= 1; y++) {
       for (let x = -1; x <= 1; x++) {
         offsets.push((x * stepSize) / this.canvas.width, (y * stepSize) / this.canvas.height);
