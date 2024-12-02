@@ -46,55 +46,50 @@ export class FolkEventPropagator extends FolkRope {
   set expression(expression) {
     this.mend();
     this.#expression = expression;
+    const processedExp = expression.trim();
+
+    const codeLines: string[] = [];
+
+    // Split the expression into lines, handling different line endings
+    const lines = processedExp.split(/\r?\n/);
+
+    for (const line of lines) {
+      let line_trimmed = line.trim();
+      if (!line_trimmed) continue;
+
+      // Remove trailing comma if it exists (only if it's at the very end of the line)
+      if (line_trimmed.endsWith(',')) {
+        line_trimmed = line_trimmed.slice(0, -1).trim();
+      }
+
+      // Find the first colon index, which separates the key and value.
+      // Colons can still be used in ternary operators or other expressions,
+      const colonIndex = line_trimmed.indexOf(':');
+      if (colonIndex === -1) {
+        // Line without a colon, skip or handle error
+        console.warn(`Skipping line without colon: "${line_trimmed}"`);
+        continue;
+      }
+
+      const key = line_trimmed.slice(0, colonIndex).trim();
+      const value = line_trimmed.slice(colonIndex + 1).trim();
+
+      if (key.endsWith('()')) {
+        // If the key is a function call, execute it if the condition is true
+        const methodName = key.slice(0, -2);
+        codeLines.push(`if (${value}) { to.${methodName}(); }`);
+      } else {
+        // For property assignments, assign the value directly
+        codeLines.push(`to.${key} = ${value};`);
+      }
+    }
+
+    const functionBody = codeLines.join('\n');
+
     try {
-      const processedExp = expression.trim();
-
-      // Process each line, looking for the first ':' to separate key from value
-      const processedProps = processedExp
-        .split('\n')
-        .map((line) => {
-          const line_trimmed = line.trim();
-          if (!line_trimmed || line_trimmed === '{' || line_trimmed === '}') return '';
-
-          // Remove trailing comma if it exists
-          const withoutComma = line_trimmed.replace(/,\s*$/, '');
-
-          const colonIndex = withoutComma.indexOf(':');
-          if (colonIndex === -1) return withoutComma;
-
-          const key = withoutComma.slice(0, colonIndex).trim();
-          const value = withoutComma.slice(colonIndex + 1).trim();
-
-          return `${key}: (function() { const _ = to[${JSON.stringify(key)}]; return ${value}; })()`;
-        })
-        .filter((line) => line)
-        .join(',\n');
-
-      this.#function = new Function(
-        'from',
-        'to',
-        'event',
-        `
-      return {
-        ${processedProps}
-      };
-    `
-      );
-
-      console.log(processedProps);
-
-      this.#function = new Function(
-        'from',
-        'to',
-        'event',
-        `
-        return {
-          ${processedProps}
-        };
-      `
-      );
+      this.#function = new Function('from', 'to', 'event', functionBody);
     } catch (error) {
-      console.warn('Failed to parse expression:', error);
+      console.warn('Failed to parse expression:', error, functionBody);
       this.cut();
       this.#function = null;
     }
@@ -184,10 +179,26 @@ export class FolkEventPropagator extends FolkRope {
     if (!this.#function) return;
 
     try {
-      const assignments = this.#function(this.sourceElement, this.targetElement, event);
-      Object.assign(this.targetElement, assignments);
+      const toProxy = new Proxy(this.targetElement, {
+        set(target, prop, value, receiver) {
+          if (!(prop in target)) {
+            throw new Error(`Property '${String(prop)}' does not exist on target element.`);
+          }
+          return Reflect.set(target, prop, value, receiver);
+        },
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop, receiver);
+          if (typeof value === 'function') {
+            return value.bind(target);
+          } else {
+            return value;
+          }
+        },
+      });
+
+      this.#function(this.sourceElement, toProxy, event);
     } catch (error) {
-      console.warn('Failed to parse expression:', error);
+      console.warn('Failed to evaluate expression:', error);
       this.stroke = 'red';
     }
   };

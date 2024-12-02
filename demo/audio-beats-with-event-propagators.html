@@ -49,14 +49,14 @@
       source="folk-metronome"
       target="#kick"
       triggers="beat"
-      expression="if ($source.beat % 2 === 0) $target.play();"
+      expression="play(): from.beat === 1"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="folk-metronome"
       target="#hat"
       triggers="beat"
-      expression="if ($source.beat > 2) $target.play();"
+      expression="play(): from.beat % 3"
     ></folk-event-propagator>
 
     <script type="module">
