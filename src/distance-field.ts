@@ -158,11 +158,12 @@ export class DistanceField extends HTMLElement {
       const rect = geometry.getClientRect();
 
       const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
       // Convert DOM coordinates to Normalized Device Coordinates (NDC)
       const x1 = (rect.left / windowWidth) * 2 - 1;
-      const y1 = -((rect.top / windowWidth) * 2 - 1);
+      const y1 = -((rect.top / windowHeight) * 2 - 1);
       const x2 = (rect.right / windowWidth) * 2 - 1;
-      const y2 = -((rect.bottom / windowWidth) * 2 - 1);
+      const y2 = -((rect.bottom / windowHeight) * 2 - 1);
 
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
