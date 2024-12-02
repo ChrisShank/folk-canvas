@@ -74,8 +74,11 @@ export class FolkEventPropagator extends FolkRope {
       const key = line_trimmed.slice(0, colonIndex).trim();
       const value = line_trimmed.slice(colonIndex + 1).trim();
 
-      if (key.endsWith('()')) {
-        // If the key is a function call, execute it if the condition is true
+      if (key === '()') {
+        // Anonymous function: directly evaluate the value
+        codeLines.push(`${value};`);
+      } else if (key.endsWith('()')) {
+        // If the key is a method, execute it if the condition is true
         const methodName = key.slice(0, -2);
         codeLines.push(`if (${value}) { to.${methodName}(); }`);
       } else {
@@ -188,11 +191,13 @@ export class FolkEventPropagator extends FolkRope {
         },
         get(target, prop, receiver) {
           const value = Reflect.get(target, prop, receiver);
+          if (value === undefined) {
+            throw new Error(`Property '${String(prop)}' does not exist on target element.`);
+          }
           if (typeof value === 'function') {
             return value.bind(target);
-          } else {
-            return value;
           }
+          return value;
         },
       });
 
