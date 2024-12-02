@@ -60,4 +60,16 @@ export class WebGLUtils {
     parent.appendChild(canvas);
     return { gl, canvas };
   }
+
+  static createShaderProgram(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string): WebGLProgram {
+    const vertexShader = this.createShader(gl, gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    const program = this.createProgram(gl, vertexShader, fragmentShader);
+
+    // Clean up shaders since they're now linked to the program
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+
+    return program;
+  }
 }
