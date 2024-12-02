@@ -1,5 +1,5 @@
 import { css, html } from './common/tags';
-import { ResizeObserverManager } from './resize-observer';
+import { ResizeObserverManager } from './common/resize-observer';
 
 const resizeObserver = new ResizeObserverManager();
 
