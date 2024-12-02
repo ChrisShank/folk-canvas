@@ -41,8 +41,8 @@
       for (let i = 0; i < 20; i++) {
         for (let j = 0; j < 20; j++) {
           const geo = document.createElement('fc-geometry');
-          geo.x = 50 * i + Math.floor(Math.random() * 45);
-          geo.y = 50 * j + Math.floor(Math.random() * 45);
+          geo.x = 100 * i + Math.floor(Math.random() * 45);
+          geo.y = 100 * j + Math.floor(Math.random() * 45);
           geo.width = geo.height = 45;
           geometries.push(geo);
           d.append(geo);
@@ -52,18 +52,18 @@
 
       DistanceField.define();
 
-      // function tick() {
-      //   window.requestAnimationFrame(tick);
+      function tick() {
+        window.requestAnimationFrame(tick);
 
-      //   for (let i = 0; i < 10; i++) {
-      //     const g = geometries[Math.floor(Math.random() * geometries.length)];
-      //     const max = 15;
-      //     g.x += Math.floor(Math.random() * max - max / 2);
-      //     g.y += Math.floor(Math.random() * max - max / 2);
-      //   }
-      // }
+        for (let i = 0; i < 10; i++) {
+          const g = geometries[Math.floor(Math.random() * geometries.length)];
+          const max = 50;
+          g.x += Math.floor(Math.random() * max - max / 2);
+          g.y += Math.floor(Math.random() * max - max / 2);
+        }
+      }
 
-      // tick();
+      tick();
     </script>
   </body>
 </html>

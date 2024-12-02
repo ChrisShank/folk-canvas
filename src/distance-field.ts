@@ -153,12 +153,13 @@ export class DistanceField extends HTMLElement {
     const gl = this.glContext;
     const positions: number[] = [];
 
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getClientRect();
 
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
       // Convert DOM coordinates to Normalized Device Coordinates (NDC)
       const x1 = (rect.left / windowWidth) * 2 - 1;
       const y1 = -((rect.top / windowHeight) * 2 - 1);
