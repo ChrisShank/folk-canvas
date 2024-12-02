@@ -1,6 +1,6 @@
 import { AbstractArrow } from './abstract-arrow.js';
-import { Vertex, verticesToPolygon } from './common/utils.js';
-
+import { verticesToPolygon } from './common/utils.js';
+import type { Point } from './common/types.js';
 export class FolkXanadu extends AbstractArrow {
   static tagName = 'folk-xanadu';
 
@@ -47,7 +47,7 @@ export class FolkXanadu extends AbstractArrow {
 }
 
 // The order that vertices are returned is significant
-function computeInlineVertices(rects: DOMRect[]): Vertex[] {
+function computeInlineVertices(rects: DOMRect[]): Point[] {
   rects = rects.map((rect) =>
     DOMRectReadOnly.fromRect({
       height: Math.round(rect.height),
@@ -68,7 +68,7 @@ function computeInlineVertices(rects: DOMRect[]): Vertex[] {
     ];
   }
 
-  const vertices: Vertex[] = [];
+  const vertices: Point[] = [];
 
   if (rects[1].left < rects[0].left) {
     vertices.push({ x: rects[1].left, y: rects[1].top }, { x: rects[0].left, y: rects[0].bottom });

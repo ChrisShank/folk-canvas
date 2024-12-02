@@ -1,6 +1,6 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
-import type { Vector2 } from './common/Vector2';
+import type { Point } from './common/types';
 
 const resizeObserver = new ResizeObserverManager();
 
@@ -11,13 +11,13 @@ type RotatedDOMRect = DOMRect & {
   rotation: number;
 
   // Returns the center point in worldspace coordinates
-  center(): Vector2;
+  center(): Point;
 
   // Returns the four corners in worldspace coordinates, in clockwise order
-  corners(): [Vector2, Vector2, Vector2, Vector2];
+  corners(): [Point, Point, Point, Point];
 
   // Returns all the vertices in worldspace coordinates
-  vertices(): Vector2[];
+  vertices(): Point[];
 };
 export type MoveEventDetail = { movementX: number; movementY: number };
 
@@ -311,18 +311,18 @@ export class FolkShape extends HTMLElement {
       bottom: y + height,
       rotation,
 
-      center(): Vector2 {
+      center(): Point {
         return {
           x: this.x + this.width / 2,
           y: this.y + this.height / 2,
         };
       },
-      vertices(): Vector2[] {
+      vertices(): Point[] {
         // TODO: Implement
         return [];
       },
 
-      corners(): [Vector2, Vector2, Vector2, Vector2] {
+      corners(): [Point, Point, Point, Point] {
         const center = this.center();
         const cos = Math.cos(radians);
         const sin = Math.sin(radians);
@@ -331,7 +331,7 @@ export class FolkShape extends HTMLElement {
         const halfHeight = this.height / 2;
 
         // Helper to rotate a point around the center
-        const rotatePoint = (dx: number, dy: number): Vector2 => ({
+        const rotatePoint = (dx: number, dy: number): Point => ({
           x: center.x + dx * cos - dy * sin,
           y: center.y + dx * sin + dy * cos,
         });

@@ -1,35 +1,21 @@
 // Adopted from: https://github.com/pshihn/bezier-points/blob/master/src/index.ts
 
-export type Point = [number, number];
-
-export interface Vertex {
-  x: number;
-  y: number;
-}
-
-// distance between 2 points
-function distance(p1: Point, p2: Point): number {
-  return Math.sqrt(distanceSq(p1, p2));
-}
-
-// distance between 2 points squared
-function distanceSq(p1: Point, p2: Point): number {
-  return Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2);
-}
+import type { Point } from './types.ts';
+import { Vector } from './Vector.ts';
 
 // Distance squared from a point p to the line segment vw
 function distanceToSegmentSq(p: Point, v: Point, w: Point): number {
-  const l2 = distanceSq(v, w);
+  const l2 = Vector.distanceSquared(v, w);
   if (l2 === 0) {
-    return distanceSq(p, v);
+    return Vector.distanceSquared(p, v);
   }
-  let t = ((p[0] - v[0]) * (w[0] - v[0]) + (p[1] - v[1]) * (w[1] - v[1])) / l2;
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
   t = Math.max(0, Math.min(1, t));
-  return distanceSq(p, lerp(v, w, t));
+  return Vector.distanceSquared(p, Vector.lerp(v, w, t));
 }
 
 function lerp(a: Point, b: Point, t: number): Point {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
 // Adapted from https://seant23.wordpress.com/2010/11/12/offset-bezier-curves/
@@ -39,13 +25,13 @@ function flatness(points: readonly Point[], offset: number): number {
   const p3 = points[offset + 2];
   const p4 = points[offset + 3];
 
-  let ux = 3 * p2[0] - 2 * p1[0] - p4[0];
+  let ux = 3 * p2.x - 2 * p1.x - p4.x;
   ux *= ux;
-  let uy = 3 * p2[1] - 2 * p1[1] - p4[1];
+  let uy = 3 * p2.y - 2 * p1.y - p4.y;
   uy *= uy;
-  let vx = 3 * p3[0] - 2 * p4[0] - p1[0];
+  let vx = 3 * p3.x - 2 * p4.x - p1.x;
   vx *= vx;
-  let vy = 3 * p3[1] - 2 * p4[1] - p1[1];
+  let vy = 3 * p3.y - 2 * p4.y - p1.y;
   vy *= vy;
 
   if (ux < vx) {
@@ -69,7 +55,7 @@ function getPointsOnBezierCurveWithSplitting(
   if (flatness(points, offset) < tolerance) {
     const p0 = points[offset + 0];
     if (outPoints.length) {
-      const d = distance(outPoints[outPoints.length - 1], p0);
+      const d = Vector.distance(outPoints[outPoints.length - 1], p0);
       if (d > 1) {
         outPoints.push(p0);
       }
@@ -176,7 +162,7 @@ export function getSvgPathFromStroke(stroke: number[][]): string {
   return d.join(' ');
 }
 
-export function verticesToPolygon(vertices: Vertex[]): string {
+export function verticesToPolygon(vertices: Point[]): string {
   if (vertices.length === 0) return '';
 
   return `polygon(${vertices.map((vertex) => `${vertex.x}px ${vertex.y}px`).join(', ')})`;
@@ -184,7 +170,7 @@ export function verticesToPolygon(vertices: Vertex[]): string {
 
 const vertexRegex = /(?<x>-?([0-9]*[.])?[0-9]+),\s*(?<y>-?([0-9]*[.])?[0-9]+)/;
 
-export function parseVertex(str: string): Vertex | null {
+export function parseVertex(str: string): Point | null {
   const results = vertexRegex.exec(str);
 
   if (results === null) return null;

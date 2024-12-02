@@ -73,10 +73,10 @@ export class FolkConnection extends AbstractArrow {
     ) as Arrow;
 
     const points = pointsOnBezierCurves([
-      [sx, sy],
-      [cx, cy],
-      [ex, ey],
-      [ex, ey],
+      { x: sx, y: sy },
+      { x: cx, y: cy },
+      { x: ex, y: ey },
+      { x: ex, y: ey },
     ]);
 
     const stroke = getStroke(points, this.#options);
