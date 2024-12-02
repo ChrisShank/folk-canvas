@@ -1,12 +1,24 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
+import type { Vector2 } from './common/Vector2';
 
 const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
-type RotatedDOMRect = DOMRect & { rotation: number };
+type RotatedDOMRect = DOMRect & {
+  // In degrees
+  rotation: number;
 
+  // Returns the center point in worldspace coordinates
+  center(): Vector2;
+
+  // Returns the four corners in worldspace coordinates, in clockwise order
+  corners(): [Vector2, Vector2, Vector2, Vector2];
+
+  // Returns all the vertices in worldspace coordinates
+  vertices(): Vector2[];
+};
 export type MoveEventDetail = { movementX: number; movementY: number };
 
 export class MoveEvent extends CustomEvent<MoveEventDetail> {
@@ -286,6 +298,7 @@ export class FolkShape extends HTMLElement {
 
   getClientRect(): RotatedDOMRect {
     const { x, y, width, height, rotation } = this;
+    const radians = (rotation * Math.PI) / 180;
 
     return {
       x,
@@ -297,9 +310,43 @@ export class FolkShape extends HTMLElement {
       right: x + width,
       bottom: y + height,
       rotation,
+
+      center(): Vector2 {
+        return {
+          x: this.x + this.width / 2,
+          y: this.y + this.height / 2,
+        };
+      },
+      vertices(): Vector2[] {
+        // TODO: Implement
+        return [];
+      },
+
+      corners(): [Vector2, Vector2, Vector2, Vector2] {
+        const center = this.center();
+        const cos = Math.cos(radians);
+        const sin = Math.sin(radians);
+
+        const halfWidth = this.width / 2;
+        const halfHeight = this.height / 2;
+
+        // Helper to rotate a point around the center
+        const rotatePoint = (dx: number, dy: number): Vector2 => ({
+          x: center.x + dx * cos - dy * sin,
+          y: center.y + dx * sin + dy * cos,
+        });
+
+        // Return vertices in clockwise order: top-left, top-right, bottom-right, bottom-left
+        return [
+          rotatePoint(-halfWidth, -halfHeight), // Top-left
+          rotatePoint(halfWidth, -halfHeight), // Top-right
+          rotatePoint(halfWidth, halfHeight), // Bottom-right
+          rotatePoint(-halfWidth, halfHeight), // Bottom-left
+        ];
+      },
+
       toJSON: undefined as any,
     };
-    // return DOMRectReadOnly.fromRect({ x: this.x, y: this.y, width: this.width, height: this.height });
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.

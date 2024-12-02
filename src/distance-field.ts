@@ -153,29 +153,7 @@ export class DistanceField extends HTMLElement {
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getClientRect();
-      const rotation = (geometry.rotation * Math.PI) / 180; // Convert to radians
-
-      // Calculate the center of the rectangle
-      const centerX = (rect.left + rect.right) / 2;
-      const centerY = (rect.top + rect.bottom) / 2;
-
-      // Function to rotate a point around the center
-      const rotatePoint = (x: number, y: number) => {
-        const dx = x - centerX;
-        const dy = y - centerY;
-        const cos = Math.cos(rotation);
-        const sin = Math.sin(rotation);
-        return {
-          x: centerX + dx * cos - dy * sin,
-          y: centerY + dx * sin + dy * cos,
-        };
-      };
-
-      // Rotate each corner of the rectangle
-      const topLeft = rotatePoint(rect.left, rect.top);
-      const topRight = rotatePoint(rect.right, rect.top);
-      const bottomLeft = rotatePoint(rect.left, rect.bottom);
-      const bottomRight = rotatePoint(rect.right, rect.bottom);
+      const [topLeft, topRight, bottomRight, bottomLeft] = rect.corners();
 
       // Convert rotated coordinates to NDC
       const x1 = (topLeft.x / windowWidth) * 2 - 1;
