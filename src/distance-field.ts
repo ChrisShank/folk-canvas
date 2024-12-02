@@ -66,7 +66,6 @@ export class DistanceField extends HTMLElement {
 
   // Handle updates from geometries
   private handleGeometryUpdate = () => {
-    console.log('handleGeometryUpdate');
     // Re-render seed points and rerun JFA
     this.initSeedPointRendering();
     this.runJFA();
