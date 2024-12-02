@@ -138,6 +138,10 @@ export class DistanceField extends HTMLElement {
 
         vec4 sampled = texture(u_previousTexture, sampleCoord);
 
+        if (sampled.z == 0.0) {
+          continue; // Skip background pixels
+        }
+
         // Compute distance to the seed point stored in this neighbor
         float dist = distance(sampled.xy, v_texCoord);
 
