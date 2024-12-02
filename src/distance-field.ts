@@ -73,7 +73,6 @@ export class DistanceField extends HTMLElement {
    * Handles updates to geometry elements by re-initializing seed points and rerunning the JFA.
    */
   private handleGeometryUpdate = () => {
-    console.log('handleGeometryUpdate');
     this.populateSeedPoints();
     this.runJumpFloodingAlgorithm();
   };
