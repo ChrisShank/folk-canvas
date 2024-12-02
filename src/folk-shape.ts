@@ -8,7 +8,7 @@ const resizeObserver = new ResizeObserverManager();
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
 type RotatedDOMRect = DOMRect & {
-  /** in degrees */
+  /** in radians */
   rotation: number;
 
   /** Returns the center point in worldspace coordinates */
@@ -134,7 +134,7 @@ styles.replaceSync(css`
     cursor: var(--fc-nesw-resize, nesw-resize);
   }
 
-  [part='rotate'] {
+  [part='rotation'] {
     z-index: calc(infinity);
     display: block;
     position: absolute;
@@ -154,7 +154,7 @@ styles.replaceSync(css`
   }
 
   :host(:not(:focus-within)) [part^='resize'],
-  :host(:not(:focus-within)) [part='rotate'] {
+  :host(:not(:focus-within)) [part='rotation'] {
     opacity: 0;
     cursor: default;
   }
@@ -256,8 +256,8 @@ export class FolkShape extends HTMLElement {
   #startAngle = 0;
   #previousRotation = 0;
 
-  // TODO: consider using radians instead of degrees
-  #rotation = Number(this.getAttribute('rotate')) || 0;
+  // use degrees in the DOM, but store in radians internally
+  #rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
 
   get rotation(): number {
     return this.#rotation;
@@ -266,7 +266,7 @@ export class FolkShape extends HTMLElement {
   set rotation(rotation: number) {
     this.#previousRotation = this.#rotation;
     this.#rotation = rotation;
-    this.#requestUpdate('rotate');
+    this.#requestUpdate('rotation');
   }
 
   constructor() {
@@ -282,7 +282,7 @@ export class FolkShape extends HTMLElement {
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    shadowRoot.innerHTML = html` <button part="rotate"></button>
+    shadowRoot.innerHTML = html` <button part="rotation"></button>
       <button part="resize-nw"></button>
       <button part="resize-ne"></button>
       <button part="resize-se"></button>
@@ -294,12 +294,11 @@ export class FolkShape extends HTMLElement {
   }
 
   connectedCallback() {
-    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotate']));
+    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
   }
 
   getClientRect(): RotatedDOMRect {
     const { x, y, width, height, rotation } = this;
-    const radians = (rotation * Math.PI) / 180;
 
     return {
       x,
@@ -325,14 +324,13 @@ export class FolkShape extends HTMLElement {
 
       corners() {
         const center = this.center();
-        const radians = (this.rotation * Math.PI) / 180;
-        const { x, y, width, height } = this;
+        const { x, y, width, height, rotation } = this;
 
         return [
-          Vector.rotateAround({ x, y }, center, radians),
-          Vector.rotateAround({ x: x + width, y }, center, radians),
-          Vector.rotateAround({ x: x + width, y: y + height }, center, radians),
-          Vector.rotateAround({ x, y: y + height }, center, radians),
+          Vector.rotateAround({ x, y }, center, rotation),
+          Vector.rotateAround({ x: x + width, y }, center, rotation),
+          Vector.rotateAround({ x: x + width, y: y + height }, center, rotation),
+          Vector.rotateAround({ x, y: y + height }, center, rotation),
         ];
       },
 
@@ -358,7 +356,7 @@ export class FolkShape extends HTMLElement {
         const target = event.composedPath()[0] as HTMLElement;
 
         // Store initial angle on rotation start
-        if (target.getAttribute('part') === 'rotate') {
+        if (target.getAttribute('part') === 'rotation') {
           // We need to store initial rotation/angle somewhere.
           // This is a little awkward as we'll want to do *quite a lot* of this kind of thing.
           // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
@@ -441,13 +439,13 @@ export class FolkShape extends HTMLElement {
           return;
         }
 
-        if (part === 'rotate') {
+        if (part === 'rotation') {
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
           const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
 
           const deltaAngle = currentAngle - this.#startAngle;
-          this.rotation = this.#initialRotation + (deltaAngle * 180) / Math.PI;
+          this.rotation = this.#initialRotation + deltaAngle;
           return;
         }
 
@@ -535,13 +533,13 @@ export class FolkShape extends HTMLElement {
       }
     }
 
-    if (updatedProperties.has('rotate')) {
+    if (updatedProperties.has('rotation')) {
       // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
       const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotation - this.#previousRotation }));
 
       if (notCancelled) {
-        if (updatedProperties.has('rotate')) {
-          this.style.rotate = `${this.#rotation}deg`;
+        if (updatedProperties.has('rotation')) {
+          this.style.rotate = `${this.#rotation}rad`;
         }
       } else {
         this.#rotation = this.#previousRotation;
