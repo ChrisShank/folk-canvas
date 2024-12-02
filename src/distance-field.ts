@@ -249,6 +249,12 @@ export class DistanceField extends HTMLElement {
     const width = this.canvas.width;
     const height = this.canvas.height;
 
+    // Delete existing textures to prevent memory leaks
+    for (const texture of this.textures) {
+      gl.deleteTexture(texture);
+    }
+    this.textures = [];
+
     // Enable the EXT_color_buffer_float extension
     const ext = gl.getExtension('EXT_color_buffer_float');
     if (!ext) {
@@ -282,8 +288,10 @@ export class DistanceField extends HTMLElement {
       this.textures.push(texture);
     }
 
-    // Create framebuffer
-    this.framebuffer = gl.createFramebuffer()!;
+    // Reuse existing framebuffer
+    if (!this.framebuffer) {
+      this.framebuffer = gl.createFramebuffer()!;
+    }
   }
 
   private initSeedPointRendering() {
@@ -305,19 +313,17 @@ export class DistanceField extends HTMLElement {
     precision highp float;
 
     flat in float v_shapeID;
-    uniform vec2 u_resolution;
+    uniform vec2 u_canvasSize;
 
     out vec4 outColor;
 
     void main() {
-      vec2 seedCoord = gl_FragCoord.xy / vec2(${this.canvas.width.toFixed(1)}, ${this.canvas.height.toFixed(1)});
+      vec2 seedCoord = gl_FragCoord.xy / u_canvasSize;
       outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords, shape ID, initial distance 0
     }`;
 
     // Compile seed shaders
-    const seedVertexShader = this.createShader(gl.VERTEX_SHADER, seedVertexShaderSource);
-    const seedFragmentShader = this.createShader(gl.FRAGMENT_SHADER, seedFragmentShaderSource);
-    this.seedProgram = this.createProgram(seedVertexShader, seedFragmentShader);
+    this.seedProgram = this.compileShaderProgram(seedVertexShaderSource, seedFragmentShaderSource);
 
     // Set up VAO and buffer for shapes
     this.shapeVAO = gl.createVertexArray()!;
@@ -390,8 +396,9 @@ export class DistanceField extends HTMLElement {
     // Use seed shader program
     gl.useProgram(this.seedProgram);
 
-    // Set uniforms
-    gl.uniform2f(gl.getUniformLocation(this.seedProgram, 'u_resolution'), this.canvas.width, this.canvas.height);
+    // Set the canvas size uniform
+    const canvasSizeLocation = gl.getUniformLocation(this.seedProgram, 'u_canvasSize');
+    gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(this.shapeVAO);
@@ -508,13 +515,26 @@ export class DistanceField extends HTMLElement {
 
   // Handle window resize
   private handleResize = () => {
+    console.log('handleResize');
+    const gl = this.gl;
+
     // Update canvas size
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
 
-    // Re-initialize WebGL resources
+    // Update the viewport
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+    // Re-initialize textures with the new dimensions
     this.initPingPongTextures();
-    this.renderSeedPoints();
+
+    // Update uniforms dependent on canvas size
+    this.updateCanvasSizeUniforms();
+
+    // Re-initialize seed point rendering to update positions
+    this.initSeedPointRendering();
+
+    // Rerun JFA
     this.runJFA();
   };
 
@@ -526,5 +546,16 @@ export class DistanceField extends HTMLElement {
       }
     }
     return new Float32Array(offsets);
+  }
+
+  private updateCanvasSizeUniforms() {
+    const gl = this.gl;
+
+    // Update seedProgram's canvas size uniform
+    gl.useProgram(this.seedProgram);
+    const canvasSizeLocation = gl.getUniformLocation(this.seedProgram, 'u_canvasSize');
+    gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
+
+    // Update other programs if necessary
   }
 }
