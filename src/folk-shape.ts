@@ -386,7 +386,7 @@ export class FolkShape extends HTMLElement {
         // ignore interactions from slotted elements.
         if (target !== this && !target.hasAttribute('part')) return;
 
-        target.addEventListener('pointermove', this);
+        this.addEventListener('pointermove', this);
         this.addEventListener('lostpointercapture', this);
         target.setPointerCapture(event.pointerId);
 
@@ -397,8 +397,7 @@ export class FolkShape extends HTMLElement {
         return;
       }
       case 'pointermove': {
-        const target = event.target as HTMLElement;
-
+        const target = event.composedPath()[0] as HTMLElement;
         if (target === null) return;
 
         if (target === this) {
@@ -452,7 +451,7 @@ export class FolkShape extends HTMLElement {
         const target = event.composedPath()[0] as HTMLElement;
         const interaction = target.getAttribute('part') || 'move';
         this.#internals.states.delete(interaction);
-        target.removeEventListener('pointermove', this);
+        this.removeEventListener('pointermove', this);
         this.removeEventListener('lostpointercapture', this);
         return;
       }
