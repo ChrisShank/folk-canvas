@@ -407,7 +407,6 @@ export class FolkShape extends HTMLElement {
         }
 
         const handle = target.getAttribute('part') as Handle;
-
         if (handle === null) return;
 
         if (handle.includes('resize')) {
@@ -427,13 +426,73 @@ export class FolkShape extends HTMLElement {
 
           // Calculate new dimensions based on mouse position and opposite corner
           const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
-          const unrotatedMouse = Vector.rotateAround(mouse, newCenter, -this.rotation);
-          const unrotatedOpposite = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
+          const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
+          const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
 
-          this.x = Math.min(unrotatedMouse.x, unrotatedOpposite.x);
-          this.y = Math.min(unrotatedMouse.y, unrotatedOpposite.y);
-          this.width = Math.abs(unrotatedOpposite.x - unrotatedMouse.x);
-          this.height = Math.abs(unrotatedOpposite.y - unrotatedMouse.y);
+          let newX = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
+          let newY = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
+          let newWidth = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
+          let newHeight = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
+
+          const HANDLE_BEHAVIOR = {
+            'resize-se': {
+              flipX: unrotatedHandle.x < unrotatedAnchor.x,
+              flipY: unrotatedHandle.y < unrotatedAnchor.y,
+              handleX: 'resize-sw',
+              handleY: 'resize-ne',
+            },
+            'resize-sw': {
+              flipX: unrotatedHandle.x > unrotatedAnchor.x,
+              flipY: unrotatedHandle.y < unrotatedAnchor.y,
+              handleX: 'resize-se',
+              handleY: 'resize-nw',
+            },
+            'resize-nw': {
+              flipX: unrotatedHandle.x > unrotatedAnchor.x,
+              flipY: unrotatedHandle.y > unrotatedAnchor.y,
+              handleX: 'resize-ne',
+              handleY: 'resize-sw',
+            },
+            'resize-ne': {
+              flipX: unrotatedHandle.x < unrotatedAnchor.x,
+              flipY: unrotatedHandle.y > unrotatedAnchor.y,
+              handleX: 'resize-nw',
+              handleY: 'resize-se',
+            },
+          } as const;
+
+          const behavior = HANDLE_BEHAVIOR[handle as keyof typeof HANDLE_BEHAVIOR];
+          const hasFlippedX = behavior.flipX;
+          const hasFlippedY = behavior.flipY;
+
+          if (hasFlippedX || hasFlippedY) {
+            console.log('negative');
+            const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
+            const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
+
+            if (newTarget) {
+              // Clean up old handle state
+              this.#internals.states.delete(handle);
+              target.removeEventListener('pointermove', this);
+              target.removeEventListener('lostpointercapture', this);
+
+              // Set up new handle state
+              this.#internals.states.add(nextHandle);
+              newTarget.addEventListener('pointermove', this);
+              newTarget.addEventListener('lostpointercapture', this);
+
+              console.log('target', target, 'newTarget', newTarget);
+
+              // Transfer pointer capture
+              target.releasePointerCapture(event.pointerId);
+              newTarget.setPointerCapture(event.pointerId);
+            }
+          }
+
+          this.x = newX;
+          this.y = newY;
+          this.width = newWidth;
+          this.height = newHeight;
 
           return;
         }
