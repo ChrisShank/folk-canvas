@@ -376,15 +376,9 @@ export class FolkShape extends HTMLElement {
 
         // Store initial angle on rotation start
         if (target.getAttribute('part') === 'rotation') {
-          // We need to store initial rotation/angle somewhere.
-          // This is a little awkward as we'll want to do *quite a lot* of this kind of thing.
-          // Might be an argument for making elements dumber (i.e. not have them manage their own state) and do this from the outside.
-          // But we also want to preserve the self-sufficient nature of elements' behaviour...
-          // Maybe some kind of shared utility, used by both the element and the outside environment?
+          const center = this.getClientRect().center();
           this.#initialRotation = this.#rotation;
-          const centerX = this.#x + this.width / 2;
-          const centerY = this.#y + this.height / 2;
-          this.#startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+          this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
         }
 
         // ignore interactions from slotted elements.
@@ -448,12 +442,9 @@ export class FolkShape extends HTMLElement {
         }
 
         if (handle === 'rotation') {
-          const centerX = this.#x + this.width / 2;
-          const centerY = this.#y + this.height / 2;
-          const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
-
-          const deltaAngle = currentAngle - this.#startAngle;
-          this.rotation = this.#initialRotation + deltaAngle;
+          const center = this.getClientRect().center();
+          const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
+          this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
           return;
         }
 
