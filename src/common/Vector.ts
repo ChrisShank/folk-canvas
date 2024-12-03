@@ -1,5 +1,7 @@
 import type { Point } from './types.ts';
 
+const { hypot, cos, sin, atan2 } = Math;
+
 export class Vector {
   /**
    * Creates a zero vector (0,0)
@@ -55,7 +57,7 @@ export class Vector {
    * @returns {number} The magnitude of the vector
    */
   static mag(v: Point): number {
-    return Math.hypot(v.x, v.y);
+    return hypot(v.x, v.y);
   }
 
   /**
@@ -64,8 +66,11 @@ export class Vector {
    * @returns {Point} The normalized vector
    */
   static normalized(v: Point): Point {
-    const magnitude = Vector.mag(v);
-    return magnitude === 0 ? Vector.zero() : { x: v.x / magnitude, y: v.y / magnitude };
+    const { x, y } = v;
+    const magnitude = hypot(x, y);
+    if (magnitude === 0) return { x: 0, y: 0 };
+    const invMag = 1 / magnitude;
+    return { x: x * invMag, y: y * invMag };
   }
 
   /**
@@ -75,7 +80,7 @@ export class Vector {
    * @returns {number} The distance between the points
    */
   static distance(a: Point, b: Point): number {
-    return Math.hypot(a.x - b.x, a.y - b.y);
+    return hypot(a.x - b.x, a.y - b.y);
   }
 
   /**
@@ -112,11 +117,11 @@ export class Vector {
    * @returns {Point} The rotated vector
    */
   static rotate(v: Point, angle: number): Point {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
+    const _cos = cos(angle);
+    const _sin = sin(angle);
     return {
-      x: v.x * cos - v.y * sin,
-      y: v.x * sin + v.y * cos,
+      x: v.x * _cos - v.y * _sin,
+      y: v.x * _sin + v.y * _cos,
     };
   }
 
@@ -128,11 +133,50 @@ export class Vector {
    * @returns {Point} The rotated point
    */
   static rotateAround(point: Point, pivot: Point, angle: number): Point {
-    // Translate to origin
-    const translated = Vector.sub(point, pivot);
-    // Rotate around origin
-    const rotated = Vector.rotate(translated, angle);
-    // Translate back
-    return Vector.add(rotated, pivot);
+    const dx = point.x - pivot.x;
+    const dy = point.y - pivot.y;
+    const c = cos(angle);
+    const s = sin(angle);
+    return {
+      x: pivot.x + dx * c - dy * s,
+      y: pivot.y + dx * s + dy * c,
+    };
+  }
+
+  /**
+   * Calculates the angle (in radians) between the vector and the positive x-axis
+   * @param {Point} v - The vector
+   * @returns {number} The angle in radians
+   */
+  static angle(v: Point): number {
+    return atan2(v.y, v.x);
+  }
+
+  /**
+   * Calculates the angle (in radians) between two vectors
+   * @param {Point} a - The first vector
+   * @param {Point} b - The second vector (optional, defaults to positive x-axis unit vector)
+   * @returns {number} The angle in radians
+   */
+  static angleTo(a: Point, b: Point = { x: 1, y: 0 }): number {
+    // Get the angle of each vector relative to x-axis
+    const angleA = Vector.angle(a);
+    const angleB = Vector.angle(b);
+
+    // Return the difference
+    return angleA - angleB;
+  }
+
+  /**
+   * Calculates the angle between a point and a center point relative to the positive x-axis
+   * @param {Point} point - The point to measure from
+   * @param {Point} origin - The origin point to measure around
+   * @returns {number} The angle in radians
+   */
+  static angleFromOrigin(point: Point, origin: Point): number {
+    return Vector.angleTo({
+      x: point.x - origin.x,
+      y: point.y - origin.y,
+    });
   }
 }
