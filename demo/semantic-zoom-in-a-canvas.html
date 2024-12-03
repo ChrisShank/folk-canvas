@@ -75,7 +75,7 @@
         margin: 1rem;
       }
 
-      folk-connection {
+      folk-arrow {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -145,16 +145,16 @@
       </p>
     </folk-shape>
 
-    <folk-connection source="#box1" target="#box2"></folk-connection>
-    <folk-connection source="#box2" target="#box3"></folk-connection>
-    <folk-connection source="#box1" target="#box3"></folk-connection>
+    <folk-arrow source="#box1" target="#box2"></folk-arrow>
+    <folk-arrow source="#box2" target="#box3"></folk-arrow>
+    <folk-arrow source="#box1" target="#box3"></folk-arrow>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-connection.ts';
+      import '../src/standalone/folk-arrow.ts';
 
       document.body.querySelectorAll('folk-shape').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
-      document.body.querySelectorAll('folk-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
+      document.body.querySelectorAll('folk-arrow').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
       document.body.querySelectorAll('h2').forEach((el, i) => (el.style.viewTransitionName = `h${i}`));
       document.body.querySelectorAll('p').forEach((el, i) => (el.style.viewTransitionName = `p${i}`));
 

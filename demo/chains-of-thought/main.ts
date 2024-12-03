@@ -1,5 +1,5 @@
 import { FolkShape } from '../../src/folk-shape.ts';
-import { FolkConnection } from '../../src/folk-connection.ts';
+import { FolkArrow } from '../../src/folk-arrow.ts';
 import { FileSaver } from '../src/file-system.ts';
 
 declare global {
@@ -37,8 +37,8 @@ class FolkThought extends HTMLElement {
 
       document
         .querySelectorAll(
-          `folk-connection[source="folk-shape[id='${this.#geometry.id}']"], 
-          folk-connection[target="folk-shape[id='${this.#geometry.id}']"]`
+          `folk-arrow[source="folk-shape[id='${this.#geometry.id}']"], 
+          folk-arrow[target="folk-shape[id='${this.#geometry.id}']"]`
         )
         .forEach((el) => el.remove());
     }
@@ -47,7 +47,7 @@ class FolkThought extends HTMLElement {
 
 FolkShape.define();
 FolkThought.define();
-FolkConnection.define();
+FolkArrow.define();
 
 interface Thought {
   id: string;
@@ -82,10 +82,7 @@ function renderThought({ id, x, y, text }: Thought) {
 }
 
 function renderConnection({ sourceId, targetId }: Connection) {
-  return html`<folk-connection
-    source="folk-shape[id='${sourceId}']"
-    target="folk-shape[id='${targetId}']"
-  ></folk-connection>`;
+  return html`<folk-arrow source="folk-shape[id='${sourceId}']" target="folk-shape[id='${targetId}']"></folk-arrow>`;
 }
 
 function renderChainOfThought({ thoughts, connections }: ChainOfThought) {
@@ -100,7 +97,7 @@ function parseChainOfThought(): ChainOfThought {
       x: el.x,
       y: el.y,
     })),
-    connections: Array.from(document.querySelectorAll('folk-connection')).map((el) => ({
+    connections: Array.from(document.querySelectorAll('folk-arrow')).map((el) => ({
       sourceId: (el.sourceElement as FolkShape).id,
       targetId: (el.targetElement as FolkShape).id,
     })),

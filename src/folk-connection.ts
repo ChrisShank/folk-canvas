@@ -26,12 +26,12 @@ export type Arrow = [
 
 declare global {
   interface HTMLElementTagNameMap {
-    'folk-connection': FolkConnection;
+    'folk-arrow': FolkArrow;
   }
 }
 
-export class FolkConnection extends AbstractArrow {
-  static override tagName = 'folk-connection';
+export class FolkArrow extends AbstractArrow {
+  static override tagName = 'folk-arrow';
 
   #options: StrokeOptions = {
     size: 7,

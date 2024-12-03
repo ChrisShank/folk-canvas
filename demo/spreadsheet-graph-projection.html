@@ -15,7 +15,7 @@
         margin: 0;
       }
 
-      folk-connection {
+      folk-arrow {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -167,7 +167,7 @@
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-connection.ts';
+      import '../src/standalone/folk-arrow.ts';
       import '../src/standalone/folk-spreadsheet.ts';
 
       let isProjected = false;
@@ -192,7 +192,7 @@
           for (const dep of cell.dependencies) {
             dep.setAttribute('graph', '');
 
-            const connection = document.createElement('folk-connection');
+            const connection = document.createElement('folk-arrow');
             connection.source = `folk-cell[row="${dep.row}"][column="${dep.column}"]`;
             connection.target = `folk-cell[row="${cell.row}"][column="${cell.column}"]`;
 
@@ -204,7 +204,7 @@
       function removeOverlayGraph() {
         document.body.removeAttribute('overlay', '');
 
-        document.querySelectorAll('folk-connection').forEach((arrow) => arrow.remove());
+        document.querySelectorAll('folk-arrow').forEach((arrow) => arrow.remove());
 
         document.querySelectorAll('folk-cell').forEach((cell) => {
           cell.removeAttribute('graph', '');

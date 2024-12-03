@@ -1,3 +1,3 @@
-import { FolkConnection } from '../folk-connection';
+import { FolkArrow } from '../folk-arrow';
 
-FolkConnection.define();
+FolkArrow.define();

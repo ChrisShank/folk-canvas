@@ -20,7 +20,7 @@
         border-radius: 3px;
       }
 
-      folk-connection {
+      folk-arrow {
         display: block;
         position: absolute;
         inset: 0 0 0 0;
@@ -31,11 +31,11 @@
   <body>
     <folk-shape id="box1" x="50" y="100" width="50" height="50"></folk-shape>
     <folk-shape id="box2" x="150" y="300" width="50" height="50"></folk-shape>
-    <folk-connection source="#box1" target="#box2"></folk-connection>
+    <folk-arrow source="#box1" target="#box2"></folk-arrow>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-connection.ts';
+      import '../src/standalone/folk-arrow.ts';
       import '../src/common/iframe-script.ts';
     </script>
   </body>
