@@ -80,7 +80,12 @@ styles.replaceSync(css`
     height: 100%;
     width: 100%;
     overflow: hidden;
+    pointer-events: none;
+  }
+
+  ::slotted(*) {
     cursor: default;
+    pointer-events: auto;
   }
 
   :host(:focus-within) {
@@ -188,6 +193,8 @@ export class FolkShape extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
+  #shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+
   #internals = this.attachInternals();
 
   #type = (this.getAttribute('type') || 'rectangle') as Shape;
@@ -288,15 +295,11 @@ export class FolkShape extends HTMLElement {
 
     this.addEventListener('pointerdown', this);
 
-    const shadowRoot = this.attachShadow({
-      mode: 'open',
-      delegatesFocus: true,
-    });
-    shadowRoot.adoptedStyleSheets.push(styles);
+    this.#shadow.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    shadowRoot.innerHTML = html` <button part="rotation"></button>
+    this.#shadow.innerHTML = html` <button part="rotation"></button>
       <button part="resize-nw"></button>
       <button part="resize-ne"></button>
       <button part="resize-se"></button>
