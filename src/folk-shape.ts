@@ -416,30 +416,31 @@ export class FolkShape extends HTMLElement {
         if (handle === null) return;
 
         if (handle.includes('resize')) {
-          const angle = this.rotation;
           const { clientX, clientY } = event;
-          const rect = this.getClientRect();
-          const [topLeft, topRight, bottomRight, bottomLeft] = rect.corners();
+          const [topLeft, topRight, bottomRight, bottomLeft] = this.getClientRect().corners();
+          const newCenter: Point = {
+            x: (topLeft.x + clientX) / 2,
+            y: (topLeft.y + clientY) / 2,
+          };
+          const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
+
+          let bottomRightAdjusted: Point;
 
           if (handle.endsWith('nw')) {
+            bottomRightAdjusted = { x: clientX, y: clientY };
           } else if (handle.endsWith('ne')) {
-          }
-          if (handle.endsWith('se')) {
-            const newCenter: Point = {
-              x: (topLeft.x + clientX) / 2,
-              y: (topLeft.y + clientY) / 2,
-            };
-
-            const newTopLeft = Vector.rotateAround(topLeft, newCenter, -angle);
-
-            const newBottomRight = Vector.rotateAround({ x: clientX, y: clientY }, newCenter, -angle);
-
-            this.x = newTopLeft.x;
-            this.y = newTopLeft.y;
-            this.width = newBottomRight.x - newTopLeft.x;
-            this.height = newBottomRight.y - newTopLeft.y;
+            bottomRightAdjusted = { x: clientX, y: clientY };
+          } else if (handle.endsWith('se')) {
+            bottomRightAdjusted = { x: clientX, y: clientY };
           } else {
+            bottomRightAdjusted = { x: clientX, y: clientY };
           }
+          const newBottomRight = Vector.rotateAround(bottomRightAdjusted, newCenter, -this.rotation);
+
+          this.x = newTopLeft.x;
+          this.y = newTopLeft.y;
+          this.width = newBottomRight.x - newTopLeft.x;
+          this.height = newBottomRight.y - newTopLeft.y;
           return;
         }
 
