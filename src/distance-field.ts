@@ -39,6 +39,7 @@ export class DistanceField extends HTMLElement {
     this.initShaders();
     this.initPingPongTextures();
     this.populateSeedPoints();
+    this.runJumpFloodingAlgorithm();
 
     window.addEventListener('resize', this.handleResize);
     this.shapes.forEach((geometry) => {
