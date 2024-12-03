@@ -417,25 +417,28 @@ export class FolkShape extends HTMLElement {
 
         if (handle.includes('resize')) {
           const { clientX, clientY } = event;
-          const [topLeft, topRight, bottomRight, bottomLeft] = this.getClientRect().corners();
+
+          const [topLeft] = this.getClientRect().corners();
+
           const newCenter: Point = {
             x: (topLeft.x + clientX) / 2,
             y: (topLeft.y + clientY) / 2,
           };
           const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
 
-          let bottomRightAdjusted: Point;
+          let bottomRight: Point;
 
           if (handle.endsWith('nw')) {
-            bottomRightAdjusted = { x: clientX, y: clientY };
+            bottomRight = { x: clientX, y: clientY };
           } else if (handle.endsWith('ne')) {
-            bottomRightAdjusted = { x: clientX, y: clientY };
+            bottomRight = { x: clientX, y: clientY };
           } else if (handle.endsWith('se')) {
-            bottomRightAdjusted = { x: clientX, y: clientY };
+            bottomRight = { x: clientX, y: clientY };
           } else {
-            bottomRightAdjusted = { x: clientX, y: clientY };
+            bottomRight = { x: clientX, y: clientY };
           }
-          const newBottomRight = Vector.rotateAround(bottomRightAdjusted, newCenter, -this.rotation);
+
+          const newBottomRight = Vector.rotateAround(bottomRight, newCenter, -this.rotation);
 
           this.x = newTopLeft.x;
           this.y = newTopLeft.y;
