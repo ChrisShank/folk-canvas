@@ -154,6 +154,7 @@ export class FolkSpreadsheet extends HTMLElement {
 
   static define() {
     if (customElements.get(this.tagName)) return;
+    // order of registering is important
     FolkSpreadSheetCell.define();
     FolkSpreadsheetHeader.define();
     customElements.define(this.tagName, this);
@@ -516,5 +517,3 @@ export class FolkSpreadSheetCell extends HTMLElement {
     }
   }
 }
-
-FolkSpreadsheet.define();

@@ -43,15 +43,10 @@
     </folk-space>
 
     <script type="module">
-      import { FolkSpace } from '../src/folk-space.ts';
-      import { FolkShape } from '../src/folk-shape.ts';
+      import '../src/standalone/folk-space.ts';
+      import '../src/standalone/folk-shape.ts';
 
-      const space = document.getElementById('space');
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          space.transition();
-        }
-      });
+      document.addEventListener('click', () => window.space.transition());
     </script>
   </body>
 </html>

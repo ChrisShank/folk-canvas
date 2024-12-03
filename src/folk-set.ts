@@ -79,5 +79,3 @@ export class FolkSet extends HTMLElement {
 
   update() {}
 }
-
-FolkSet.define();

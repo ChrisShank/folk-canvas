@@ -100,5 +100,3 @@ function computeInlineVertices(rects: DOMRect[]): Point[] {
 
   return vertices;
 }
-
-FolkXanadu.define();

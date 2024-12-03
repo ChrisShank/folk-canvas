@@ -257,5 +257,3 @@ function applyConstraint(p1: RopePoint, p2: RopePoint) {
     p2.pos = Vector.sub(p2.pos, adjustment);
   }
 }
-
-FolkRope.define();

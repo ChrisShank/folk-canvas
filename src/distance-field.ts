@@ -1,6 +1,6 @@
 import { frag, vert } from './common/tags.ts';
 import { WebGLUtils } from './common/webgl.ts';
-import type { FolkShape } from './folk-shape.ts';
+import { FolkShape } from './folk-shape.ts';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.
@@ -31,6 +31,7 @@ export class DistanceField extends HTMLElement {
 
   static define() {
     if (customElements.get(this.tagName)) return;
+    FolkShape.define();
     customElements.define(this.tagName, this);
   }
 
@@ -569,5 +570,3 @@ void main() {
   vec2 seedCoord = gl_FragCoord.xy / u_canvasSize;
   outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords (x, y), shape ID (z), initial distance (a)
 }`;
-
-DistanceField.define();

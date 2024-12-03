@@ -71,5 +71,3 @@ export class FolkSpace extends HTMLElement {
     space?.classList.toggle('rotate');
   }
 }
-
-FolkSpace.define();

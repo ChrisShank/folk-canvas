@@ -60,8 +60,8 @@
     </folk-shape>
 
     <script type="module">
-      import { FolkShape } from '../src/folk-shape.ts';
-      import { RecordPlayer } from './src/record-player.ts';
+      import '../src/standalone/folk-shape.ts';
+      import './src/record-player.ts';
       import { collisionDetection } from '../src/common/collision.ts';
 
       let proximityDistance = 150;

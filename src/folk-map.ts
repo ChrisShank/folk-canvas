@@ -95,5 +95,3 @@ export class FolkMap extends HTMLElement {
     }
   };
 }
-
-FolkMap.define();

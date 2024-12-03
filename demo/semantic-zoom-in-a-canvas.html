@@ -150,8 +150,8 @@
     <folk-connection source="#box1" target="#box3"></folk-connection>
 
     <script type="module">
-      import { FolkShape } from '../src/folk-shape.ts';
-      import { FolkConnection } from '../src/folk-connection.ts';
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-connection.ts';
 
       document.body.querySelectorAll('folk-shape').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
       document.body.querySelectorAll('folk-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));

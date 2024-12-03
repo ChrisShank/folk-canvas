@@ -110,5 +110,3 @@ export function makeHull(rects: DOMRectReadOnly[]): Point[] {
 
   return upperHull.concat(lowerHull);
 }
-
-FolkHull.define();

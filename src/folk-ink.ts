@@ -33,6 +33,7 @@ export class FolkInk extends HTMLElement {
   static tagName = 'folk-ink';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -211,5 +212,3 @@ export class FolkInk extends HTMLElement {
     return d.join(' ');
   }
 }
-
-FolkInk.define();

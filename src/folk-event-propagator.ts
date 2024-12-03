@@ -244,5 +244,3 @@ function parseAst(functionBody: string) {
   console.log('Properties accessed on to:', Array.from(toProps));
   console.log('Properties accessed on from:', Array.from(fromProps));
 }
-
-FolkEventPropagator.define();

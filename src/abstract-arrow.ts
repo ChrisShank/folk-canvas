@@ -12,6 +12,8 @@ export class AbstractArrow extends HTMLElement {
   static tagName = 'abstract-arrow';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
+    FolkShape.define();
     customElements.define(this.tagName, this);
   }
 

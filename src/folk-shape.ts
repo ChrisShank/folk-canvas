@@ -786,5 +786,3 @@ export class FolkShape extends HTMLElement {
     this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
   }
 }
-
-FolkShape.define();

@@ -103,5 +103,3 @@ declare global {
     ai: any;
   }
 }
-
-FolkLLM.define();

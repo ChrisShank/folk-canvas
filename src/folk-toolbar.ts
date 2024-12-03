@@ -126,6 +126,3 @@ export class FolkToolbar extends HTMLElement {
     return element.id;
   }
 }
-
-FolkEventPropagator.define();
-FolkToolbar.define();

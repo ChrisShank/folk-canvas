@@ -98,7 +98,8 @@
       source="folk-llm"
       target="folk-timer"
       triggers="started"
-      expression="$target.reset(); $target.start()"
+      expression="reset(): true
+start(): true"
     >
     </folk-event-propagator>
 
@@ -106,14 +107,14 @@
       source="folk-llm"
       target="folk-timer"
       triggers="finished"
-      expression="$target.stop();"
+      expression="stop(): true"
     ></folk-event-propagator>
 
     <script type="module">
-      import { FolkShape } from '../src/folk-shape.ts';
-      import { FolkLLM } from '../src/folk-llm.ts';
-      import { FolkTimer } from '../src/folk-timer.ts';
-      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-llm.ts';
+      import '../src/standalone/folk-timer.ts';
+      import '../src/standalone/folk-event-propagator.ts';
     </script>
   </body>
 </html>

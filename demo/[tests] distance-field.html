@@ -26,10 +26,10 @@
     </style>
   </head>
   <body>
-    <distance-field> </distance-field>
+    <distance-field></distance-field>
     <script type="module">
-      import { DistanceField } from '../src/distance-field.ts';
-      import { FolkShape } from '../src/folk-shape.ts';
+      import '../src/standalone/distance-field.ts';
+      import '../src/standalone/folk-shape.ts';
 
       const d = document.querySelector('distance-field');
 
@@ -47,8 +47,6 @@
         }
       }
       console.log(performance.now() - now);
-
-      DistanceField.define();
 
       // function tick() {
       //   window.requestAnimationFrame(tick);

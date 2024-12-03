@@ -76,11 +76,13 @@
     </folk-proximity>
 
     <script type="module">
-      import { FolkShape } from '../src/folk-shape.ts';
-      import { FolkMap } from '../src/folk-map.ts';
-      import { FolkWeather } from '../src/folk-weather.ts';
-      import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
-      import { GeoWiki } from './src/geo-wiki.ts';
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-map.ts';
+      import '../src/standalone/folk-weather.ts';
+      import './src/geo-wiki.ts';
+      import { FolkCluster } from '../src/folk-proximity.ts';
+
+      FolkCluster.define();
 
       FolkCluster.registerElement({
         constructor: FolkMap,
