@@ -412,32 +412,42 @@ export class FolkShape extends HTMLElement {
         if (handle === null) return;
 
         if (handle.includes('resize')) {
-          const { clientX, clientY } = event;
-
-          const [topLeft] = this.getClientRect().corners();
-
-          const newCenter: Point = Vector.lerp(topLeft, { x: clientX, y: clientY }, 0.5);
-
-          const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
-
-          let bottomRight: Point;
+          const mouse = { x: event.clientX, y: event.clientY };
+          const [topLeft, topRight, bottomRight, bottomLeft] = this.getClientRect().corners();
 
           if (handle.endsWith('nw')) {
-            bottomRight = { x: clientX, y: clientY };
+            const newCenter = Vector.lerp(bottomRight, mouse, 0.5);
+            const newTopLeft = Vector.rotateAround(mouse, newCenter, -this.rotation);
+            const newBottomRight = Vector.rotateAround(bottomRight, newCenter, -this.rotation);
+            this.x = newTopLeft.x;
+            this.y = newTopLeft.y;
+            this.width = newBottomRight.x - newTopLeft.x;
+            this.height = newBottomRight.y - newTopLeft.y;
           } else if (handle.endsWith('ne')) {
-            bottomRight = { x: clientX, y: clientY };
+            const newCenter = Vector.lerp(bottomLeft, mouse, 0.5);
+            const newBottomLeft = Vector.rotateAround(bottomLeft, newCenter, -this.rotation);
+            const newTopRight = Vector.rotateAround(mouse, newCenter, -this.rotation);
+            this.x = newBottomLeft.x;
+            this.y = newTopRight.y;
+            this.width = newTopRight.x - newBottomLeft.x;
+            this.height = newBottomLeft.y - newTopRight.y;
           } else if (handle.endsWith('se')) {
-            bottomRight = { x: clientX, y: clientY };
+            const newCenter = Vector.lerp(topLeft, mouse, 0.5);
+            const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
+            const newBottomRight = Vector.rotateAround(mouse, newCenter, -this.rotation);
+            this.x = newTopLeft.x;
+            this.y = newTopLeft.y;
+            this.width = newBottomRight.x - newTopLeft.x;
+            this.height = newBottomRight.y - newTopLeft.y;
           } else {
-            bottomRight = { x: clientX, y: clientY };
+            const newCenter = Vector.lerp(topRight, mouse, 0.5);
+            const newBottomLeft = Vector.rotateAround(mouse, newCenter, -this.rotation);
+            const newTopRight = Vector.rotateAround(topRight, newCenter, -this.rotation);
+            this.x = newBottomLeft.x;
+            this.y = newTopRight.y;
+            this.width = newTopRight.x - newBottomLeft.x;
+            this.height = newBottomLeft.y - newTopRight.y;
           }
-
-          const newBottomRight = Vector.rotateAround(bottomRight, newCenter, -this.rotation);
-
-          this.x = newTopLeft.x;
-          this.y = newTopLeft.y;
-          this.width = newBottomRight.x - newTopLeft.x;
-          this.height = newBottomRight.y - newTopLeft.y;
           return;
         }
 
