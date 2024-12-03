@@ -327,6 +327,8 @@ export class FolkShape extends HTMLElement {
     super();
 
     this.addEventListener('pointerdown', this);
+    this.addEventListener('keydown', this);
+    this.setAttribute('tabindex', '0');
 
     this.#shadow.adoptedStyleSheets = [styles, this.#dynamicStyles];
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
@@ -404,165 +406,178 @@ export class FolkShape extends HTMLElement {
     return [];
   }
 
-  handleEvent(event: PointerEvent) {
-    switch (event.type) {
-      case 'pointerdown': {
-        if (event.button !== 0 || event.ctrlKey) return;
+  handleEvent(event: PointerEvent | KeyboardEvent) {
+    if (event instanceof KeyboardEvent) {
+      const MOVEMENT_DELTA = event.shiftKey ? 20 : 2;
+      const ROTATION_DELTA = event.shiftKey ? Math.PI / 12 : Math.PI / 36; // 15 or 5 degrees
 
-        const target = event.composedPath()[0] as HTMLElement;
+      // Get the focused element to check if it's a resize handle
+      const focusedElement = this.#shadow.activeElement;
+      const handle = focusedElement?.getAttribute('part') as Handle | null;
 
-        // Store initial angle on rotation start
-        if (target.getAttribute('part')?.startsWith('rotation')) {
-          const center = this.getClientRect().center();
-          this.#initialRotation = this.#rotation;
-          this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
-        }
+      // Create synthetic mouse coordinates for keyboard events
+      let syntheticMouse: Point | null = null;
 
-        // ignore interactions from slotted elements.
-        if (target !== this && !target.hasAttribute('part')) return;
+      if (handle?.startsWith('resize')) {
+        const anyChange =
+          event.key === 'ArrowUp' ||
+          event.key === 'ArrowDown' ||
+          event.key === 'ArrowLeft' ||
+          event.key === 'ArrowRight';
+        if (!anyChange) return;
 
-        target.addEventListener('pointermove', this);
-        target.addEventListener('lostpointercapture', this);
-        target.setPointerCapture(event.pointerId);
+        // Get the corner coordinates of the shape for the corresponding handle
+        const corners = this.getClientRect().corners(); // Returns an array of Points: [NW, NE, SE, SW]
 
-        const interaction = target.getAttribute('part') || 'move';
-        this.#internals.states.add(interaction);
+        // Map handle names to corner indices
+        const handleToCornerIndex: { [key: string]: number } = {
+          'resize-nw': 0, // Top-left corner
+          'resize-ne': 1, // Top-right corner
+          'resize-se': 2, // Bottom-right corner
+          'resize-sw': 3, // Bottom-left corner
+        };
 
-        this.focus();
+        const cornerIndex = handleToCornerIndex[handle];
+        const currentPos = corners[cornerIndex];
+
+        // Calculate movement based on arrow keys
+        const isVertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+        const isIncreasing = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+        const delta = isIncreasing ? MOVEMENT_DELTA : -MOVEMENT_DELTA;
+
+        syntheticMouse = {
+          x: currentPos.x + (isVertical ? 0 : delta),
+          y: currentPos.y + (isVertical ? delta : 0),
+        };
+
+        // Process resize using the same logic as mouse events
+        this.#handleResize(handle, syntheticMouse, focusedElement as HTMLElement);
+        event.preventDefault();
         return;
       }
-      case 'pointermove': {
-        const target = event.composedPath()[0] as HTMLElement;
-        if (target === null) return;
 
-        if (target === this) {
-          this.x += event.movementX;
-          this.y += event.movementY;
-          return;
+      // Handle rotation with Alt key
+      if (event.altKey) {
+        switch (event.key) {
+          case 'ArrowLeft':
+            this.rotation -= ROTATION_DELTA;
+            event.preventDefault();
+            return;
+          case 'ArrowRight':
+            this.rotation += ROTATION_DELTA;
+            event.preventDefault();
+            return;
         }
+      }
 
-        const handle = target.getAttribute('part') as Handle;
-        if (handle === null) return;
-
-        if (handle.includes('resize')) {
-          const mouse = { x: event.clientX, y: event.clientY };
-
-          // Map each resize handle to its opposite corner index
-          const OPPOSITE_CORNERS = {
-            'resize-se': 0,
-            'resize-sw': 1,
-            'resize-nw': 2,
-            'resize-ne': 3,
-          } as const;
-
-          // Get the opposite corner for the current resize handle
-          const corners = this.getClientRect().corners();
-          const oppositeCorner = corners[OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS]];
-
-          // Calculate new dimensions based on mouse position and opposite corner
-          const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
-          const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
-          const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
-
-          const HANDLE_BEHAVIOR = {
-            'resize-se': {
-              flipX: unrotatedHandle.x < unrotatedAnchor.x,
-              flipY: unrotatedHandle.y < unrotatedAnchor.y,
-              handleX: 'resize-sw',
-              handleY: 'resize-ne',
-            },
-            'resize-sw': {
-              flipX: unrotatedHandle.x > unrotatedAnchor.x,
-              flipY: unrotatedHandle.y < unrotatedAnchor.y,
-              handleX: 'resize-se',
-              handleY: 'resize-nw',
-            },
-            'resize-nw': {
-              flipX: unrotatedHandle.x > unrotatedAnchor.x,
-              flipY: unrotatedHandle.y > unrotatedAnchor.y,
-              handleX: 'resize-ne',
-              handleY: 'resize-sw',
-            },
-            'resize-ne': {
-              flipX: unrotatedHandle.x < unrotatedAnchor.x,
-              flipY: unrotatedHandle.y > unrotatedAnchor.y,
-              handleX: 'resize-nw',
-              handleY: 'resize-se',
-            },
-          } as const;
-
-          const behavior = HANDLE_BEHAVIOR[handle as keyof typeof HANDLE_BEHAVIOR];
-          const hasFlippedX = behavior.flipX;
-          const hasFlippedY = behavior.flipY;
-
-          if (hasFlippedX || hasFlippedY) {
-            const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
-            const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
-
-            if (newTarget) {
-              // Clean up old handle state
-              this.#internals.states.delete(handle);
-              target.removeEventListener('pointermove', this);
-              target.removeEventListener('lostpointercapture', this);
-
-              // Set up new handle state
-              this.#internals.states.add(nextHandle);
-              newTarget.addEventListener('pointermove', this);
-              newTarget.addEventListener('lostpointercapture', this);
-
-              // Transfer pointer capture
-              target.releasePointerCapture(event.pointerId);
-              newTarget.setPointerCapture(event.pointerId);
-            }
-          }
-
-          this.x = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
-          this.y = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
-          this.width = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
-          this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
+      switch (event.key) {
+        case 'ArrowLeft':
+          this.x -= MOVEMENT_DELTA;
+          event.preventDefault();
           return;
-        }
+        case 'ArrowRight':
+          this.x += MOVEMENT_DELTA;
+          event.preventDefault();
+          return;
+        case 'ArrowUp':
+          this.y -= MOVEMENT_DELTA;
+          event.preventDefault();
+          return;
+        case 'ArrowDown':
+          this.y += MOVEMENT_DELTA;
+          event.preventDefault();
+          return;
+      }
+      return;
+    }
 
-        if (handle.startsWith('rotation')) {
-          const center = this.getClientRect().center();
-          const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
-          this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
-
-          let degrees = (this.rotation * 180) / Math.PI;
-          switch (handle) {
-            case 'rotation-ne':
-              degrees = (degrees + 90) % 360;
-              break;
-            case 'rotation-se':
-              degrees = (degrees + 180) % 360;
-              break;
-            case 'rotation-sw':
-              degrees = (degrees + 270) % 360;
-              break;
-          }
+    if (event instanceof PointerEvent) {
+      switch (event.type) {
+        case 'pointerdown': {
+          if (event.button !== 0 || event.ctrlKey) return;
 
           const target = event.composedPath()[0] as HTMLElement;
-          const rotateCursor = getRotateCursorUrl(degrees);
-          target.style.setProperty('cursor', rotateCursor);
+
+          // Store initial angle on rotation start
+          if (target.getAttribute('part')?.startsWith('rotation')) {
+            const center = this.getClientRect().center();
+            this.#initialRotation = this.#rotation;
+            this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
+          }
+
+          // ignore interactions from slotted elements.
+          if (target !== this && !target.hasAttribute('part')) return;
+
+          target.addEventListener('pointermove', this);
+          target.addEventListener('lostpointercapture', this);
+          target.setPointerCapture(event.pointerId);
+
+          const interaction = target.getAttribute('part') || 'move';
+          this.#internals.states.add(interaction);
+
+          this.focus();
+          return;
+        }
+        case 'pointermove': {
+          const target = event.composedPath()[0] as HTMLElement;
+          if (target === null) return;
+
+          if (target === this) {
+            this.x += event.movementX;
+            this.y += event.movementY;
+            return;
+          }
+
+          const handle = target.getAttribute('part') as Handle;
+          if (handle === null) return;
+
+          if (handle.includes('resize')) {
+            const mouse = { x: event.clientX, y: event.clientY };
+            this.#handleResize(handle, mouse, target, event);
+            return;
+          }
+
+          if (handle.startsWith('rotation')) {
+            const center = this.getClientRect().center();
+            const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
+            this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
+
+            let degrees = (this.rotation * 180) / Math.PI;
+            switch (handle) {
+              case 'rotation-ne':
+                degrees = (degrees + 90) % 360;
+                break;
+              case 'rotation-se':
+                degrees = (degrees + 180) % 360;
+                break;
+              case 'rotation-sw':
+                degrees = (degrees + 270) % 360;
+                break;
+            }
+
+            const target = event.composedPath()[0] as HTMLElement;
+            const rotateCursor = getRotateCursorUrl(degrees);
+            target.style.setProperty('cursor', rotateCursor);
+
+            return;
+          }
 
           return;
         }
+        case 'lostpointercapture': {
+          const target = event.composedPath()[0] as HTMLElement;
+          const interaction = target.getAttribute('part') || 'move';
+          this.#internals.states.delete(interaction);
+          target.removeEventListener('pointermove', this);
+          target.removeEventListener('lostpointercapture', this);
 
-        return;
-      }
-      case 'lostpointercapture': {
-        const target = event.composedPath()[0] as HTMLElement;
-        const interaction = target.getAttribute('part') || 'move';
-        this.#internals.states.delete(interaction);
-        target.removeEventListener('pointermove', this);
-        target.removeEventListener('lostpointercapture', this);
+          this.#updateCursors();
+          if (target.getAttribute('part')?.startsWith('rotation')) {
+            target.style.removeProperty('cursor');
+          }
 
-        this.#updateCursors();
-        if (target.getAttribute('part')?.startsWith('rotation')) {
-          target.style.removeProperty('cursor');
+          return;
         }
-
-        return;
       }
     }
   }
@@ -682,6 +697,93 @@ export class FolkShape extends HTMLElement {
     `;
 
     this.#dynamicStyles.replaceSync(dynamicStyles);
+  }
+
+  // Updated helper method to handle resize operations
+  #handleResize(handle: Handle, mouse: Point, target: HTMLElement, event?: PointerEvent) {
+    // Map each resize handle to its opposite corner index
+    const OPPOSITE_CORNERS = {
+      'resize-se': 0,
+      'resize-sw': 1,
+      'resize-nw': 2,
+      'resize-ne': 3,
+    } as const;
+
+    // Get the opposite corner for the current resize handle
+    const corners = this.getClientRect().corners();
+    const oppositeCorner = corners[OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS]];
+
+    // Calculate new dimensions based on mouse position and opposite corner
+    const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
+    const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
+    const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
+
+    const HANDLE_BEHAVIOR = {
+      'resize-se': {
+        flipX: unrotatedHandle.x < unrotatedAnchor.x,
+        flipY: unrotatedHandle.y < unrotatedAnchor.y,
+        handleX: 'resize-sw',
+        handleY: 'resize-ne',
+      },
+      'resize-sw': {
+        flipX: unrotatedHandle.x > unrotatedAnchor.x,
+        flipY: unrotatedHandle.y < unrotatedAnchor.y,
+        handleX: 'resize-se',
+        handleY: 'resize-nw',
+      },
+      'resize-nw': {
+        flipX: unrotatedHandle.x > unrotatedAnchor.x,
+        flipY: unrotatedHandle.y > unrotatedAnchor.y,
+        handleX: 'resize-ne',
+        handleY: 'resize-sw',
+      },
+      'resize-ne': {
+        flipX: unrotatedHandle.x < unrotatedAnchor.x,
+        flipY: unrotatedHandle.y > unrotatedAnchor.y,
+        handleX: 'resize-nw',
+        handleY: 'resize-se',
+      },
+    } as const;
+
+    // Handle flipping logic
+    const behavior = HANDLE_BEHAVIOR[handle as keyof typeof HANDLE_BEHAVIOR];
+    const hasFlippedX = behavior.flipX;
+    const hasFlippedY = behavior.flipY;
+
+    if (hasFlippedX || hasFlippedY) {
+      const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
+      const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
+
+      if (newTarget) {
+        // Update focus for keyboard events
+        newTarget.focus();
+
+        // Update handle state
+        this.#internals.states.delete(handle);
+        this.#internals.states.add(nextHandle);
+
+        // Handle pointer capture swap for mouse events
+        if (event && 'setPointerCapture' in target) {
+          // Clean up old handle state
+          target.removeEventListener('pointermove', this);
+          target.removeEventListener('lostpointercapture', this);
+
+          // Set up new handle state
+          newTarget.addEventListener('pointermove', this);
+          newTarget.addEventListener('lostpointercapture', this);
+
+          // Transfer pointer capture
+          target.releasePointerCapture(event.pointerId);
+          newTarget.setPointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    // Update dimensions
+    this.x = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
+    this.y = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
+    this.width = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
+    this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
   }
 }
 
