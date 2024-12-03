@@ -160,7 +160,7 @@ export class FolkSpreadsheet extends HTMLElement {
 
   #shadow = this.attachShadow({ mode: 'open' });
 
-  #textarea;
+  #textarea: HTMLTextAreaElement | null = null;
 
   #editedCell: FolkSpreadSheetCell | null = null;
 
@@ -315,6 +315,7 @@ export class FolkSpreadsheet extends HTMLElement {
   }
 
   #focusTextarea(cell: FolkSpreadSheetCell) {
+    if (this.#textarea === null) return;
     this.#editedCell = cell;
     const gridColumn = getColumnIndex(cell.column) + 2;
     const gridRow = cell.row + 1;
@@ -327,6 +328,7 @@ export class FolkSpreadsheet extends HTMLElement {
 
   #resetTextarea() {
     if (this.#editedCell === null) return;
+    if (this.#textarea === null) return;
     this.#textarea.style.setProperty('--text-column', '0');
     this.#textarea.style.setProperty('--text-row', '0');
     this.#editedCell.expression = this.#textarea.value;

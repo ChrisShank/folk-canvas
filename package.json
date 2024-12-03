@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/folk-canvas",
-    "preview": "vite build && vite preview"
+    "build": "tsc --noEmit && vite build --base=/folk-canvas",
+    "preview": "tsc --noEmit && vite build && vite preview",
+    "types": "tsc --noEmit"
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",

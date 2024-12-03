@@ -1,18 +1,18 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
-import { Vector, type Vector2 } from './common/Vector2.ts';
+import { Vector } from './common/Vector.ts';
+import type { Point } from './common/types.ts';
 import { AbstractArrow } from './abstract-arrow.ts';
-import { Vertex } from './common/utils.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 
 // Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!
 interface RopePoint {
-  pos: Vertex;
+  pos: Point;
   distanceToNextPoint: number;
   isFixed: boolean;
-  oldPos: Vertex;
-  velocity: Vertex;
+  oldPos: Point;
+  velocity: Point;
   mass: number;
   damping: number;
   prev: RopePoint | null;
@@ -162,7 +162,7 @@ export class FolkRope extends AbstractArrow {
     }
   }
 
-  #generatePoints(start: Vertex, end: Vertex) {
+  #generatePoints(start: Point, end: Point) {
     const delta = Vector.sub(end, start);
     const len = Vector.mag(delta);
     const resolution = 5;
@@ -202,7 +202,7 @@ export class FolkRope extends AbstractArrow {
     return points;
   }
 
-  #integratePoint(point: RopePoint, gravity: Vector2) {
+  #integratePoint(point: RopePoint, gravity: Point) {
     if (!point.isFixed) {
       point.velocity = Vector.sub(point.pos, point.oldPos);
       point.oldPos = { ...point.pos };

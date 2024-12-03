@@ -1,6 +1,6 @@
 import { FolkSet } from './folk-set';
-import { Vertex, verticesToPolygon } from './common/utils';
-
+import { verticesToPolygon } from './common/utils';
+import type { Point } from './common/types';
 declare global {
   interface HTMLElementTagNameMap {
     'folk-hull': FolkHull;
@@ -10,9 +10,9 @@ declare global {
 export class FolkHull extends FolkSet {
   static tagName = 'folk-hull';
 
-  #hull: Vertex[] = [];
+  #hull: Point[] = [];
 
-  get hull(): ReadonlyArray<Vertex> {
+  get hull(): ReadonlyArray<Point> {
     return this.#hull;
   }
 
@@ -50,7 +50,7 @@ export class FolkHull extends FolkSet {
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-function comparePoints(a: Vertex, b: Vertex): number {
+function comparePoints(a: Point, b: Point): number {
   if (a.x < b.x) return -1;
   if (a.x > b.x) return 1;
   if (a.y < b.y) return -1;
@@ -58,8 +58,8 @@ function comparePoints(a: Vertex, b: Vertex): number {
   return 0;
 }
 
-export function makeHull(rects: DOMRectReadOnly[]): Vertex[] {
-  const points: Vertex[] = rects
+export function makeHull(rects: DOMRectReadOnly[]): Point[] {
+  const points: Point[] = rects
     .flatMap((rect) => [
       { x: rect.left, y: rect.top },
       { x: rect.right, y: rect.top },
@@ -74,12 +74,12 @@ export function makeHull(rects: DOMRectReadOnly[]): Vertex[] {
   // as per the mathematical convention, instead of "down" as per the computer
   // graphics convention. This doesn't affect the correctness of the result.
 
-  const upperHull: Array<Vertex> = [];
+  const upperHull: Array<Point> = [];
   for (let i = 0; i < points.length; i++) {
-    const p: Vertex = points[i];
+    const p: Point = points[i];
     while (upperHull.length >= 2) {
-      const q: Vertex = upperHull[upperHull.length - 1];
-      const r: Vertex = upperHull[upperHull.length - 2];
+      const q: Point = upperHull[upperHull.length - 1];
+      const r: Point = upperHull[upperHull.length - 2];
       if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x)) upperHull.pop();
       else break;
     }
@@ -87,12 +87,12 @@ export function makeHull(rects: DOMRectReadOnly[]): Vertex[] {
   }
   upperHull.pop();
 
-  const lowerHull: Array<Vertex> = [];
+  const lowerHull: Array<Point> = [];
   for (let i = points.length - 1; i >= 0; i--) {
-    const p: Vertex = points[i];
+    const p: Point = points[i];
     while (lowerHull.length >= 2) {
-      const q: Vertex = lowerHull[lowerHull.length - 1];
-      const r: Vertex = lowerHull[lowerHull.length - 2];
+      const q: Point = lowerHull[lowerHull.length - 1];
+      const r: Point = lowerHull[lowerHull.length - 2];
       if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x)) lowerHull.pop();
       else break;
     }

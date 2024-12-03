@@ -19,7 +19,7 @@ export class FolkWeather extends HTMLElement {
 
   static observedAttributes = ['coordinates'];
 
-  #coordinates = [0, 0] as const;
+  #coordinates: readonly [number, number] = [0, 0];
   #results: Weather | null = null;
 
   get coordinates() {
@@ -30,9 +30,10 @@ export class FolkWeather extends HTMLElement {
     this.setAttribute('coordinates', coordinates.join(', '));
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
     if (name === 'coordinates') {
-      this.#coordinates = newValue.split(',').map((str) => Number(str)) || [0, 0];
+      const [lat = 0, long = 0] = newValue.split(',').map((str) => Number(str));
+      this.#coordinates = [lat, long] as const;
       this.fetchWeather(this.#coordinates);
     }
   }

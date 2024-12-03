@@ -12,7 +12,7 @@ export class FolkTimer extends HTMLElement {
   }
 
   #timeMs = 0;
-  #timeoutId = -1;
+  #timeoutId: NodeJS.Timeout | -1 = -1;
 
   #intervalMs = 100;
 

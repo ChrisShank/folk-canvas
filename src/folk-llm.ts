@@ -24,9 +24,11 @@ export class FolkLLM extends HTMLElement {
     this.#update(new Set(['systemPrompt', 'prompt']));
   }
 
-  #session;
+  #session: any;
 
-  #isModelReady = window?.ai.languageModel.capabilities().then((capabilities) => capabilities.available === 'readily');
+  #isModelReady = window?.ai.languageModel
+    .capabilities()
+    .then((capabilities: any) => capabilities.available === 'readily');
 
   #systemPrompt: Prompt = this.getAttribute('system-prompt') || '';
   get systemPrompt() {
