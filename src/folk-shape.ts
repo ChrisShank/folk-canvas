@@ -7,7 +7,16 @@ const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
-type Handle = 'resize-nw' | 'resize-ne' | 'resize-se' | 'resize-sw' | 'rotation' | 'move';
+type Handle =
+  | 'resize-nw'
+  | 'resize-ne'
+  | 'resize-se'
+  | 'resize-sw'
+  | 'rotation-nw'
+  | 'rotation-ne'
+  | 'rotation-se'
+  | 'rotation-sw'
+  | 'move';
 
 const resizeCursorUrl = (degrees: number) =>
   `url("data:image/svg+xml,<svg height='32' width='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'><g fill='none' transform='rotate(${degrees} 16 16)'><path d='M9 9L21 21M9 9H12L9 12V9ZM21 21V18L18 21H21Z' stroke='white' stroke-width='3' stroke-linejoin='miter'/><path d='M9 9L21 21M9 9H12L9 12V9ZM21 21V18L18 21H21Z' stroke='black' stroke-width='1.5' stroke-linejoin='miter'/></g></svg>") 16 16, nwse-resize`;
@@ -97,7 +106,8 @@ styles.replaceSync(css`
     pointer-events: auto;
   }
 
-  :host(:focus-within) {
+  :host(:focus-within),
+  :host(:focus-visible) {
     z-index: calc(infinity - 1);
     outline: solid 1px hsl(214, 84%, 56%);
   }
@@ -162,29 +172,45 @@ styles.replaceSync(css`
     cursor: var(--fc-nesw-resize, url('${resizeCursorUrl(0)}') 16 16, nesw-resize);
   }
 
-  [part='rotation'] {
+  [part^='rotation'] {
     z-index: calc(infinity);
     display: block;
     position: absolute;
     box-sizing: border-box;
+    border-radius: 0px;
     padding: 0;
-    border: 1.5px solid hsl(214, 84%, 56%);
-    border-radius: 50%;
-    background: hsl(210, 20%, 98%);
-    width: 11px;
+    opacity: 0;
+    width: 16px;
     aspect-ratio: 1;
-    top: 0;
-    left: 50%;
-    translate: -50% -150%;
-    cursor: var(--fc-rotate, url('${rotateCursorUrl(0)}') 16 16, pointer);
-  }
-
-  :state(rotate) {
     cursor: var(--fc-rotate, url('${rotateCursorUrl(0)}') 16 16, pointer) !important;
   }
 
+  [part='rotation-nw'] {
+    top: 0;
+    left: 0;
+    translate: -100% -100%;
+  }
+
+  [part='rotation-ne'] {
+    top: 0;
+    left: 100%;
+    translate: 0% -100%;
+  }
+
+  [part='rotation-se'] {
+    top: 100%;
+    left: 100%;
+    translate: 0% 0%;
+  }
+
+  [part='rotation-sw'] {
+    top: 100%;
+    left: 0;
+    translate: -100% 0%;
+  }
+
   :host(:not(:focus-within)) [part^='resize'],
-  :host(:not(:focus-within)) [part='rotation'] {
+  :host(:not(:focus-within)) [part^='rotation'] {
     opacity: 0;
     cursor: default;
   }
@@ -204,7 +230,7 @@ export class FolkShape extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  #shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+  #shadow = this.attachShadow({ mode: 'open' });
 
   #internals = this.attachInternals();
 
@@ -305,16 +331,20 @@ export class FolkShape extends HTMLElement {
     super();
 
     this.addEventListener('pointerdown', this);
+    this.setAttribute('tabindex', '0');
 
     this.#shadow.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    this.#shadow.innerHTML = html` <button part="rotation"></button>
-      <button part="resize-nw"></button>
-      <button part="resize-ne"></button>
-      <button part="resize-se"></button>
-      <button part="resize-sw"></button>
+    this.#shadow.innerHTML = html` <button part="rotation-nw" tabindex="-1"></button>
+      <button part="rotation-ne" tabindex="-1"></button>
+      <button part="rotation-se" tabindex="-1"></button>
+      <button part="rotation-sw" tabindex="-1"></button>
+      <button part="resize-nw" aria-label="Resize shape from top left"></button>
+      <button part="resize-ne" aria-label="Resize shape from top right"></button>
+      <button part="resize-se" aria-label="Resize shape from bottom right"></button>
+      <button part="resize-sw" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
 
     this.height = Number(this.getAttribute('height')) || 'auto';
@@ -386,7 +416,7 @@ export class FolkShape extends HTMLElement {
         const target = event.composedPath()[0] as HTMLElement;
 
         // Store initial angle on rotation start
-        if (target.getAttribute('part') === 'rotation') {
+        if (target.getAttribute('part')?.startsWith('rotation')) {
           const center = this.getClientRect().center();
           this.#initialRotation = this.#rotation;
           this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
@@ -497,7 +527,7 @@ export class FolkShape extends HTMLElement {
           return;
         }
 
-        if (handle === 'rotation') {
+        if (handle.startsWith('rotation')) {
           const center = this.getClientRect().center();
           const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
           this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
