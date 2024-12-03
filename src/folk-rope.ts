@@ -2,7 +2,7 @@
 
 import { Vector } from './common/Vector.ts';
 import type { Point } from './common/types.ts';
-import { AbstractArrow } from './abstract-arrow.ts';
+import { FolkConnection } from './folk-connection.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 
@@ -25,7 +25,7 @@ declare global {
   }
 }
 
-export class FolkRope extends AbstractArrow {
+export class FolkRope extends FolkConnection {
   static override tagName = 'folk-rope';
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

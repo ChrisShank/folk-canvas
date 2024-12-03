@@ -1,7 +1,7 @@
-import { AbstractArrow } from './abstract-arrow.js';
+import { FolkConnection } from './folk-connection.js';
 import { verticesToPolygon } from './common/utils.js';
 import type { Point } from './common/types.js';
-export class FolkXanadu extends AbstractArrow {
+export class FolkXanadu extends FolkConnection {
   static tagName = 'folk-xanadu';
 
   render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly): void {
