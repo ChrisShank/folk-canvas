@@ -5,6 +5,13 @@ import type { Node } from '@babel/types';
 
 const styles = new CSSStyleSheet();
 styles.replaceSync(css`
+  :host {
+    display: block;
+    position: absolute;
+    inset: 0 0 0 0;
+    pointer-events: none;
+  }
+
   textarea {
     position: absolute;
     width: auto;
