@@ -414,10 +414,8 @@ export class FolkShape extends HTMLElement {
 
           const [topLeft] = this.getClientRect().corners();
 
-          const newCenter: Point = {
-            x: (topLeft.x + clientX) / 2,
-            y: (topLeft.y + clientY) / 2,
-          };
+          const newCenter: Point = Vector.lerp(topLeft, { x: clientX, y: clientY }, 0.5);
+
           const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
 
           let bottomRight: Point;
