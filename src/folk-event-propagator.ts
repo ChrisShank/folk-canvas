@@ -82,18 +82,21 @@ export class FolkEventPropagator extends FolkRope {
       } else if (key.endsWith('()')) {
         // If the key is a method, execute it if the condition is true
         const methodName = key.slice(0, -2);
-        codeLines.push(`if (${value}) { to.${methodName}(); }`);
+        codeLines.push(`
+if (typeof to.${methodName} !== 'function') throw new Error(\`Method '${methodName}' does not exist on target element.\`);
+else if (${value}) to.${methodName}();`);
       } else {
         // For property assignments, assign the value directly
-        codeLines.push(`to.${key} = ${value};`);
+        codeLines.push(`
+if (!('${key}' in to)) throw new Error(\`Property '${key}' does not exist on target element.\`);
+to.${key} = ${value};`);
       }
     }
 
     const functionBody = codeLines.join('\n');
 
     try {
-      parseAst(functionBody);
-
+      // parseAst(functionBody);
       this.#function = new Function('from', 'to', 'event', functionBody);
     } catch (error) {
       console.warn('Failed to parse expression:', error, functionBody);
@@ -186,26 +189,7 @@ export class FolkEventPropagator extends FolkRope {
     if (!this.#function) return;
 
     try {
-      const toProxy = new Proxy(this.targetElement, {
-        set(target, prop, value, receiver) {
-          if (!(prop in target)) {
-            throw new Error(`Property '${String(prop)}' does not exist on target element.`);
-          }
-          return Reflect.set(target, prop, value, receiver);
-        },
-        get(target, prop, receiver) {
-          const value = Reflect.get(target, prop, receiver);
-          if (value === undefined) {
-            throw new Error(`Property '${String(prop)}' does not exist on target element.`);
-          }
-          if (typeof value === 'function') {
-            return value.bind(target);
-          }
-          return value;
-        },
-      });
-
-      this.#function(this.sourceElement, toProxy, event);
+      this.#function(this.sourceElement, this.targetElement, event);
     } catch (error) {
       console.warn('Failed to evaluate expression:', error);
       this.stroke = 'red';
