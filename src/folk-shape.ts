@@ -413,41 +413,38 @@ export class FolkShape extends HTMLElement {
 
         if (handle.includes('resize')) {
           const mouse = { x: event.clientX, y: event.clientY };
-          const [topLeft, topRight, bottomRight, bottomLeft] = this.getClientRect().corners();
+          const corners = this.getClientRect().corners();
 
-          if (handle.endsWith('nw')) {
-            const newCenter = Vector.lerp(bottomRight, mouse, 0.5);
-            const newTopLeft = Vector.rotateAround(mouse, newCenter, -this.rotation);
-            const newBottomRight = Vector.rotateAround(bottomRight, newCenter, -this.rotation);
-            this.x = newTopLeft.x;
-            this.y = newTopLeft.y;
-            this.width = newBottomRight.x - newTopLeft.x;
-            this.height = newBottomRight.y - newTopLeft.y;
-          } else if (handle.endsWith('ne')) {
-            const newCenter = Vector.lerp(bottomLeft, mouse, 0.5);
-            const newBottomLeft = Vector.rotateAround(bottomLeft, newCenter, -this.rotation);
-            const newTopRight = Vector.rotateAround(mouse, newCenter, -this.rotation);
-            this.x = newBottomLeft.x;
-            this.y = newTopRight.y;
-            this.width = newTopRight.x - newBottomLeft.x;
-            this.height = newBottomLeft.y - newTopRight.y;
-          } else if (handle.endsWith('se')) {
-            const newCenter = Vector.lerp(topLeft, mouse, 0.5);
-            const newTopLeft = Vector.rotateAround(topLeft, newCenter, -this.rotation);
-            const newBottomRight = Vector.rotateAround(mouse, newCenter, -this.rotation);
-            this.x = newTopLeft.x;
-            this.y = newTopLeft.y;
-            this.width = newBottomRight.x - newTopLeft.x;
-            this.height = newBottomRight.y - newTopLeft.y;
+          const handleEnd = handle.slice(-2); // 'nw', 'ne', 'se', 'sw'
+          let thisCornerIndex: number;
+          let oppositeCornerIndex: number;
+
+          if (handleEnd === 'nw') {
+            thisCornerIndex = 0; // topLeft
+            oppositeCornerIndex = 2; // bottomRight
+          } else if (handleEnd === 'ne') {
+            thisCornerIndex = 1; // topRight
+            oppositeCornerIndex = 3; // bottomLeft
+          } else if (handleEnd === 'se') {
+            thisCornerIndex = 2; // bottomRight
+            oppositeCornerIndex = 0; // topLeft
+          } else if (handleEnd === 'sw') {
+            thisCornerIndex = 3; // bottomLeft
+            oppositeCornerIndex = 1; // topRight
           } else {
-            const newCenter = Vector.lerp(topRight, mouse, 0.5);
-            const newBottomLeft = Vector.rotateAround(mouse, newCenter, -this.rotation);
-            const newTopRight = Vector.rotateAround(topRight, newCenter, -this.rotation);
-            this.x = newBottomLeft.x;
-            this.y = newTopRight.y;
-            this.width = newTopRight.x - newBottomLeft.x;
-            this.height = newBottomLeft.y - newTopRight.y;
+            return;
           }
+
+          const oppositeCorner = corners[oppositeCornerIndex];
+          const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
+          const newThisCorner = Vector.rotateAround(mouse, newCenter, -this.rotation);
+          const newOppositeCorner = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
+
+          this.x = Math.min(newThisCorner.x, newOppositeCorner.x);
+          this.y = Math.min(newThisCorner.y, newOppositeCorner.y);
+          this.width = Math.abs(newOppositeCorner.x - newThisCorner.x);
+          this.height = Math.abs(newOppositeCorner.y - newThisCorner.y);
+
           return;
         }
 
