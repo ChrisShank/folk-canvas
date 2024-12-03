@@ -171,11 +171,6 @@
       import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
       import { FolkSpreadsheet } from '../src/folk-spreadsheet.ts';
 
-      FolkMap.define();
-      FolkShape.define();
-      FolkSpreadsheet.define();
-      FolkEventPropagator.define();
-
       window.round = (number, digits = 0) => {
         const base = Number('1'.padEnd(digits + 1, '0'));
         return Math.round(number * base) / base;

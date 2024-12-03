@@ -153,9 +153,6 @@
       import { FolkShape } from '../src/folk-shape.ts';
       import { FolkConnection } from '../src/folk-connection.ts';
 
-      FolkShape.define();
-      FolkConnection.define();
-
       document.body.querySelectorAll('folk-shape').forEach((el, i) => (el.style.viewTransitionName = `g${i}`));
       document.body.querySelectorAll('folk-connection').forEach((el, i) => (el.style.viewTransitionName = `c${i}`));
       document.body.querySelectorAll('h2').forEach((el, i) => (el.style.viewTransitionName = `h${i}`));

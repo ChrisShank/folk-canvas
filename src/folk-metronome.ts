@@ -69,3 +69,7 @@ export class FolkMetronome extends HTMLElement {
     this.textContent = this.#beat.toString();
   };
 }
+
+if (!customElements.get('folk-metronome')) {
+  FolkMetronome.define();
+}

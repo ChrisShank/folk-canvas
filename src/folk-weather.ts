@@ -68,3 +68,7 @@ export class FolkWeather extends HTMLElement {
     `;
   }
 }
+
+if (!customElements.get('folk-weather')) {
+  FolkWeather.define();
+}

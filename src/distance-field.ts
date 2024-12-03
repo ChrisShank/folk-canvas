@@ -568,3 +568,7 @@ void main() {
   vec2 seedCoord = gl_FragCoord.xy / u_canvasSize;
   outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords (x, y), shape ID (z), initial distance (a)
 }`;
+
+if (!customElements.get('distance-field')) {
+  DistanceField.define();
+}

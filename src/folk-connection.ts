@@ -85,3 +85,7 @@ export class FolkConnection extends AbstractArrow {
     this.style.backgroundColor = 'black';
   }
 }
+
+if (!customElements.get('folk-connection')) {
+  FolkConnection.define();
+}

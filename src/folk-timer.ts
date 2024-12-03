@@ -39,3 +39,7 @@ export class FolkTimer extends HTMLElement {
     this.textContent = (time / 1000).toFixed(1);
   };
 }
+
+if (!customElements.get('folk-timer')) {
+  FolkTimer.define();
+}

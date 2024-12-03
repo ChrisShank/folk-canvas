@@ -211,3 +211,7 @@ export class FolkInk extends HTMLElement {
     return d.join(' ');
   }
 }
+
+if (!customElements.get('folk-ink')) {
+  FolkInk.define();
+}

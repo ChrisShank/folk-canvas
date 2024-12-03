@@ -102,3 +102,7 @@ declare global {
     ai: any;
   }
 }
+
+if (!customElements.get('folk-llm')) {
+  FolkLLM.define();
+}

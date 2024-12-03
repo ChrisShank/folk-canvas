@@ -513,3 +513,7 @@ export class FolkSpreadSheetCell extends HTMLElement {
     }
   }
 }
+
+if (!customElements.get('folk-cell')) {
+  FolkSpreadSheetCell.define();
+}

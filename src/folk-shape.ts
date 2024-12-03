@@ -591,3 +591,7 @@ export class FolkShape extends HTMLElement {
     this.#dispatchTransformEvent(new Set(['width', 'height']));
   };
 }
+
+if (!customElements.get('folk-shape')) {
+  FolkShape.define();
+}

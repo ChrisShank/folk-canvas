@@ -94,3 +94,7 @@ export class FolkMap extends HTMLElement {
     }
   };
 }
+
+if (!customElements.get('folk-map')) {
+  FolkMap.define();
+}

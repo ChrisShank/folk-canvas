@@ -78,3 +78,7 @@ export class FolkSet extends HTMLElement {
 
   update() {}
 }
+
+if (!customElements.get('folk-set')) {
+  FolkSet.define();
+}

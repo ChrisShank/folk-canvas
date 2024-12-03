@@ -128,3 +128,7 @@ export class FolkToolbar extends HTMLElement {
     return element.id;
   }
 }
+
+if (!customElements.get('folk-toolbar')) {
+  FolkToolbar.define();
+}

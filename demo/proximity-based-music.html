@@ -64,15 +64,6 @@
       import { RecordPlayer } from './src/record-player.ts';
       import { collisionDetection } from '../src/common/collision.ts';
 
-      FolkShape.define();
-      RecordPlayer.define();
-
-      /**
-        sips -c 326 276 --cropOffset 1 1 *.png --out pngs/
-        ffmpeg -framerate 25 -pattern_type glob -i '*.png' -c:v prores -pix_fmt yuva444p10le dancing-flower.mov
-        ffmpeg -framerate 25 -f image2 -pattern_type glob -i '*.png' -c:v libvpx-vp9 -pix_fmt yuva420p dancing-flowers.webm
-       */
-
       let proximityDistance = 150;
       const proximitySet = new Set();
       const recordPlayerGeometry = document.querySelector('folk-shape:has(record-player)');

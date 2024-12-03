@@ -192,3 +192,7 @@ export class FolkProximity extends HTMLElement {
     return null;
   }
 }
+
+if (!customElements.get('folk-proximity')) {
+  FolkProximity.define();
+}
