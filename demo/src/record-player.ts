@@ -219,6 +219,7 @@ export class RecordPlayer extends HTMLElement {
   static tagName = 'record-player';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -384,3 +385,5 @@ function diffStyles(stylesA: Map<string, string>, stylesB: Map<string, string>):
 
   return changedProperties;
 }
+
+RecordPlayer.define();

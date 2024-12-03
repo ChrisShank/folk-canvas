@@ -15,6 +15,7 @@ export class FolkLLM extends HTMLElement {
   static tagName = 'folk-llm';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -103,6 +104,4 @@ declare global {
   }
 }
 
-if (!customElements.get('folk-llm')) {
-  FolkLLM.define();
-}
+FolkLLM.define();

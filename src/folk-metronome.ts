@@ -8,6 +8,7 @@ export class FolkMetronome extends HTMLElement {
   static tagName = 'folk-metronome';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -70,6 +71,4 @@ export class FolkMetronome extends HTMLElement {
   };
 }
 
-if (!customElements.get('folk-metronome')) {
-  FolkMetronome.define();
-}
+FolkMetronome.define();

@@ -132,6 +132,7 @@ export class FolkProximity extends HTMLElement {
   static tagName = 'folk-proximity';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -193,6 +194,5 @@ export class FolkProximity extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-proximity')) {
-  FolkProximity.define();
-}
+FolkCluster.define();
+FolkProximity.define();

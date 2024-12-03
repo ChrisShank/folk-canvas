@@ -153,6 +153,7 @@ export class FolkSpreadsheet extends HTMLElement {
   static tagName = 'folk-spreadsheet';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     FolkSpreadSheetCell.define();
     FolkSpreadsheetHeader.define();
     customElements.define(this.tagName, this);
@@ -349,6 +350,7 @@ export class FolkSpreadsheetHeader extends HTMLElement {
   static tagName = 's-header';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -379,6 +381,7 @@ export class FolkSpreadSheetCell extends HTMLElement {
   static tagName = 'folk-cell';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -514,6 +517,4 @@ export class FolkSpreadSheetCell extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-cell')) {
-  FolkSpreadSheetCell.define();
-}
+FolkSpreadsheet.define();

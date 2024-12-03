@@ -14,6 +14,7 @@ export class FolkSet extends HTMLElement {
   static tagName = 'folk-set';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -79,6 +80,4 @@ export class FolkSet extends HTMLElement {
   update() {}
 }
 
-if (!customElements.get('folk-set')) {
-  FolkSet.define();
-}
+FolkSet.define();

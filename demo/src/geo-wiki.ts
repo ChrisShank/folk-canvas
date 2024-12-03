@@ -4,6 +4,7 @@ export class GeoWiki extends HTMLElement {
   static tagName = 'geo-wiki';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -62,3 +63,5 @@ export class GeoWiki extends HTMLElement {
     this.appendChild(list);
   }
 }
+
+GeoWiki.define();

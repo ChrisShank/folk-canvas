@@ -33,6 +33,7 @@ export class FolkToolbar extends HTMLElement {
   static tagName = 'folk-toolbar';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -113,9 +114,6 @@ export class FolkToolbar extends HTMLElement {
       'text/html'
     ).body.firstElementChild;
 
-    if (!customElements.get('folk-event-propagator')) {
-      FolkEventPropagator.define();
-    }
     if (propagator) {
       document.body.appendChild(propagator);
     }
@@ -129,6 +127,5 @@ export class FolkToolbar extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-toolbar')) {
-  FolkToolbar.define();
-}
+FolkEventPropagator.define();
+FolkToolbar.define();

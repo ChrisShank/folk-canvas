@@ -86,6 +86,4 @@ export class FolkConnection extends AbstractArrow {
   }
 }
 
-if (!customElements.get('folk-connection')) {
-  FolkConnection.define();
-}
+FolkConnection.define();

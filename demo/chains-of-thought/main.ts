@@ -12,6 +12,7 @@ class FolkThought extends HTMLElement {
   static tagName = 'fc-thought';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 

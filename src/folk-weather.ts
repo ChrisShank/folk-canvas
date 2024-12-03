@@ -14,6 +14,7 @@ export class FolkWeather extends HTMLElement {
   static tagName = 'folk-weather';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -69,6 +70,4 @@ export class FolkWeather extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-weather')) {
-  FolkWeather.define();
-}
+FolkWeather.define();

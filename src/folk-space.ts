@@ -10,6 +10,7 @@ export class FolkSpace extends HTMLElement {
   static tagName = 'folk-space';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -71,6 +72,4 @@ export class FolkSpace extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-space')) {
-  FolkSpace.define();
-}
+FolkSpace.define();

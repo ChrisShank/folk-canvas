@@ -8,6 +8,7 @@ export class FolkTimer extends HTMLElement {
   static tagName = 'folk-timer';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -40,6 +41,4 @@ export class FolkTimer extends HTMLElement {
   };
 }
 
-if (!customElements.get('folk-timer')) {
-  FolkTimer.define();
-}
+FolkTimer.define();

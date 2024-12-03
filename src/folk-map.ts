@@ -25,6 +25,7 @@ export class FolkMap extends HTMLElement {
   static tagName = 'folk-map';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -95,6 +96,4 @@ export class FolkMap extends HTMLElement {
   };
 }
 
-if (!customElements.get('folk-map')) {
-  FolkMap.define();
-}
+FolkMap.define();

@@ -258,6 +258,4 @@ function applyConstraint(p1: RopePoint, p2: RopePoint) {
   }
 }
 
-if (!customElements.get('folk-rope')) {
-  FolkRope.define();
-}
+FolkRope.define();

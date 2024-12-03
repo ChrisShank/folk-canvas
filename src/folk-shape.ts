@@ -91,7 +91,7 @@ styles.replaceSync(css`
   div {
     height: 100%;
     width: 100%;
-    overflow: hidden;
+    overflow: scroll;
     pointer-events: none;
   }
 
@@ -221,6 +221,7 @@ export class FolkShape extends HTMLElement {
   static tagName = 'folk-shape';
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -326,7 +327,6 @@ export class FolkShape extends HTMLElement {
     super();
 
     this.addEventListener('pointerdown', this);
-    this.setAttribute('tabindex', '0');
 
     this.#shadow.adoptedStyleSheets = [styles, this.#dynamicStyles];
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
@@ -348,6 +348,7 @@ export class FolkShape extends HTMLElement {
 
   #isConnected = false;
   connectedCallback() {
+    this.setAttribute('tabindex', '0');
     this.#isConnected = true;
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
   }
@@ -684,6 +685,4 @@ export class FolkShape extends HTMLElement {
   }
 }
 
-if (!customElements.get('folk-shape')) {
-  FolkShape.define();
-}
+FolkShape.define();

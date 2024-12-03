@@ -30,6 +30,7 @@ export class DistanceField extends HTMLElement {
   private isPingTexture: boolean = true;
 
   static define() {
+    if (customElements.get(this.tagName)) return;
     customElements.define(this.tagName, this);
   }
 
@@ -569,6 +570,4 @@ void main() {
   outColor = vec4(seedCoord, v_shapeID, 0.0);  // Seed coords (x, y), shape ID (z), initial distance (a)
 }`;
 
-if (!customElements.get('distance-field')) {
-  DistanceField.define();
-}
+DistanceField.define();

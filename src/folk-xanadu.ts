@@ -101,6 +101,4 @@ function computeInlineVertices(rects: DOMRect[]): Point[] {
   return vertices;
 }
 
-if (!customElements.get('folk-xanadu')) {
-  FolkXanadu.define();
-}
+FolkXanadu.define();
