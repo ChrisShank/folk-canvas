@@ -429,11 +429,6 @@ export class FolkShape extends HTMLElement {
           const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
           const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
 
-          let newX = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
-          let newY = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
-          let newWidth = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
-          let newHeight = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
-
           const HANDLE_BEHAVIOR = {
             'resize-se': {
               flipX: unrotatedHandle.x < unrotatedAnchor.x,
@@ -466,7 +461,6 @@ export class FolkShape extends HTMLElement {
           const hasFlippedY = behavior.flipY;
 
           if (hasFlippedX || hasFlippedY) {
-            console.log('negative');
             const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
             const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
 
@@ -481,19 +475,16 @@ export class FolkShape extends HTMLElement {
               newTarget.addEventListener('pointermove', this);
               newTarget.addEventListener('lostpointercapture', this);
 
-              console.log('target', target, 'newTarget', newTarget);
-
               // Transfer pointer capture
               target.releasePointerCapture(event.pointerId);
               newTarget.setPointerCapture(event.pointerId);
             }
           }
 
-          this.x = newX;
-          this.y = newY;
-          this.width = newWidth;
-          this.height = newHeight;
-
+          this.x = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
+          this.y = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
+          this.width = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
+          this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
           return;
         }
 
