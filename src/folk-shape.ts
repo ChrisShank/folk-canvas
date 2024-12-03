@@ -7,6 +7,8 @@ const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
+type Handle = 'resize-nw' | 'resize-ne' | 'resize-se' | 'resize-sw' | 'rotation' | 'move';
+
 export type TransformEventDetail = {
   rotate: number;
 };
@@ -405,7 +407,7 @@ export class FolkShape extends HTMLElement {
           return;
         }
 
-        const handle = target.getAttribute('part');
+        const handle = target.getAttribute('part') as Handle;
 
         if (handle === null) return;
 
