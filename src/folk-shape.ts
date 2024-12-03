@@ -411,54 +411,39 @@ export class FolkShape extends HTMLElement {
           return;
         }
 
-        const part = target.getAttribute('part');
+        const handle = target.getAttribute('part');
 
-        if (part === null) return;
+        if (handle === null) return;
 
-        if (part.includes('resize')) {
-          let newWidth = this.width;
-          let newHeight = this.height;
-          let newX = this.x;
-          let newY = this.y;
+        if (handle.includes('resize')) {
+          const angle = this.rotation;
+          const { clientX, clientY } = event;
+          const rect = this.getClientRect();
+          const [topLeft, topRight, bottomRight, bottomLeft] = rect.corners();
 
-          if (part.includes('-n')) {
-            const proposedHeight = this.height - event.movementY;
-            if (proposedHeight > 0) {
-              newHeight = proposedHeight;
-              newY = this.y + event.movementY;
-            }
+          if (handle.endsWith('nw')) {
+          } else if (handle.endsWith('ne')) {
           }
+          if (handle.endsWith('se')) {
+            const newCenter: Point = {
+              x: (topLeft.x + clientX) / 2,
+              y: (topLeft.y + clientY) / 2,
+            };
 
-          if (part.endsWith('e')) {
-            const proposedWidth = this.width + event.movementX;
-            if (proposedWidth > 0) {
-              newWidth = proposedWidth;
-            }
+            const newTopLeft = Vector.rotateAround(topLeft, newCenter, -angle);
+
+            const newBottomRight = Vector.rotateAround({ x: clientX, y: clientY }, newCenter, -angle);
+
+            this.x = newTopLeft.x;
+            this.y = newTopLeft.y;
+            this.width = newBottomRight.x - newTopLeft.x;
+            this.height = newBottomRight.y - newTopLeft.y;
+          } else {
           }
-
-          if (part.includes('-s')) {
-            const proposedHeight = this.height + event.movementY;
-            if (proposedHeight > 0) {
-              newHeight = proposedHeight;
-            }
-          }
-
-          if (part.endsWith('w')) {
-            const proposedWidth = this.width - event.movementX;
-            if (proposedWidth > 0) {
-              newWidth = proposedWidth;
-              newX = this.x + event.movementX;
-            }
-          }
-
-          this.width = newWidth;
-          this.height = newHeight;
-          this.x = newX;
-          this.y = newY;
           return;
         }
 
-        if (part === 'rotation') {
+        if (handle === 'rotation') {
           const centerX = this.#x + this.width / 2;
           const centerY = this.#y + this.height / 2;
           const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
