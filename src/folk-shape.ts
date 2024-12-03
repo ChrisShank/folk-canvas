@@ -309,8 +309,8 @@ export class FolkShape extends HTMLElement {
 
   #isConnected = false;
   connectedCallback() {
-    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
     this.#isConnected = true;
+    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
   }
 
   getClientRect(): RotatedDOMRect {
@@ -497,12 +497,12 @@ export class FolkShape extends HTMLElement {
 
   // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
   #update(updatedProperties: Set<string>) {
-    if (updatedProperties.has('type')) {
-      // TODO: Update shape styles. For many shapes, we could just use clip-path to style the shape.
-      // If we use relative values in `clip-path: polygon()`, then no JS is needed to style the shape
-      // If `clip-path: path()` is used then we need to update the path in JS.
-      // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
-    }
+    // if (updatedProperties.has('type')) {
+    //   // TODO: Update shape styles. For many shapes, we could just use clip-path to style the shape.
+    //   // If we use relative values in `clip-path: polygon()`, then no JS is needed to style the shape
+    //   // If `clip-path: path()` is used then we need to update the path in JS.
+    //   // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
+    // }
 
     this.#dispatchTransformEvent(updatedProperties);
   }

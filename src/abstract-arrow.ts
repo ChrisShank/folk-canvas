@@ -192,10 +192,15 @@ export class AbstractArrow extends HTMLElement {
         throw new Error('source is not a valid element');
       } else if (this.#sourceElement instanceof FolkShape) {
         this.#sourceElement.addEventListener('transform', this.#sourceHandler);
-        this.#sourceRect = this.#sourceElement.getBoundingClientRect();
+
+        this.#sourceRect = this.#sourceElement.getClientRect();
+
+        this.#update();
       } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
         window.addEventListener('message', this.#sourcePostMessage);
+
         clientRectObserver.observe(this.#sourceElement, this.#sourceIframeCallback);
+
         this.#sourceElement.contentWindow?.postMessage({
           type: 'folk-observe-element',
           selector: this.#sourceIframeSelector,
@@ -241,6 +246,8 @@ export class AbstractArrow extends HTMLElement {
         throw new Error('target is not a valid element');
       } else if (this.#targetElement instanceof FolkShape) {
         this.#targetElement.addEventListener('transform', this.#targetHandler);
+        this.#targetRect = this.#targetElement.getClientRect();
+        this.#update();
       } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
         window.addEventListener('message', this.#targetPostMessage);
         clientRectObserver.observe(this.#targetElement, this.#targetIframeCallback);
@@ -250,8 +257,8 @@ export class AbstractArrow extends HTMLElement {
         });
       } else {
         clientRectObserver.observe(this.#targetElement, this.#targetCallback);
+        this.#targetRect = this.#targetElement.getBoundingClientRect();
       }
-      this.#targetRect = this.#targetElement.getBoundingClientRect();
     }
   }
 
