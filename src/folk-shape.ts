@@ -7,27 +7,54 @@ const resizeObserver = new ResizeObserverManager();
 
 export type Shape = 'rectangle' | 'circle' | 'triangle';
 
-export type MoveEventDetail = { movementX: number; movementY: number };
+export type TransformEventDetail = {
+  rotate: number;
+};
 
-export class MoveEvent extends CustomEvent<MoveEventDetail> {
-  constructor(detail: MoveEventDetail) {
-    super('move', { detail, cancelable: true, bubbles: true });
+// TODO: expose previous and current rects
+export class TransformEvent extends Event {
+  constructor() {
+    super('transform', { cancelable: true, bubbles: true });
   }
-}
 
-export type ResizeEventDetail = { movementX: number; movementY: number };
-
-export class ResizeEvent extends CustomEvent<MoveEventDetail> {
-  constructor(detail: MoveEventDetail) {
-    super('resize', { detail, cancelable: true, bubbles: true });
+  #xPrevented = false;
+  get xPrevented() {
+    return this.defaultPrevented || this.#xPrevented;
   }
-}
+  preventX() {
+    this.#xPrevented = true;
+  }
 
-export type RotateEventDetail = { rotate: number };
+  #yPrevented = false;
+  get yPrevented() {
+    return this.defaultPrevented || this.#yPrevented;
+  }
+  preventY() {
+    this.#yPrevented = true;
+  }
 
-export class RotateEvent extends CustomEvent<RotateEventDetail> {
-  constructor(detail: RotateEventDetail) {
-    super('rotate', { detail, cancelable: true, bubbles: true });
+  #heightPrevented = false;
+  get heightPrevented() {
+    return this.defaultPrevented || this.#heightPrevented;
+  }
+  preventHeight() {
+    this.#heightPrevented = true;
+  }
+
+  #widthPrevented = false;
+  get widthPrevented() {
+    return this.defaultPrevented || this.#widthPrevented;
+  }
+  preventWidth() {
+    this.#widthPrevented = true;
+  }
+
+  #rotatePrevented = false;
+  get rotatePrevented() {
+    return this.defaultPrevented || this.#rotatePrevented;
+  }
+  preventRotate() {
+    this.#rotatePrevented = true;
   }
 }
 
@@ -209,9 +236,9 @@ export class FolkShape extends HTMLElement {
 
   set width(width: Dimension) {
     if (width === 'auto') {
-      resizeObserver.observe(this, this.#onResize);
+      resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#width === 'auto' && this.#height !== 'auto') {
-      resizeObserver.unobserve(this, this.#onResize);
+      resizeObserver.unobserve(this, this.#onAutoResize);
     }
     this.#previousWidth = this.#width;
     this.#width = width;
@@ -229,9 +256,9 @@ export class FolkShape extends HTMLElement {
 
   set height(height: Dimension) {
     if (height === 'auto') {
-      resizeObserver.observe(this, this.#onResize);
+      resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#height === 'auto' && this.#width !== 'auto') {
-      resizeObserver.unobserve(this, this.#onResize);
+      resizeObserver.unobserve(this, this.#onAutoResize);
     }
 
     this.#previousHeight = this.#height;
@@ -280,8 +307,10 @@ export class FolkShape extends HTMLElement {
     this.width = Number(this.getAttribute('width')) || 'auto';
   }
 
+  #isConnected = false;
   connectedCallback() {
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
+    this.#isConnected = true;
   }
 
   getClientRect(): RotatedDOMRect {
@@ -453,6 +482,8 @@ export class FolkShape extends HTMLElement {
   #isUpdating = false;
 
   async #requestUpdate(property: string) {
+    if (!this.#isConnected) return;
+
     this.#updatedProperties.add(property);
 
     if (this.#isUpdating) return;
@@ -473,86 +504,60 @@ export class FolkShape extends HTMLElement {
       // See https://www.smashingmagazine.com/2024/05/modern-guide-making-css-shapes/
     }
 
-    if (updatedProperties.has('x') || updatedProperties.has('y')) {
-      // Although the change in movement isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(
-        new MoveEvent({
-          movementX: this.#x - this.#previousX,
-          movementY: this.#y - this.#previousY,
-        })
-      );
+    this.#dispatchTransformEvent(updatedProperties);
+  }
 
-      if (notCancelled) {
-        if (updatedProperties.has('x')) {
-          // In the future, when CSS `attr()` is supported we could define this x/y projection in CSS.
-          this.style.left = `${this.#x}px`;
-        }
+  #dispatchTransformEvent(updatedProperties: Set<string>) {
+    const event = new TransformEvent();
 
-        if (updatedProperties.has('y')) {
-          this.style.top = `${this.#y}px`;
-        }
-      } else {
+    this.dispatchEvent(event);
+
+    if (updatedProperties.has('x')) {
+      if (event.xPrevented) {
         this.#x = this.#previousX;
-        this.#y = this.#previousY;
+      } else {
+        this.style.left = `${this.#x}px`;
       }
     }
 
-    if (updatedProperties.has('width') || updatedProperties.has('height')) {
-      // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(
-        new ResizeEvent({
-          movementX: this.width - (this.#previousWidth === 'auto' ? 0 : this.#previousWidth),
-          movementY: this.height - (this.#previousHeight === 'auto' ? 0 : this.#previousHeight),
-        })
-      );
-      if (notCancelled) {
-        if (updatedProperties.has('width')) {
-          this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
-        }
-
-        if (updatedProperties.has('height')) {
-          this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
-        }
+    if (updatedProperties.has('y')) {
+      if (event.yPrevented) {
+        this.#y = this.#previousY;
       } else {
-        // TODO: Revert changes to position too
+        this.style.top = `${this.#y}px`;
+      }
+    }
+
+    if (updatedProperties.has('height')) {
+      if (event.heightPrevented) {
         this.#height = this.#previousHeight;
+      } else {
+        this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
+      }
+    }
+
+    if (updatedProperties.has('width')) {
+      if (event.widthPrevented) {
         this.#width = this.#previousWidth;
+      } else {
+        this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
       }
     }
 
     if (updatedProperties.has('rotation')) {
-      // Although the change in resize isn't useful inside this component, the outside world might find it helpful to calculate acceleration and other physics
-      const notCancelled = this.dispatchEvent(new RotateEvent({ rotate: this.#rotation - this.#previousRotation }));
-
-      if (notCancelled) {
-        if (updatedProperties.has('rotation')) {
-          this.style.rotate = `${this.#rotation}rad`;
-        }
-      } else {
+      if (event.rotatePrevented) {
         this.#rotation = this.#previousRotation;
+      } else {
+        this.style.rotate = `${this.#rotation}rad`;
       }
     }
   }
 
-  #onResize = (entry: ResizeObserverEntry) => {
+  #onAutoResize = (entry: ResizeObserverEntry) => {
     const previousRect = this.#autoContentRect;
     this.#autoContentRect = entry.contentRect;
-
-    const notCancelled = this.dispatchEvent(
-      new ResizeEvent({
-        movementX: this.width - (this.#previousWidth === 'auto' ? previousRect.width : this.#previousWidth),
-        movementY: this.height - (this.#previousHeight === 'auto' ? previousRect.height : this.#previousHeight),
-      })
-    );
-
-    if (!notCancelled) {
-      if (this.#height === 'auto') {
-        this.height = previousRect?.height || 0;
-      }
-
-      if (this.#width === 'auto') {
-        this.width = previousRect?.width || 0;
-      }
-    }
+    this.#previousHeight = previousRect.height;
+    this.#previousWidth = previousRect.width;
+    this.#dispatchTransformEvent(new Set(['width', 'height']));
   };
 }

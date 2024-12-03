@@ -191,8 +191,7 @@ export class AbstractArrow extends HTMLElement {
       if (this.#sourceElement === null) {
         throw new Error('source is not a valid element');
       } else if (this.#sourceElement instanceof FolkShape) {
-        this.#sourceElement.addEventListener('resize', this.#sourceHandler);
-        this.#sourceElement.addEventListener('move', this.#sourceHandler);
+        this.#sourceElement.addEventListener('transform', this.#sourceHandler);
         this.#sourceRect = this.#sourceElement.getBoundingClientRect();
       } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
         window.addEventListener('message', this.#sourcePostMessage);
@@ -212,8 +211,7 @@ export class AbstractArrow extends HTMLElement {
     if (this.#sourceElement === null) return;
 
     if (this.#sourceElement instanceof FolkShape) {
-      this.#sourceElement.removeEventListener('resize', this.#sourceHandler);
-      this.#sourceElement.removeEventListener('move', this.#sourceHandler);
+      this.#sourceElement.removeEventListener('transform', this.#sourceHandler);
     } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
       window.removeEventListener('message', this.#sourcePostMessage);
       clientRectObserver.unobserve(this.#sourceElement, this.#sourceIframeCallback);
@@ -242,8 +240,7 @@ export class AbstractArrow extends HTMLElement {
       if (!this.#targetElement) {
         throw new Error('target is not a valid element');
       } else if (this.#targetElement instanceof FolkShape) {
-        this.#targetElement.addEventListener('resize', this.#targetHandler);
-        this.#targetElement.addEventListener('move', this.#targetHandler);
+        this.#targetElement.addEventListener('transform', this.#targetHandler);
       } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
         window.addEventListener('message', this.#targetPostMessage);
         clientRectObserver.observe(this.#targetElement, this.#targetIframeCallback);
@@ -262,8 +259,7 @@ export class AbstractArrow extends HTMLElement {
     if (this.#targetElement === null) return;
 
     if (this.#targetElement instanceof FolkShape) {
-      this.#targetElement.removeEventListener('resize', this.#targetHandler);
-      this.#targetElement.removeEventListener('move', this.#targetHandler);
+      this.#targetElement.removeEventListener('transform', this.#targetHandler);
     } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
       window.removeEventListener('message', this.#targetPostMessage);
       clientRectObserver.unobserve(this.#targetElement, this.#targetIframeCallback);

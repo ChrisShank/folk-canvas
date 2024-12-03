@@ -81,8 +81,7 @@ if (window.parent !== window) {
         observedSelectors.set(element, selector);
 
         if (element instanceof FolkShape) {
-          element.addEventListener('move', onGeometryChange);
-          element.addEventListener('resize', onGeometryChange);
+          element.addEventListener('transform', onGeometryChange);
 
           window.parent.postMessage({
             type: 'folk-element-change',
@@ -101,8 +100,7 @@ if (window.parent !== window) {
         if (element === undefined) return;
 
         if (element instanceof FolkShape) {
-          element.removeEventListener('move', onGeometryChange);
-          element.removeEventListener('resize', onGeometryChange);
+          element.removeEventListener('transform', onGeometryChange);
           observedElements.delete(selector);
           observedSelectors.delete(element);
         } else {

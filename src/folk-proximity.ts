@@ -141,8 +141,7 @@ export class FolkProximity extends HTMLElement {
   constructor() {
     super();
 
-    this.addEventListener('move', this.#handleProximity);
-    this.addEventListener('resize', this.#handleProximity);
+    this.addEventListener('transform', this.#handleProximity);
   }
 
   #handleProximity = (e: Event) => {

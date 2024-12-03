@@ -126,8 +126,7 @@
         }
       }
 
-      document.addEventListener('move', handleProximity);
-      document.addEventListener('resize', handleProximity);
+      document.addEventListener('transform', handleProximity);
 
       document.addEventListener('playing', (e) => {
         proximitySet.forEach((el) => el.firstElementChild.play?.());

@@ -42,18 +42,14 @@ export class DistanceField extends HTMLElement {
 
     window.addEventListener('resize', this.handleResize);
     this.shapes.forEach((geometry) => {
-      geometry.addEventListener('move', this.handleGeometryUpdate);
-      geometry.addEventListener('resize', this.handleGeometryUpdate);
-      geometry.addEventListener('rotate', this.handleGeometryUpdate);
+      geometry.addEventListener('transform', this.handleGeometryUpdate);
     });
   }
 
   disconnectedCallback() {
     window.removeEventListener('resize', this.handleResize);
     this.shapes.forEach((geometry) => {
-      geometry.removeEventListener('move', this.handleGeometryUpdate);
-      geometry.removeEventListener('resize', this.handleGeometryUpdate);
-      geometry.removeEventListener('rotate', this.handleGeometryUpdate);
+      geometry.removeEventListener('transform', this.handleGeometryUpdate);
     });
     this.cleanupWebGLResources();
   }
