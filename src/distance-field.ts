@@ -143,23 +143,23 @@ export class DistanceField extends HTMLElement {
     const gl = this.glContext;
     const positions: number[] = [];
 
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const containerWidth = this.clientWidth;
+    const containerHeight = this.clientHeight;
 
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getClientRect();
       const [topLeft, topRight, bottomRight, bottomLeft] = rect.corners();
 
-      // Convert rotated coordinates to NDC
-      const x1 = (topLeft.x / windowWidth) * 2 - 1;
-      const y1 = -((topLeft.y / windowHeight) * 2 - 1);
-      const x2 = (topRight.x / windowWidth) * 2 - 1;
-      const y2 = -((topRight.y / windowHeight) * 2 - 1);
-      const x3 = (bottomLeft.x / windowWidth) * 2 - 1;
-      const y3 = -((bottomLeft.y / windowHeight) * 2 - 1);
-      const x4 = (bottomRight.x / windowWidth) * 2 - 1;
-      const y4 = -((bottomRight.y / windowHeight) * 2 - 1);
+      // Convert rotated coordinates to NDC using container dimensions
+      const x1 = (topLeft.x / containerWidth) * 2 - 1;
+      const y1 = -((topLeft.y / containerHeight) * 2 - 1);
+      const x2 = (topRight.x / containerWidth) * 2 - 1;
+      const y2 = -((topRight.y / containerHeight) * 2 - 1);
+      const x3 = (bottomLeft.x / containerWidth) * 2 - 1;
+      const y3 = -((bottomLeft.y / containerHeight) * 2 - 1);
+      const x4 = (bottomRight.x / containerWidth) * 2 - 1;
+      const y4 = -((bottomRight.y / containerHeight) * 2 - 1);
 
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
@@ -369,9 +369,9 @@ export class DistanceField extends HTMLElement {
   private handleResize = () => {
     const gl = this.glContext;
 
-    // Update canvas size to match the window
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    // Update canvas size to match the container instead of window
+    this.canvas.width = this.clientWidth;
+    this.canvas.height = this.clientHeight;
 
     // Update the viewport
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
