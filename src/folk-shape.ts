@@ -413,37 +413,28 @@ export class FolkShape extends HTMLElement {
 
         if (handle.includes('resize')) {
           const mouse = { x: event.clientX, y: event.clientY };
+
+          // Map each resize handle to its opposite corner index
+          const OPPOSITE_CORNERS = {
+            'resize-se': 0,
+            'resize-sw': 1,
+            'resize-nw': 2,
+            'resize-ne': 3,
+          } as const;
+
+          // Get the opposite corner for the current resize handle
           const corners = this.getClientRect().corners();
+          const oppositeCorner = corners[OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS]];
 
-          const handleEnd = handle.slice(-2); // 'nw', 'ne', 'se', 'sw'
-          let thisCornerIndex: number;
-          let oppositeCornerIndex: number;
-
-          if (handleEnd === 'nw') {
-            thisCornerIndex = 0; // topLeft
-            oppositeCornerIndex = 2; // bottomRight
-          } else if (handleEnd === 'ne') {
-            thisCornerIndex = 1; // topRight
-            oppositeCornerIndex = 3; // bottomLeft
-          } else if (handleEnd === 'se') {
-            thisCornerIndex = 2; // bottomRight
-            oppositeCornerIndex = 0; // topLeft
-          } else if (handleEnd === 'sw') {
-            thisCornerIndex = 3; // bottomLeft
-            oppositeCornerIndex = 1; // topRight
-          } else {
-            return;
-          }
-
-          const oppositeCorner = corners[oppositeCornerIndex];
+          // Calculate new dimensions based on mouse position and opposite corner
           const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
-          const newThisCorner = Vector.rotateAround(mouse, newCenter, -this.rotation);
-          const newOppositeCorner = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
+          const unrotatedMouse = Vector.rotateAround(mouse, newCenter, -this.rotation);
+          const unrotatedOpposite = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
 
-          this.x = Math.min(newThisCorner.x, newOppositeCorner.x);
-          this.y = Math.min(newThisCorner.y, newOppositeCorner.y);
-          this.width = Math.abs(newOppositeCorner.x - newThisCorner.x);
-          this.height = Math.abs(newOppositeCorner.y - newThisCorner.y);
+          this.x = Math.min(unrotatedMouse.x, unrotatedOpposite.x);
+          this.y = Math.min(unrotatedMouse.y, unrotatedOpposite.y);
+          this.width = Math.abs(unrotatedOpposite.x - unrotatedMouse.x);
+          this.height = Math.abs(unrotatedOpposite.y - unrotatedMouse.y);
 
           return;
         }
