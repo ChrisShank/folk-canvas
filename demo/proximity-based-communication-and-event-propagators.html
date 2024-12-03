@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proximity Maps</title>
+    <title>Proximity And Propagators</title>
     <style>
       * {
         box-sizing: border-box;
@@ -54,19 +54,26 @@
         border-radius: 5px;
         padding: 1rem;
       }
+
+      folk-event-propagator {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
+    <folk-shape x="25" y="500">
+      <label>Lat: <input type="range" min="40.5" max="41" step="0.001" value="40.76845173617708" /></label>
+    </folk-shape>
+
     <folk-proximity>
       <folk-shape id="g1" x="25" y="100" width="400" height="200">
         <folk-map coordinates="40.76845173617708, -73.97983074188234" zoom="15"></folk-map>
       </folk-shape>
 
-      <folk-shape id="g2" x="50" y="600" width="400" height="250">
-        <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
-      </folk-shape>
-
-      <folk-shape id="g3" x="500" y="500" width="500" height="300">
+      <folk-shape id="g3" x="400" y="300" width="500" height="300">
         <geo-wiki></geo-wiki>
       </folk-shape>
 
@@ -75,8 +82,16 @@
       </folk-shape>
     </folk-proximity>
 
+    <folk-event-propagator
+      source="input[type='range']"
+      target="folk-map"
+      triggers="input"
+      expression="lat: from.value"
+    ></folk-event-propagator>
+
     <script type="module">
       import { FolkShape } from '../src/folk-shape.ts';
+      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
       import { FolkMap } from '../src/folk-map.ts';
       import { FolkWeather } from '../src/folk-weather.ts';
       import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
@@ -126,6 +141,7 @@
       FolkProximity.define();
       FolkWeather.define();
       GeoWiki.define();
+      FolkEventPropagator.define();
     </script>
   </body>
 </html>

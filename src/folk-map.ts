@@ -34,17 +34,29 @@ export class FolkMap extends HTMLElement {
   constructor() {
     super();
 
-    this.handleEvent = this.handleEvent.bind(this);
-
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.adoptedStyleSheets.push(styles);
     shadow.appendChild(this.#container);
   }
 
-  get coordinates() {
+  get lat() {
+    return this.coordinates.lat;
+  }
+  set lat(lat) {
+    this.coordinates = [lat, this.lng];
+  }
+
+  get lng() {
+    return this.coordinates.lng;
+  }
+  set lng(lng) {
+    this.coordinates = [this.lat, lng];
+  }
+
+  get coordinates(): LatLng {
     return this.#map.getCenter();
   }
-  set coordinates(coordinates) {
+  set coordinates(coordinates: LatLngExpression) {
     this.#map.setView(coordinates);
   }
 
@@ -64,7 +76,7 @@ export class FolkMap extends HTMLElement {
       })
     );
 
-    this.#map.on('zoom', this.handleEvent);
+    // Move end includes changes to zoom
     this.#map.on('moveend', this.handleEvent);
 
     this.#map.setView(
@@ -73,13 +85,12 @@ export class FolkMap extends HTMLElement {
     );
   }
 
-  handleEvent(event: LeafletEvent) {
+  handleEvent = (event: LeafletEvent) => {
     switch (event.type) {
-      case 'zoom':
       case 'moveend': {
         this.dispatchEvent(new RecenterEvent());
         break;
       }
     }
-  }
+  };
 }

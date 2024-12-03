@@ -288,8 +288,6 @@ export class RecordPlayer extends HTMLElement {
     this.#audio.pause();
     this.#audio.currentTime = 0;
     this.dispatchEvent(new Event('stopped', { bubbles: true }));
-
-    // console.log(a);
   }
 
   handleEvent(event: Event) {
