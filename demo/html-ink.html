@@ -14,12 +14,14 @@
         position: relative;
         margin: 0;
       }
+
+      button {
+        margin: 0.5rem;
+      }
     </style>
   </head>
   <body>
-    <nav>
-      <button on:click="DRAW">Draw</button>
-    </nav>
+    <button on:click="DRAW">Draw</button>
     <script type="module">
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-ink.ts';

@@ -146,11 +146,11 @@ export class FolkInk extends HTMLElement {
 
   handleEvent(event: PointerEvent) {
     switch (event.type) {
+      // for some reason adding a point on pointer down causes a bug
       case 'pointerdown': {
         if (event.button !== 0 || event.ctrlKey) return;
 
         this.points = [];
-        this.addPoint([event.offsetX, event.offsetY, event.pressure]);
         this.addEventListener('lostpointercapture', this);
         this.addEventListener('pointermove', this);
         this.setPointerCapture(event.pointerId);
