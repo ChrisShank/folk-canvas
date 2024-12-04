@@ -35,7 +35,7 @@ export class FolkShrinkHull extends FolkBaseSet {
     }
 
     const rects = Array.from(this.sourcesMapRotated.values());
-    this.#hull = makeHull(rects);
+    this.#hull = addMidpoints(makeHull(rects));
     this.#svg.innerHTML = verticesToColoredPolygon(this.#hull);
   }
 }
@@ -73,7 +73,7 @@ function compareColoredPoints(a: SpanningPoint, b: SpanningPoint): number {
 export function makeHull(rects: RotatedDOMRect[]): SpanningPoint[] {
   const points: SpanningPoint[] = rects
     .flatMap((rect, index) =>
-      rect.corners().map((corner) => ({ id: index, isSpanning: false, x: corner.x, y: corner.y }))
+      rect.corners().map((corner) => ({ id: index, isSpanning: false, isMidpoint: false, x: corner.x, y: corner.y }))
     )
     .sort(compareColoredPoints);
 
@@ -118,6 +118,7 @@ export function makeHull(rects: RotatedDOMRect[]): SpanningPoint[] {
 
   const hull = upperHull.concat(lowerHull);
 
+  // Mark the spanning segments
   for (let i = 0; i < hull.length; i++) {
     const p = hull[i];
     const nextP = hull[(i + 1) % hull.length];
@@ -133,32 +134,37 @@ export function makeHull(rects: RotatedDOMRect[]): SpanningPoint[] {
 type SpanningPoint = {
   id: number;
   isSpanning: boolean;
+  isMidpoint: boolean;
   x: number;
   y: number;
 };
 
-export function verticesToColoredPolygon(segments: SpanningPoint[]): string {
-  if (segments.length === 0) return '';
-  if (segments.length === 1) {
+export function verticesToColoredPolygon(points: SpanningPoint[]): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) {
     // For a single point, draw a small circle
-    const p = segments[0];
+    const p = points[0];
     return `<circle cx="${p.x}" cy="${p.y}" r="2" fill="${idToColor(p.id)}"/>`;
   }
 
-  // Create path segments, each with its own color
-  return segments
-    .map((point, i) => {
-      const color = idToColor(point.id);
-      const nextPoint = segments[(i + 1) % segments.length];
-      return `<path d="M ${point.x} ${point.y} L ${nextPoint.x} ${nextPoint.y}" 
+  // Create path segments and circles
+  const paths = points.map((point, i) => {
+    const color = idToColor(point.id);
+    const nextPoint = points[(i + 1) % points.length];
+    return `<path d="M ${point.x} ${point.y} L ${nextPoint.x} ${nextPoint.y}" 
         stroke="${color ?? '#999'}" 
         stroke-width="${point.isSpanning ? '2' : '4'}"
         ${point.isSpanning ? 'stroke-dasharray="4"' : ''}
         stroke-linejoin="miter"
         opacity="${point.isSpanning ? '0.5' : '1'}"
         fill="none"/>`;
-    })
-    .join('\n');
+  });
+
+  const circles = points.map(
+    (point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="${idToColor(point.id)}"/>`
+  );
+
+  return [...paths, ...circles].join('\n');
 }
 
 function idToColor(id: number): string {
@@ -166,4 +172,28 @@ function idToColor(id: number): string {
   const hue = ((id * 0.618033988749895) % 1) * 360;
   // Fixed saturation and lightness for consistent, vibrant colors
   return `hsl(${hue}, 85%, 60%)`;
+}
+
+function addMidpoints(hull: SpanningPoint[]): SpanningPoint[] {
+  const result: SpanningPoint[] = [];
+
+  for (let i = 0; i < hull.length; i++) {
+    const current = hull[i];
+    result.push(current);
+
+    if (current.isSpanning) {
+      const next = hull[(i + 1) % hull.length];
+      // Create midpoint
+      const midpoint: SpanningPoint = {
+        id: current.id,
+        isSpanning: true,
+        isMidpoint: true,
+        x: (current.x + next.x) / 2,
+        y: (current.y + next.y) / 2,
+      };
+      result.push(midpoint);
+    }
+  }
+
+  return result;
 }
