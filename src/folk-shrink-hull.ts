@@ -116,24 +116,12 @@ export function makeHull(rects: RotatedDOMRect[]): SpanningPoint[] {
     return upperHull;
   }
 
-  const hull = upperHull.concat(lowerHull);
-
-  // Mark the spanning segments
-  for (let i = 0; i < hull.length; i++) {
-    const p = hull[i];
-    const nextP = hull[(i + 1) % hull.length];
-    if (p.id !== nextP.id) {
-      p.isSpanning = true;
-    }
-  }
-
-  return hull;
+  return upperHull.concat(lowerHull);
 }
 
 /** isSpanning indicates the color of the line between this point and the next */
 type SpanningPoint = {
-  id: number;
-  isSpanning: boolean;
+  id: number | null;
   isMidpoint: boolean;
   x: number;
   y: number;
@@ -149,27 +137,27 @@ export function verticesToColoredPolygon(points: SpanningPoint[]): string {
 
   // Create path segments and circles
   const paths = points.map((point, i) => {
-    const color = idToColor(point.id);
+    const shapeColor = idToColor(point.id);
+    const spanningColor = '#FF0000'; // Debug color for spanning segments
     const nextPoint = points[(i + 1) % points.length];
+    const isStartOfSpanningSegment = point.id !== nextPoint.id || nextPoint.id === null;
     return `<path d="M ${point.x} ${point.y} L ${nextPoint.x} ${nextPoint.y}" 
-        stroke="${color ?? '#999'}" 
-        stroke-width="${point.isSpanning ? '2' : '4'}"
-        ${point.isSpanning ? 'stroke-dasharray="4"' : ''}
+        stroke="${isStartOfSpanningSegment ? spanningColor : shapeColor}" 
+        stroke-width="${isStartOfSpanningSegment ? '2' : '4'}"
+        ${isStartOfSpanningSegment ? 'stroke-dasharray="4"' : ''}
         stroke-linejoin="miter"
-        opacity="${point.isSpanning ? '0.5' : '1'}"
-        fill="none"/>`;
+        opacity="${isStartOfSpanningSegment ? '0.5' : '1'}"
+        fill="none"/>
+        <circle cx="${point.x}" cy="${point.y}" r="4" fill="${!point.id ? spanningColor : shapeColor}"/>`;
   });
 
-  const circles = points.map(
-    (point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="${idToColor(point.id)}"/>`
-  );
-
-  return [...paths, ...circles].join('\n');
+  return paths.join('\n');
 }
 
-function idToColor(id: number): string {
+function idToColor(id: number | null): string {
   // Golden ratio conjugate (~0.618033988749895) helps create visually pleasing color spacing
-  const hue = ((id * 0.618033988749895) % 1) * 360;
+
+  const hue = (((id ?? 0) * 0.618033988749895) % 1) * 360;
   // Fixed saturation and lightness for consistent, vibrant colors
   return `hsl(${hue}, 85%, 60%)`;
 }
@@ -181,12 +169,11 @@ function addMidpoints(hull: SpanningPoint[]): SpanningPoint[] {
     const current = hull[i];
     result.push(current);
 
-    if (current.isSpanning) {
-      const next = hull[(i + 1) % hull.length];
+    const next = hull[(i + 1) % hull.length];
+    if (current.id !== next.id) {
       // Create midpoint
       const midpoint: SpanningPoint = {
-        id: current.id,
-        isSpanning: true,
+        id: null,
         isMidpoint: true,
         x: (current.x + next.x) / 2,
         y: (current.y + next.y) / 2,
