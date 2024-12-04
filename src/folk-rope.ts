@@ -42,6 +42,14 @@ export class FolkRope extends FolkBaseConnection {
     return this.#points;
   }
 
+  get gravity() {
+    return this.#gravity;
+  }
+
+  set gravity(gravity) {
+    this.#gravity = gravity;
+  }
+
   #stroke = '';
   get stroke() {
     return this.#stroke;

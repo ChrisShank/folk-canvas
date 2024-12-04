@@ -26,9 +26,17 @@
         inset: 0 0 0 0;
         pointer-events: none;
       }
+
+      button {
+        margin: 1rem;
+        background-color: black;
+        font-size: 2rem;
+        border-radius: 5px;
+      }
     </style>
   </head>
   <body>
+    <button id="wind">☁️</button>
     <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
     <folk-shape id="box2" x="300" y="105" width="30" height="30"></folk-shape>
     <folk-shape id="box3" x="200" y="150" width="30" height="30"></folk-shape>
@@ -40,6 +48,29 @@
     <script type="module">
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-rope.ts';
+
+      let timeout = -1;
+      let isBlowing = false;
+      const ropes = document.querySelectorAll('folk-rope');
+      const randomInt = (multiplier, adjust = 0) => Math.floor(Math.random() * multiplier) + adjust;
+      const updateGravity = (gravity) => ropes.forEach((rope) => (rope.gravity = gravity));
+
+      function simulateWind() {
+        updateGravity({ x: randomInt(5000), y: randomInt(5000) });
+        timeout = setTimeout(simulateWind, randomInt(1000, 200));
+      }
+
+      wind.addEventListener('click', () => {
+        if (isBlowing) {
+          clearTimeout(timeout);
+          updateGravity({ x: 0, y: 3000 });
+          wind.textContent = '☁️';
+        } else {
+          simulateWind();
+          wind.textContent = '🌬️';
+        }
+        isBlowing = !isBlowing;
+      });
     </script>
   </body>
 </html>
