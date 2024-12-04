@@ -1,4 +1,5 @@
 import { css } from './common/tags.ts';
+import type { RotatedDOMRect } from './common/types';
 import { FolkRope } from './folk-rope.ts';
 import * as parser from '@babel/parser';
 import type { Node } from '@babel/types';
@@ -136,7 +137,7 @@ to.${key} = ${value};`);
     this.expression = this.#expressionTextarea.value = this.getAttribute('expression') || '';
   }
 
-  override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
+  override render(sourceRect: RotatedDOMRect | DOMRectReadOnly, targetRect: RotatedDOMRect | DOMRectReadOnly) {
     super.render(sourceRect, targetRect);
   }
 

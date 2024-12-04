@@ -1,7 +1,7 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
 import { Vector } from './common/Vector.ts';
-import type { Point } from './common/types.ts';
+import type { Point, RotatedDOMRect } from './common/types.ts';
 import { FolkConnection } from './folk-connection.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
@@ -63,10 +63,13 @@ export class FolkRope extends FolkConnection {
     this.#shadow.appendChild(this.#svg);
 
     this.#path.setAttribute('stroke-width', '3');
+    this.#path.setAttribute('stroke-linecap', 'round');
+
     this.#path.setAttribute('fill', 'none');
     this.#path.style.pointerEvents = 'auto';
 
     this.#path2.setAttribute('stroke-width', '3');
+    this.#path2.setAttribute('stroke-linecap', 'round');
     this.#path2.setAttribute('fill', 'none');
     this.#path2.style.pointerEvents = 'auto';
 
@@ -108,12 +111,32 @@ export class FolkRope extends FolkConnection {
     this.draw();
   };
 
-  override render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly) {
+  override render(sourceRect: RotatedDOMRect | DOMRectReadOnly, targetRect: RotatedDOMRect | DOMRectReadOnly) {
+    let source: Point;
+    let target: Point;
+
+    if ('corners' in sourceRect) {
+      const [_a, _b, bottomRight, bottomLeft] = sourceRect.corners();
+      source = Vector.lerp(bottomRight, bottomLeft, 0.5);
+    } else {
+      source = {
+        x: sourceRect.x + sourceRect.width / 2,
+        y: sourceRect.y + sourceRect.height,
+      };
+    }
+
+    if ('corners' in targetRect) {
+      const [_a, _b, bottomRight, bottomLeft] = targetRect.corners();
+      target = Vector.lerp(bottomRight, bottomLeft, 0.5);
+    } else {
+      target = {
+        x: targetRect.x + targetRect.width / 2,
+        y: targetRect.y + targetRect.height,
+      };
+    }
+
     if (this.#points.length === 0) {
-      this.#points = this.#generatePoints(
-        { x: sourceRect.x + sourceRect.width / 2, y: sourceRect.bottom },
-        { x: targetRect.x + targetRect.width / 2, y: targetRect.bottom }
-      );
+      this.#points = this.#generatePoints(source, target);
 
       this.#lastTime = 0;
 
@@ -125,11 +148,8 @@ export class FolkRope extends FolkConnection {
 
     if (startingPoint === undefined || endingPoint === undefined) return;
 
-    startingPoint.pos.x = sourceRect.x + sourceRect.width / 2;
-    startingPoint.pos.y = sourceRect.bottom;
-
-    endingPoint.pos.x = targetRect.x + targetRect.width / 2;
-    endingPoint.pos.y = targetRect.bottom;
+    startingPoint.pos = source;
+    endingPoint.pos = target;
   }
 
   draw() {
