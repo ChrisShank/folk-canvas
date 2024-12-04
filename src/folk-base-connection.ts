@@ -8,8 +8,8 @@ function parseCSSSelector(selector: string): string[] {
   return selector.split('>>>').map((s) => s.trim());
 }
 
-export class FolkConnection extends HTMLElement {
-  static tagName = 'folk-connection';
+export class FolkBaseConnection extends HTMLElement {
+  static tagName = 'folk-base-connection';
 
   static define() {
     if (customElements.get(this.tagName)) return;

@@ -1,7 +1,7 @@
-import { FolkConnection } from './folk-connection.js';
+import { FolkBaseConnection } from './folk-base-connection.js';
 import { verticesToPolygon } from './common/utils.js';
 import type { Point } from './common/types.js';
-export class FolkXanadu extends FolkConnection {
+export class FolkXanadu extends FolkBaseConnection {
   static tagName = 'folk-xanadu';
 
   render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly): void {

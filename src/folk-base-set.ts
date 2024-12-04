@@ -4,14 +4,14 @@ const clientRectObserver = new ClientRectObserverManager();
 
 declare global {
   interface HTMLElementTagNameMap {
-    'folk-set': FolkSet;
+    'folk-base-set': FolkBaseSet;
   }
 }
 
 const defaultRect = DOMRectReadOnly.fromRect();
 
-export class FolkSet extends HTMLElement {
-  static tagName = 'folk-set';
+export class FolkBaseSet extends HTMLElement {
+  static tagName = 'folk-base-set';
 
   static define() {
     if (customElements.get(this.tagName)) return;

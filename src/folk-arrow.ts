@@ -1,5 +1,5 @@
 import { getBoxToBoxArrow } from 'perfect-arrows';
-import { FolkConnection } from './folk-connection.ts';
+import { FolkBaseConnection } from './folk-base-connection.ts';
 import { getSvgPathFromStroke, pointsOnBezierCurves } from './common/utils.ts';
 import { getStroke, StrokeOptions } from 'perfect-freehand';
 
@@ -30,7 +30,7 @@ declare global {
   }
 }
 
-export class FolkArrow extends FolkConnection {
+export class FolkArrow extends FolkBaseConnection {
   static override tagName = 'folk-arrow';
 
   #options: StrokeOptions = {

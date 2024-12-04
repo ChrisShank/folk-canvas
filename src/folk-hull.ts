@@ -1,4 +1,4 @@
-import { FolkSet } from './folk-set';
+import { FolkBaseSet } from './folk-base-set';
 import { verticesToPolygon } from './common/utils';
 import type { Point } from './common/types';
 declare global {
@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-export class FolkHull extends FolkSet {
+export class FolkHull extends FolkBaseSet {
   static tagName = 'folk-hull';
 
   #hull: Point[] = [];
