@@ -179,4 +179,11 @@ export class Vector {
       y: point.y - origin.y,
     });
   }
+
+  static normal(a: Point, b: Point): Point {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length = hypot(dx, dy);
+    return { x: -dy / length, y: dx / length };
+  }
 }
