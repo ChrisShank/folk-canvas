@@ -1,7 +1,8 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
 import { Vector } from './common/Vector.ts';
-import type { Point, RotatedDOMRect } from './common/types.ts';
+import type { Point } from './common/types.ts';
+import { RotatedDOMRect } from './common/rotated-dom-rect.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
@@ -123,9 +124,8 @@ export class FolkRope extends FolkBaseConnection {
     let source: Point;
     let target: Point;
 
-    if ('corners' in sourceRect) {
-      const [_a, _b, bottomRight, bottomLeft] = sourceRect.corners();
-      source = Vector.lerp(bottomRight, bottomLeft, 0.5);
+    if (sourceRect instanceof RotatedDOMRect) {
+      source = Vector.lerp(sourceRect.bottomRightCorner, sourceRect.bottomLeftCorner, 0.5);
     } else {
       source = {
         x: sourceRect.x + sourceRect.width / 2,
@@ -133,9 +133,8 @@ export class FolkRope extends FolkBaseConnection {
       };
     }
 
-    if ('corners' in targetRect) {
-      const [_a, _b, bottomRight, bottomLeft] = targetRect.corners();
-      target = Vector.lerp(bottomRight, bottomLeft, 0.5);
+    if (targetRect instanceof RotatedDOMRect) {
+      target = Vector.lerp(targetRect.bottomRightCorner, targetRect.bottomLeftCorner, 0.5);
     } else {
       target = {
         x: targetRect.x + targetRect.width / 2,

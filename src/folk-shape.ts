@@ -1,6 +1,7 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
-import type { Point, RotatedDOMRect } from './common/types';
+import { Point } from './common/types';
+import { RotatedDOMRectReadonly } from './common/rotated-dom-rect';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 
@@ -354,45 +355,10 @@ export class FolkShape extends HTMLElement {
     this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
   }
 
-  getClientRect(): RotatedDOMRect {
+  getClientRect() {
     const { x, y, width, height, rotation } = this;
 
-    return {
-      x,
-      y,
-      width,
-      height,
-      left: x,
-      top: y,
-      right: x + width,
-      bottom: y + height,
-      rotation,
-
-      center(): Point {
-        return {
-          x: this.x + this.width / 2,
-          y: this.y + this.height / 2,
-        };
-      },
-      vertices(): Point[] {
-        // TODO: Implement
-        return [];
-      },
-
-      corners() {
-        const center = this.center();
-        const { x, y, width, height, rotation } = this;
-
-        return [
-          Vector.rotateAround({ x, y }, center, rotation),
-          Vector.rotateAround({ x: x + width, y }, center, rotation),
-          Vector.rotateAround({ x: x + width, y: y + height }, center, rotation),
-          Vector.rotateAround({ x, y: y + height }, center, rotation),
-        ];
-      },
-
-      toJSON: undefined as any,
-    };
+    return new RotatedDOMRectReadonly({ x, y, width, height, rotation });
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
@@ -426,18 +392,17 @@ export class FolkShape extends HTMLElement {
         if (!anyChange) return;
 
         // Get the corner coordinates of the shape for the corresponding handle
-        const corners = this.getClientRect().corners(); // Returns an array of Points: [NW, NE, SE, SW]
+        const rect = this.getClientRect();
 
         // Map handle names to corner indices
-        const handleToCornerIndex: { [key: string]: number } = {
-          'resize-nw': 0, // Top-left corner
-          'resize-ne': 1, // Top-right corner
-          'resize-se': 2, // Bottom-right corner
-          'resize-sw': 3, // Bottom-left corner
+        const handleToCornerIndex: Record<string, Point> = {
+          'resize-nw': rect.topLeftCorner,
+          'resize-ne': rect.topRightCorner,
+          'resize-se': rect.bottomRightCorner,
+          'resize-sw': rect.bottomLeftCorner,
         };
 
-        const cornerIndex = handleToCornerIndex[handle];
-        const currentPos = corners[cornerIndex];
+        const currentPos = handleToCornerIndex[handle];
 
         // Calculate movement based on arrow keys
         const isVertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';
@@ -499,7 +464,7 @@ export class FolkShape extends HTMLElement {
 
           // Store initial angle on rotation start
           if (target.getAttribute('part')?.startsWith('rotation')) {
-            const center = this.getClientRect().center();
+            const center = this.getClientRect().center;
             this.#initialRotation = this.#rotation;
             this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
           }
@@ -537,7 +502,7 @@ export class FolkShape extends HTMLElement {
           }
 
           if (handle.startsWith('rotation')) {
-            const center = this.getClientRect().center();
+            const center = this.getClientRect().center;
             const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
             this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
@@ -700,17 +665,18 @@ export class FolkShape extends HTMLElement {
 
   // Updated helper method to handle resize operations
   #handleResize(handle: Handle, mouse: Point, target: HTMLElement, event?: PointerEvent) {
+    const rect = this.getClientRect();
+
     // Map each resize handle to its opposite corner index
     const OPPOSITE_CORNERS = {
-      'resize-se': 0,
-      'resize-sw': 1,
-      'resize-nw': 2,
-      'resize-ne': 3,
+      'resize-se': rect.topLeftCorner,
+      'resize-sw': rect.topRightCorner,
+      'resize-nw': rect.bottomRightCorner,
+      'resize-ne': rect.bottomLeftCorner,
     } as const;
 
     // Get the opposite corner for the current resize handle
-    const corners = this.getClientRect().corners();
-    const oppositeCorner = corners[OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS]];
+    const oppositeCorner = OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS];
 
     // Calculate new dimensions based on mouse position and opposite corner
     const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
