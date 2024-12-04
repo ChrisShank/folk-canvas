@@ -1,5 +1,7 @@
+import { ReactiveElement } from '@lit/reactive-element';
+
 // will eventually extend Lit's ReactiveElement
-export class FolkElement extends HTMLElement {
+export class FolkElement extends ReactiveElement {
   static tagName = '';
 
   static define() {

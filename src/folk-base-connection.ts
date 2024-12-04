@@ -9,7 +9,7 @@ function parseCSSSelector(selector: string): string[] {
 }
 
 export class FolkBaseConnection extends HTMLElement {
-  static tagName = 'folk-base-connection';
+  static tagName = '';
 
   static define() {
     if (customElements.get(this.tagName)) return;

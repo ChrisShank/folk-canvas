@@ -2,16 +2,10 @@ import { ClientRectObserverEntry, ClientRectObserverManager } from './common/cli
 
 const clientRectObserver = new ClientRectObserverManager();
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'folk-base-set': FolkBaseSet;
-  }
-}
-
 const defaultRect = DOMRectReadOnly.fromRect();
 
 export class FolkBaseSet extends HTMLElement {
-  static tagName = 'folk-base-set';
+  static tagName = '';
 
   static define() {
     if (customElements.get(this.tagName)) return;
