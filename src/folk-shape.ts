@@ -102,7 +102,6 @@ styles.replaceSync(css`
 
   :host(:focus-within),
   :host(:focus-visible) {
-    z-index: calc(infinity - 1);
     outline: solid 1px hsl(214, 84%, 56%);
   }
 

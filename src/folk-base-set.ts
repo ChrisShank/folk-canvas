@@ -1,4 +1,6 @@
 import { ClientRectObserverEntry, ClientRectObserverManager } from './common/client-rect-observer.ts';
+import type { RotatedDOMRect } from './common/types';
+import { FolkShape } from './folk-shape';
 
 const clientRectObserver = new ClientRectObserverManager();
 
@@ -30,8 +32,13 @@ export class FolkBaseSet extends HTMLElement {
   }
 
   #sourcesMap = new Map<Element, DOMRectReadOnly>();
+  #sourcesMapRotated = new Map<Element, RotatedDOMRect>();
   get sourcesMap() {
     return this.#sourcesMap;
+  }
+
+  get sourcesMapRotated() {
+    return this.#sourcesMapRotated;
   }
 
   get sourceElements() {
@@ -40,6 +47,9 @@ export class FolkBaseSet extends HTMLElement {
 
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
     this.#sourcesMap.set(entry.target, entry.contentRect);
+    if (entry.target instanceof FolkShape) {
+      this.#sourcesMapRotated.set(entry.target, entry.target.getClientRect());
+    }
     this.update();
   };
 

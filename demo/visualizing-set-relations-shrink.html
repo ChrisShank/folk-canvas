@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shapes</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        background: rgb(187, 178, 178);
+      }
+
+      folk-shrink-hull {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape x="120" y="80" width="70" height="60"></folk-shape>
+    <folk-shape x="250" y="150" width="40" height="80"></folk-shape>
+    <folk-shape x="180" y="220" width="55" height="45"></folk-shape>
+    <folk-shape x="50" y="180" width="65" height="65"></folk-shape>
+    <folk-shape x="300" y="100" width="45" height="50"></folk-shape>
+
+    <folk-shrink-hull sources="folk-shape"></folk-shrink-hull>
+
+    <script type="module">
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-shrink-hull.ts';
+    </script>
+  </body>
+</html>
