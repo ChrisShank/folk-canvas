@@ -7,8 +7,8 @@ import { FolkShape } from './folk-shape.ts';
  * It renders shapes as seed points and computes the distance from each pixel to the nearest seed point.
  * Previous CPU-based implementation: github.com/folk-canvas/folk-canvas/commit/fdd7fb9d84d93ad665875cad25783c232fd17bcc
  */
-export class DistanceField extends HTMLElement {
-  static tagName = 'distance-field';
+export class FolkDistanceField extends HTMLElement {
+  static tagName = 'folk-distance-field';
 
   private textures: WebGLTexture[] = [];
 
@@ -223,7 +223,7 @@ export class DistanceField extends HTMLElement {
 
     // Clear the texture with a large initial distance
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.0, 0.0, 0.0, DistanceField.MAX_DISTANCE);
+    gl.clearColor(0.0, 0.0, 0.0, FolkDistanceField.MAX_DISTANCE);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Use the seed shader program

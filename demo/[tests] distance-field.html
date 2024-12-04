@@ -19,20 +19,17 @@
         border: 2px solid black;
       }
 
-      distance-field {
+      folk-distance-field {
         position: absolute;
         inset: 0;
       }
     </style>
   </head>
   <body>
-    <distance-field></distance-field>
     <script type="module">
-      import '../src/standalone/distance-field.ts';
-      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-distance-field.ts';
 
-      const d = document.querySelector('distance-field');
-
+      const d = document.createElement('folk-distance-field');
       const geometries = [];
 
       const now = performance.now();
@@ -43,11 +40,11 @@
           geo.y = 100 * j + Math.floor(Math.random() * 45);
           geo.width = geo.height = 45;
           geometries.push(geo);
-          d.append(geo);
+          d.appendChild(geo);
         }
       }
       console.log(performance.now() - now);
-
+      document.body.appendChild(d);
       // function tick() {
       //   window.requestAnimationFrame(tick);
 

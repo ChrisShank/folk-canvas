@@ -328,7 +328,6 @@ export class FolkShape extends HTMLElement {
 
     this.addEventListener('pointerdown', this);
     this.addEventListener('keydown', this);
-    this.setAttribute('tabindex', '0');
 
     this.#shadow.adoptedStyleSheets = [styles, this.#dynamicStyles];
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
