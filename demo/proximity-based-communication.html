@@ -66,7 +66,7 @@
         <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
       </folk-shape>
 
-      <folk-shape id="g3" x="500" y="500" width="500" height="300">
+      <folk-shape id="g3" x="475" y="500" width="500" height="300">
         <geo-wiki></geo-wiki>
       </folk-shape>
 
@@ -77,12 +77,15 @@
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-map.ts';
-      import '../src/standalone/folk-weather.ts';
-      import './src/geo-wiki.ts';
-      import { FolkCluster } from '../src/folk-proximity.ts';
+      import { FolkMap } from '../src/folk-map.ts';
+      import { FolkWeather } from '../src/folk-weather.ts';
+      import { GeoWiki } from './src/geo-wiki.ts';
+      import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
 
+      FolkMap.define();
       FolkCluster.define();
+      FolkProximity.define();
+      FolkWeather.define();
 
       FolkCluster.registerElement({
         constructor: FolkMap,
