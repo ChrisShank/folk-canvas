@@ -1,29 +1,9 @@
-export function glsl(strings: TemplateStringsArray, ...values: any[]) {
-  return strings.reduce((result, str, i) => {
-    return result + str + (values[i] || '');
-  }, '');
-}
+export const glsl = String.raw;
 
-export function vert(strings: TemplateStringsArray, ...values: any[]) {
-  return strings.reduce((result, str, i) => {
-    return result + str + (values[i] || '');
-  }, '');
-}
+export const vert = String.raw;
 
-export function frag(strings: TemplateStringsArray, ...values: any[]) {
-  return strings.reduce((result, str, i) => {
-    return result + str + (values[i] || '');
-  }, '');
-}
+export const frag = String.raw;
 
-export function css(strings: TemplateStringsArray, ...values: any[]) {
-  return strings.reduce((result, str, i) => {
-    return result + str + (values[i] || '');
-  }, '');
-}
+export const css = String.raw;
 
-export function html(strings: TemplateStringsArray, ...values: any[]) {
-  return strings.reduce((result, str, i) => {
-    return result + str + (values[i] || '');
-  }, '');
-}
+export const html = String.raw;
