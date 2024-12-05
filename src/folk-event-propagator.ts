@@ -3,8 +3,7 @@ import { FolkRope } from './folk-rope.ts';
 import * as parser from '@babel/parser';
 import type { Node } from '@babel/types';
 
-const styles = new CSSStyleSheet();
-styles.replaceSync(css`
+const styles = css`
   :host {
     display: block;
     position: absolute;
@@ -27,7 +26,7 @@ styles.replaceSync(css`
     translate: -50% -50%;
     border-radius: 5px;
   }
-`);
+`;
 
 export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';

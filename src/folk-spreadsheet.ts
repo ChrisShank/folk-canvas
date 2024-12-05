@@ -1,115 +1,118 @@
-const styles = new CSSStyleSheet();
+import { css } from './common/tags';
+
 // hardcoded column and row numbers
-styles.replaceSync(`
-:host {
-  --column-number: 10;
-  --row-number: 10;
-  --cell-height: 1.75rem;
-  --cell-width: 100px;
-  --border-color: #e1e1e1;
-  border: solid 1px var(--border-color);
-  box-sizing: border-box;
-  display: grid;
-  font-family: monospace;
-  grid-template-columns: 50px repeat(var(--column-number), var(--cell-width));
-  grid-template-rows: repeat(calc(var(--row-number) + 1), var(--cell-height));
-  position: relative;
-  overflow: scroll;
-  scroll-snap-type: both mandatory;
-  scroll-padding-top: var(--cell-height);
-  scroll-padding-left: 50px;
-}
-
-textarea {
-  background-color: rgba(255, 255, 255, 0.75);
-  grid-column: var(--text-column, 0);
-  grid-row: var(--text-row, 0);
-  z-index: 11;
-}
-
-s-columns {
-  box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.6);
-  display: grid;
-  grid-column: 2 / -1;
-  grid-row: 1;
-  grid-template-columns: subgrid;
-  grid-template-rows: subgrid;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-s-rows {
-  box-shadow: 3px 0px 5px 0px rgba(173, 168, 168, 0.4);
-  display: grid;
-  grid-column: 1;
-  grid-row: 2 / -1;
-  grid-template-columns: subgrid;
-  grid-template-rows: subgrid;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-
-  s-header {
-    font-size: 0.75rem;
+const styles = css`
+  :host {
+    --column-number: 10;
+    --row-number: 10;
+    --cell-height: 1.75rem;
+    --cell-width: 100px;
+    --border-color: #e1e1e1;
+    border: solid 1px var(--border-color);
+    box-sizing: border-box;
+    display: grid;
+    font-family: monospace;
+    grid-template-columns: 50px repeat(var(--column-number), var(--cell-width));
+    grid-template-rows: repeat(calc(var(--row-number) + 1), var(--cell-height));
+    position: relative;
+    overflow: scroll;
+    scroll-snap-type: both mandatory;
+    scroll-padding-top: var(--cell-height);
+    scroll-padding-left: 50px;
   }
-}
 
-s-header {
-  background-color: #f8f9fa;
-  display: flex;
-  padding: 0.125rem 0.5rem;
-  align-items: center;
-  justify-content: center;
+  textarea {
+    background-color: rgba(255, 255, 255, 0.75);
+    grid-column: var(--text-column, 0);
+    grid-row: var(--text-row, 0);
+    z-index: 11;
+  }
 
-  &[empty] {
-    box-shadow: 3px 3px 3px 0px rgba(173, 168, 168, 0.4);
-    grid-area: 1;
+  s-columns {
+    box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.6);
+    display: grid;
+    grid-column: 2 / -1;
+    grid-row: 1;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
     position: sticky;
     top: 0;
+    z-index: 2;
+  }
+
+  s-rows {
+    box-shadow: 3px 0px 5px 0px rgba(173, 168, 168, 0.4);
+    display: grid;
+    grid-column: 1;
+    grid-row: 2 / -1;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    position: sticky;
     left: 0;
-    z-index: 3;
+    z-index: 2;
+
+    s-header {
+      font-size: 0.75rem;
+    }
   }
 
-  &:state(selected) {
-    background-color: #d3e2fd;
-    font-weight: bold;
+  s-header {
+    background-color: #f8f9fa;
+    display: flex;
+    padding: 0.125rem 0.5rem;
+    align-items: center;
+    justify-content: center;
+
+    &[empty] {
+      box-shadow: 3px 3px 3px 0px rgba(173, 168, 168, 0.4);
+      grid-area: 1;
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 3;
+    }
+
+    &:state(selected) {
+      background-color: #d3e2fd;
+      font-weight: bold;
+    }
   }
-}
 
-s-body {
-  display: grid;
-  grid-column: 2 / -1;
-  grid-row: 2 / -1;
-  grid-template-columns: subgrid;
-  grid-template-rows: subgrid;
+  s-body {
+    display: grid;
+    grid-column: 2 / -1;
+    grid-row: 2 / -1;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
   }
-  
-s-columns, s-rows, s-body {
-  background-color: var(--border-color);
-  gap: 1px;
-}
 
-::slotted(folk-cell) {
-  box-sizing: border-box;
-  align-items: center;
-  background-color: rgb(255, 255, 255);
-  display: flex;
-  padding: 0.25rem;
-  justify-content: start;
-  scroll-snap-align: start;
-  overflow: hidden;
-}
+  s-columns,
+  s-rows,
+  s-body {
+    background-color: var(--border-color);
+    gap: 1px;
+  }
 
-::slotted(folk-cell[type='number']) {
-  justify-content: end;
-}
+  ::slotted(folk-cell) {
+    box-sizing: border-box;
+    align-items: center;
+    background-color: rgb(255, 255, 255);
+    display: flex;
+    padding: 0.25rem;
+    justify-content: start;
+    scroll-snap-align: start;
+    overflow: hidden;
+  }
 
-::slotted(folk-cell:focus) {
-  outline: 2px solid #1b73e8;
-  z-index: 4;
-}
-`);
+  ::slotted(folk-cell[type='number']) {
+    justify-content: end;
+  }
+
+  ::slotted(folk-cell:focus) {
+    outline: 2px solid #1b73e8;
+    z-index: 4;
+  }
+`;
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 

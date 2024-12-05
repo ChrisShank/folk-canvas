@@ -1,8 +1,7 @@
 import { FolkEventPropagator } from './folk-event-propagator.ts';
 import { css } from './common/tags.ts';
 
-const styles = new CSSStyleSheet();
-styles.replaceSync(css`
+const styles = css`
   :host {
     position: fixed;
     bottom: 16px;
@@ -27,7 +26,7 @@ styles.replaceSync(css`
   button.active {
     background: #eee;
   }
-`);
+`;
 
 export class FolkToolbar extends HTMLElement {
   static tagName = 'folk-toolbar';

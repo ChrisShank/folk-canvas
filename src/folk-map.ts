@@ -2,18 +2,19 @@ import { LatLng, LatLngExpression, LeafletEvent, map, Map, tileLayer } from 'lea
 
 // @ts-ignore
 // Vite specific import :(
-import css from 'leaflet/dist/leaflet.css?inline';
-const styles = new CSSStyleSheet();
-styles.replaceSync(`${css}
+import leafletCSS from 'leaflet/dist/leaflet.css?inline';
+import { css } from './common/tags';
+const styles = css`
+  ${leafletCSS}
   :host {
     display: block;
   }
-  
+
   :host > div {
     height: 100%;
     width: 100%;
-  }  
-`);
+  }
+`;
 
 export class RecenterEvent extends Event {
   constructor() {

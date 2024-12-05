@@ -1,4 +1,5 @@
 import { getStroke, StrokeOptions } from 'perfect-freehand';
+import { css } from './common/tags';
 
 export type Point = [x: number, y: number, pressure: number];
 
@@ -6,9 +7,9 @@ export type Stroke = number[][];
 
 // TODO: look into any-pointer media queries to tell if the user has a mouse or touch screen
 // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/any-pointer
-const styles = new CSSStyleSheet();
-styles.replaceSync(`
-  :host, svg {
+const styles = css`
+  :host,
+  svg {
     display: block;
     height: 100%;
     width: 100%;
@@ -16,12 +17,12 @@ styles.replaceSync(`
     pointer-events: none;
   }
 
-  :host(:state(drawing)) { 
+  :host(:state(drawing)) {
     position: fixed;
     inset: 0 0 0 0;
     cursor: var(--tracing-cursor, crosshair);
   }
-`);
+`;
 
 declare global {
   interface HTMLElementTagNameMap {

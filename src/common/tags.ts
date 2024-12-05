@@ -4,6 +4,10 @@ export const vert = String.raw;
 
 export const frag = String.raw;
 
-export const css = String.raw;
-
 export const html = String.raw;
+
+export function css(strings: TemplateStringsArray, ...values: any[]) {
+  const styles = new CSSStyleSheet();
+  styles.replaceSync(String.raw(strings, ...values));
+  return styles;
+}

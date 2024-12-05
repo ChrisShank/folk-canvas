@@ -73,8 +73,7 @@ export class TransformEvent extends Event {
 
 export type Dimension = number | 'auto';
 
-const styles = new CSSStyleSheet();
-styles.replaceSync(css`
+const styles = css`
   :host {
     display: block;
     position: absolute;
@@ -209,7 +208,7 @@ styles.replaceSync(css`
     opacity: 0;
     cursor: default;
   }
-`);
+`;
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -229,7 +228,7 @@ export class FolkShape extends HTMLElement {
   #shadow = this.attachShadow({ mode: 'open' });
   #internals = this.attachInternals();
 
-  #dynamicStyles = new CSSStyleSheet();
+  #dynamicStyles = css``;
 
   #type = (this.getAttribute('type') || 'rectangle') as Shape;
   get type(): Shape {
