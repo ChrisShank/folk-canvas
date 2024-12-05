@@ -82,15 +82,26 @@
       expression="lat: from.value"
     ></folk-event-propagator>
 
+    <folk-event-propagator
+      source="folk-map"
+      target="input[type='range']"
+      triggers="recenter"
+      expression="value: from.lat"
+    ></folk-event-propagator>
+
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-event-propagator.ts';
-      import '../src/standalone/folk-map.ts';
-      import '../src/standalone/folk-weather.ts';
-      import './src/geo-wiki.ts';
-      import { FolkCluster } from '../src/folk-proximity.ts';
+      import { FolkMap } from '../src/folk-map.ts';
+      import { FolkWeather } from '../src/folk-weather.ts';
+      import { GeoWiki } from './src/geo-wiki.ts';
+      import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
+      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
 
-      FolkCluster.register();
+      FolkMap.define();
+      FolkCluster.define();
+      FolkProximity.define();
+      FolkWeather.define();
+      FolkEventPropagator.define();
 
       FolkCluster.registerElement({
         constructor: FolkMap,

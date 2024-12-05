@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Propagator w/ Weather</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        background-color: black;
+        border-radius: 5px;
+        color: white;
+        padding: 0px 5px;
+        z-index: 10;
+      }
+
+      button {
+        margin: 1rem;
+        background-color: black;
+        font-size: 2rem;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <snow-fall count="200" style="--snow-fall-color: #9e9e9e"></snow-fall>
+    <button id="wind">☁️</button>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="200" y="350">Brrrrrr</folk-shape>
+    <folk-event-propagator
+      source="#box1"
+      target="#box2"
+      triggers="click"
+      expression="textContent: to.textContent + 'r'"
+    ></folk-event-propagator>
+
+    <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
+    <folk-event-propagator
+      source="#box3"
+      target="#box4"
+      triggers="transform"
+      expression="y: from.x, 
+rotation: from.x"
+    ></folk-event-propagator>
+
+    <script type="module">
+      import 'https://cdn.jsdelivr.net/npm/@zachleat/snow-fall';
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-event-propagator.ts';
+
+      let timeout = -1;
+      let isBlowing = false;
+      const ropes = document.querySelectorAll('folk-event-propagator');
+      const randomInt = (multiplier, adjust = 0) => Math.floor(Math.random() * multiplier) + adjust;
+      const updateGravity = (gravity) => ropes.forEach((rope) => (rope.gravity = gravity));
+
+      function simulateWind() {
+        updateGravity({ x: randomInt(5000), y: randomInt(5000) });
+        timeout = setTimeout(simulateWind, randomInt(1000, 200));
+      }
+
+      wind.addEventListener('click', () => {
+        if (isBlowing) {
+          clearTimeout(timeout);
+          updateGravity({ x: 0, y: 3000 });
+          wind.textContent = '☁️';
+        } else {
+          simulateWind();
+          wind.textContent = '🌬️';
+        }
+        isBlowing = !isBlowing;
+      });
+    </script>
+  </body>
+</html>
