@@ -396,10 +396,10 @@ export class FolkShape extends HTMLElement {
 
         // Map handle names to corner indices
         const handleToCornerIndex: Record<string, Point> = {
-          'resize-nw': rect.topLeftCorner,
-          'resize-ne': rect.topRightCorner,
-          'resize-se': rect.bottomRightCorner,
-          'resize-sw': rect.bottomLeftCorner,
+          'resize-nw': rect.topLeft,
+          'resize-ne': rect.topRight,
+          'resize-se': rect.bottomRight,
+          'resize-sw': rect.bottomLeft,
         };
 
         const currentPos = handleToCornerIndex[handle];
@@ -669,10 +669,10 @@ export class FolkShape extends HTMLElement {
 
     // Map each resize handle to its opposite corner index
     const OPPOSITE_CORNERS = {
-      'resize-se': rect.topLeftCorner,
-      'resize-sw': rect.topRightCorner,
-      'resize-nw': rect.bottomRightCorner,
-      'resize-ne': rect.bottomLeftCorner,
+      'resize-se': rect.topLeft,
+      'resize-sw': rect.topRight,
+      'resize-nw': rect.bottomRight,
+      'resize-ne': rect.bottomLeft,
     } as const;
 
     // Get the opposite corner for the current resize handle

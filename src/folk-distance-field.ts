@@ -151,12 +151,7 @@ export class FolkDistanceField extends HTMLElement {
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
       const rect = geometry.getClientRect();
-      const {
-        topLeftCorner: topLeft,
-        topRightCorner: topRight,
-        bottomRightCorner: bottomRight,
-        bottomLeftCorner: bottomLeft,
-      } = rect;
+      const { topLeft, topRight, bottomRight, bottomLeft } = rect;
 
       // Convert rotated coordinates to NDC using container dimensions
       const x1 = (topLeft.x / containerWidth) * 2 - 1;

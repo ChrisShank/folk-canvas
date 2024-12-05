@@ -125,7 +125,7 @@ export class FolkRope extends FolkBaseConnection {
     let target: Point;
 
     if (sourceRect instanceof RotatedDOMRect) {
-      source = Vector.lerp(sourceRect.bottomRightCorner, sourceRect.bottomLeftCorner, 0.5);
+      source = Vector.lerp(sourceRect.bottomRight, sourceRect.bottomLeft, 0.5);
     } else {
       source = {
         x: sourceRect.x + sourceRect.width / 2,
@@ -134,7 +134,7 @@ export class FolkRope extends FolkBaseConnection {
     }
 
     if (targetRect instanceof RotatedDOMRect) {
-      target = Vector.lerp(targetRect.bottomRightCorner, targetRect.bottomLeftCorner, 0.5);
+      target = Vector.lerp(targetRect.bottomRight, targetRect.bottomLeft, 0.5);
     } else {
       target = {
         x: targetRect.x + targetRect.width / 2,

@@ -84,44 +84,44 @@ export class RotatedDOMRect implements DOMRect {
     return this.#center;
   }
 
-  #topLeftCorner: Point | null = null;
-  get topLeftCorner() {
-    if (this.#topLeftCorner === null) {
-      this.#topLeftCorner = Vector.rotateAround({ x: this.x, y: this.y }, this.center, this.rotation);
+  #topLeft: Point | null = null;
+  get topLeft() {
+    if (this.#topLeft === null) {
+      this.#topLeft = Vector.rotateAround({ x: this.x, y: this.y }, this.center, this.rotation);
     }
-    return this.#topLeftCorner;
+    return this.#topLeft;
   }
 
-  #topRightCorner: Point | null = null;
-  get topRightCorner() {
-    if (this.#topRightCorner === null) {
-      this.#topRightCorner = Vector.rotateAround({ x: this.right, y: this.y }, this.center, this.rotation);
+  #topRight: Point | null = null;
+  get topRight() {
+    if (this.#topRight === null) {
+      this.#topRight = Vector.rotateAround({ x: this.right, y: this.y }, this.center, this.rotation);
     }
-    return this.#topRightCorner;
+    return this.#topRight;
   }
 
-  #bottomRightCorner: Point | null = null;
-  get bottomRightCorner() {
-    if (this.#bottomRightCorner === null) {
-      this.#bottomRightCorner = Vector.rotateAround({ x: this.right, y: this.bottom }, this.center, this.rotation);
+  #bottomRight: Point | null = null;
+  get bottomRight() {
+    if (this.#bottomRight === null) {
+      this.#bottomRight = Vector.rotateAround({ x: this.right, y: this.bottom }, this.center, this.rotation);
     }
-    return this.#bottomRightCorner;
+    return this.#bottomRight;
   }
 
-  #bottomLeftCorner: Point | null = null;
-  get bottomLeftCorner() {
-    if (this.#bottomLeftCorner === null) {
-      this.#bottomLeftCorner = Vector.rotateAround({ x: this.x, y: this.bottom }, this.center, this.rotation);
+  #bottomLeft: Point | null = null;
+  get bottomLeft() {
+    if (this.#bottomLeft === null) {
+      this.#bottomLeft = Vector.rotateAround({ x: this.x, y: this.bottom }, this.center, this.rotation);
     }
-    return this.#bottomLeftCorner;
+    return this.#bottomLeft;
   }
 
   #reset() {
     this.#center = null;
-    this.#topLeftCorner = null;
-    this.#topRightCorner = null;
-    this.#bottomLeftCorner = null;
-    this.#bottomRightCorner = null;
+    this.#topLeft = null;
+    this.#topRight = null;
+    this.#bottomLeft = null;
+    this.#bottomRight = null;
   }
 
   /** Returns all the vertices in worldspace coordinates */
