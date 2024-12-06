@@ -20,6 +20,29 @@ type Handle =
   | 'rotation-sw'
   | 'move';
 
+const FLIP_HANDLE_MAP = {
+  'resize-se': {
+    x: 'resize-sw',
+    y: 'resize-ne',
+    xy: 'resize-nw',
+  },
+  'resize-sw': {
+    x: 'resize-se',
+    y: 'resize-nw',
+    xy: 'resize-ne',
+  },
+  'resize-nw': {
+    x: 'resize-ne',
+    y: 'resize-sw',
+    xy: 'resize-se',
+  },
+  'resize-ne': {
+    x: 'resize-nw',
+    y: 'resize-se',
+    xy: 'resize-sw',
+  },
+} as const;
+
 export type TransformEventDetail = {
   rotate: number;
 };
@@ -599,12 +622,32 @@ export class FolkShape extends HTMLElement {
 
   // Updated helper method to handle resize operations
   #handleResize(handle: Handle, mouse: Point, target: HTMLElement, event?: PointerEvent) {
+    switch (handle) {
+      case 'resize-se':
+        this.#rect.bottomRight = mouse;
+        break;
+      case 'resize-sw':
+        this.#rect.bottomLeft = mouse;
+        break;
+      case 'resize-nw':
+        this.#rect.topLeft = mouse;
+        break;
+      case 'resize-ne':
+        this.#rect.topRight = mouse;
+        break;
+    }
+
     // Handle flipping logic
-    const hasFlippedX = false;
-    const hasFlippedY = false;
+    const hasFlippedX = this.#rect.width < 0;
+    const hasFlippedY = this.#rect.height < 0;
+    console.log(this.#rect.width, this.#rect.height);
 
     if (hasFlippedX || hasFlippedY) {
-      const nextHandle = hasFlippedX ? 'resize-sw' : 'resize-ne';
+      const flipType = `${hasFlippedX ? 'x' : ''}${
+        hasFlippedY ? 'y' : ''
+      }` as keyof (typeof FLIP_HANDLE_MAP)[keyof typeof FLIP_HANDLE_MAP];
+      const nextHandle = FLIP_HANDLE_MAP[handle as keyof typeof FLIP_HANDLE_MAP][flipType];
+
       const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
 
       if (newTarget) {
@@ -630,21 +673,6 @@ export class FolkShape extends HTMLElement {
           newTarget.setPointerCapture(event.pointerId);
         }
       }
-    }
-
-    switch (handle) {
-      case 'resize-se':
-        this.#rect.bottomRight = mouse;
-        break;
-      case 'resize-sw':
-        this.#rect.bottomLeft = mouse;
-        break;
-      case 'resize-nw':
-        this.#rect.topLeft = mouse;
-        break;
-      case 'resize-ne':
-        this.#rect.topRight = mouse;
-        break;
     }
 
     // Request update after changing the rect

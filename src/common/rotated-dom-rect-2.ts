@@ -151,19 +151,55 @@ export class RotatedDOMRect implements IRotatedDOMRect {
   }
 
   set topLeft(point: Point) {
-    this.moveCorner(point, this.bottomRight);
+    const oppositeCorner = this.bottomRight;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = -unrotated.x * 2;
+    this._height = -unrotated.y * 2;
+    this.invalidateCache();
   }
 
   set topRight(point: Point) {
-    this.moveCorner(point, this.bottomLeft);
+    const oppositeCorner = this.bottomLeft;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = unrotated.x * 2;
+    this._height = -unrotated.y * 2;
+    this.invalidateCache();
   }
 
   set bottomLeft(point: Point) {
-    this.moveCorner(point, this.topRight);
+    const oppositeCorner = this.topRight;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = -unrotated.x * 2;
+    this._height = unrotated.y * 2;
+    this.invalidateCache();
   }
 
   set bottomRight(point: Point) {
-    this.moveCorner(point, this.topLeft);
+    const oppositeCorner = this.topLeft;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = unrotated.x * 2;
+    this._height = unrotated.y * 2;
+    this.invalidateCache();
   }
 
   getBounds(): Required<DOMRectInit> {
@@ -206,30 +242,6 @@ export class RotatedDOMRect implements IRotatedDOMRect {
   }
 
   /* ——— Private methods ——— */
-
-  private moveCorner(newCorner: Point, oppositeCorner: Point) {
-    // Calculate new center as midpoint between corners
-    this._center = {
-      x: (newCorner.x + oppositeCorner.x) / 2,
-      y: (newCorner.y + oppositeCorner.y) / 2,
-    };
-
-    // Get vector from center to new corner
-    const cornerVector = {
-      x: newCorner.x - this._center.x,
-      y: newCorner.y - this._center.y,
-    };
-
-    // Un-rotate the corner vector by the current rotation
-    const unrotatedX = cornerVector.x * Math.cos(-this._rotation) - cornerVector.y * Math.sin(-this._rotation);
-    const unrotatedY = cornerVector.x * Math.sin(-this._rotation) + cornerVector.y * Math.cos(-this._rotation);
-
-    // The width and height are twice the unrotated vector components
-    this._width = unrotatedX * 2;
-    this._height = unrotatedY * 2;
-
-    this.invalidateCache();
-  }
 
   private getTrigValues(): { sin: number; cos: number } {
     if (this._sinR === null || this._cosR === null) {
