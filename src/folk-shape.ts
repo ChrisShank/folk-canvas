@@ -1,76 +1,22 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import { Point } from './common/types';
-import { TransformDOMRectReadonly } from './common/TransformDOMRect';
+import { TransformDOMRect, TransformDOMRectReadonly } from './common/TransformDOMRect';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
+import { TransformEvent } from './common/TransformEvent';
 
-const resizeObserver = new ResizeObserverManager();
-
-export type Shape = 'rectangle' | 'circle' | 'triangle';
-
-type Handle =
-  | 'resize-nw'
-  | 'resize-ne'
-  | 'resize-se'
-  | 'resize-sw'
-  | 'rotation-nw'
-  | 'rotation-ne'
-  | 'rotation-se'
-  | 'rotation-sw'
-  | 'move';
-
-export type TransformEventDetail = {
-  rotate: number;
-};
-
-// TODO: expose previous and current rects
-export class TransformEvent extends Event {
-  constructor() {
-    super('transform', { cancelable: true, bubbles: true });
-  }
-
-  #xPrevented = false;
-  get xPrevented() {
-    return this.defaultPrevented || this.#xPrevented;
-  }
-  preventX() {
-    this.#xPrevented = true;
-  }
-
-  #yPrevented = false;
-  get yPrevented() {
-    return this.defaultPrevented || this.#yPrevented;
-  }
-  preventY() {
-    this.#yPrevented = true;
-  }
-
-  #heightPrevented = false;
-  get heightPrevented() {
-    return this.defaultPrevented || this.#heightPrevented;
-  }
-  preventHeight() {
-    this.#heightPrevented = true;
-  }
-
-  #widthPrevented = false;
-  get widthPrevented() {
-    return this.defaultPrevented || this.#widthPrevented;
-  }
-  preventWidth() {
-    this.#widthPrevented = true;
-  }
-
-  #rotatePrevented = false;
-  get rotatePrevented() {
-    return this.defaultPrevented || this.#rotatePrevented;
-  }
-  preventRotate() {
-    this.#rotatePrevented = true;
+declare global {
+  interface HTMLElementTagNameMap {
+    'folk-shape': FolkShape;
   }
 }
 
+const resizeObserver = new ResizeObserverManager();
+
+type ResizeHandle = 'resize-nw' | 'resize-ne' | 'resize-se' | 'resize-sw';
+type RotateHandle = 'rotation-nw' | 'rotation-ne' | 'rotation-se' | 'rotation-sw';
+type Handle = ResizeHandle | RotateHandle | 'move';
 export type Dimension = number | 'auto';
 
 const styles = css`
@@ -79,6 +25,7 @@ const styles = css`
     position: absolute;
     cursor: move;
     box-sizing: border-box;
+    transform-origin: 0 0;
   }
 
   :host::before {
@@ -210,12 +157,6 @@ const styles = css`
   }
 `;
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'folk-shape': FolkShape;
-  }
-}
-
 // TODO: add z coordinate?
 export class FolkShape extends HTMLElement {
   static tagName = 'folk-shape';
@@ -227,101 +168,79 @@ export class FolkShape extends HTMLElement {
 
   #shadow = this.attachShadow({ mode: 'open' });
   #internals = this.attachInternals();
-
   #dynamicStyles = css``;
+  #autoContentRect = this.getBoundingClientRect();
+  #attrWidth: Dimension = 0;
+  #attrHeight: Dimension = 0;
 
-  #type = (this.getAttribute('type') || 'rectangle') as Shape;
-  get type(): Shape {
-    return this.#type;
-  }
+  // Used for rotation handling, would love a better way to do this that avoids this clutter.
+  #initialRotation = 0;
+  #startAngle = 0;
 
-  set type(type: Shape) {
-    this.setAttribute('type', type);
-  }
-
-  #previousX = 0;
-  #x = Number(this.getAttribute('x')) || 0;
   get x() {
-    return this.#x;
+    return this.#rect.x;
   }
 
   set x(x) {
-    this.#previousX = this.#x;
-    this.#x = x;
+    this.#rect.x = x;
     this.#requestUpdate('x');
   }
 
-  #previousY = 0;
-  #y = Number(this.getAttribute('y')) || 0;
   get y() {
-    return this.#y;
+    return this.#rect.y;
   }
 
   set y(y) {
-    this.#previousY = this.#y;
-    this.#y = y;
+    this.#rect.y = y;
     this.#requestUpdate('y');
   }
 
-  #autoContentRect = this.getBoundingClientRect();
-
-  #previousWidth: Dimension = 0;
-  #width: Dimension = 0;
   get width(): number {
-    if (this.#width === 'auto') {
+    if (this.#attrWidth === 'auto') {
       return this.#autoContentRect.width;
     }
-    return this.#width;
+    return this.#rect.width;
   }
 
   set width(width: Dimension) {
     if (width === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#width === 'auto' && this.#height !== 'auto') {
+    } else if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
       resizeObserver.unobserve(this, this.#onAutoResize);
     }
-    this.#previousWidth = this.#width;
-    this.#width = width;
+    this.#attrWidth = width;
     this.#requestUpdate('width');
   }
 
-  #previousHeight: Dimension = 0;
-  #height: Dimension = 0;
   get height(): number {
-    if (this.#height === 'auto') {
+    if (this.#attrHeight === 'auto') {
       return this.#autoContentRect.height;
     }
-    return this.#height;
+    return this.#attrHeight;
   }
 
   set height(height: Dimension) {
     if (height === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#height === 'auto' && this.#width !== 'auto') {
+    } else if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
       resizeObserver.unobserve(this, this.#onAutoResize);
     }
 
-    this.#previousHeight = this.#height;
-    this.#height = height;
+    this.#attrHeight = height;
     this.#requestUpdate('height');
   }
 
-  #initialRotation = 0;
-  #startAngle = 0;
-  #previousRotation = 0;
-
-  // use degrees in the DOM, but store in radians internally
-  #rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
-
   get rotation(): number {
-    return this.#rotation;
+    return this.#rect.rotation;
   }
 
   set rotation(rotation: number) {
-    this.#previousRotation = this.#rotation;
-    this.#rotation = rotation;
+    this.#rect.rotation = rotation;
     this.#requestUpdate('rotation');
   }
+
+  #rect: TransformDOMRect;
+  #previousRect: TransformDOMRect;
 
   constructor() {
     super();
@@ -343,21 +262,28 @@ export class FolkShape extends HTMLElement {
       <button part="resize-sw" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
 
-    this.height = Number(this.getAttribute('height')) || 'auto';
-    this.width = Number(this.getAttribute('width')) || 'auto';
+    this.#rect = new TransformDOMRect({
+      x: Number(this.getAttribute('x')) || 0,
+      y: Number(this.getAttribute('y')) || 0,
+      width: Number(this.getAttribute('width')) || 0,
+      height: Number(this.getAttribute('height')) || 0,
+      rotation: (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180),
+    });
+
+    // Initialize previousRect with same values as rect
+    this.#previousRect = new TransformDOMRect(this.#rect);
   }
 
   #isConnected = false;
   connectedCallback() {
     this.setAttribute('tabindex', '0');
     this.#isConnected = true;
-    this.#update(new Set(['type', 'x', 'y', 'height', 'width', 'rotation']));
+    this.#update();
   }
 
+  // TODO: rename to getTransformDOMRect()
   getClientRect() {
-    const { x, y, width, height, rotation } = this;
-
-    return new TransformDOMRectReadonly({ x, y, width, height, rotation });
+    return new TransformDOMRectReadonly(this.#rect);
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
@@ -391,30 +317,43 @@ export class FolkShape extends HTMLElement {
         if (!anyChange) return;
 
         // Get the corner coordinates of the shape for the corresponding handle
-        const rect = this.getClientRect();
+        const rect = this.#rect;
 
-        // Map handle names to corner indices
-        const handleToCornerIndex: Record<string, Point> = {
+        let vector: Point;
+        switch (event.key) {
+          case 'ArrowUp':
+            vector = { x: 0, y: -MOVEMENT_DELTA };
+            break;
+          case 'ArrowDown':
+            vector = { x: 0, y: MOVEMENT_DELTA };
+            break;
+          case 'ArrowLeft':
+            vector = { x: -MOVEMENT_DELTA, y: 0 };
+            break;
+          case 'ArrowRight':
+            vector = { x: MOVEMENT_DELTA, y: 0 };
+            break;
+        }
+
+        // Map handle names to corner points
+        const HANDLE_TO_CORNER: Record<string, Point> = {
           'resize-nw': rect.topLeft,
           'resize-ne': rect.topRight,
           'resize-se': rect.bottomRight,
           'resize-sw': rect.bottomLeft,
         };
 
-        const currentPos = handleToCornerIndex[handle];
+        const currentPos = rect.toParentSpace(HANDLE_TO_CORNER[handle]);
 
-        // Calculate movement based on arrow keys
-        const isVertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';
-        const isIncreasing = event.key === 'ArrowRight' || event.key === 'ArrowDown';
-        const delta = isIncreasing ? MOVEMENT_DELTA : -MOVEMENT_DELTA;
-
-        syntheticMouse = {
-          x: currentPos.x + (isVertical ? 0 : delta),
-          y: currentPos.y + (isVertical ? delta : 0),
+        const syntheticMouse = {
+          x: currentPos.x,
+          y: currentPos.y,
         };
 
+        // Calculate movement based on arrow keys
+
         // Process resize using the same logic as mouse events
-        this.#handleResize(handle, syntheticMouse, focusedElement as HTMLElement);
+        this.#handleResize(handle as ResizeHandle, syntheticMouse, focusedElement as HTMLElement);
         event.preventDefault();
         return;
       }
@@ -423,11 +362,13 @@ export class FolkShape extends HTMLElement {
       if (event.altKey) {
         switch (event.key) {
           case 'ArrowLeft':
-            this.rotation -= ROTATION_DELTA;
+            this.#rect.rotation -= ROTATION_DELTA;
+            this.#requestUpdate('rotation');
             event.preventDefault();
             return;
           case 'ArrowRight':
-            this.rotation += ROTATION_DELTA;
+            this.#rect.rotation += ROTATION_DELTA;
+            this.#requestUpdate('rotation');
             event.preventDefault();
             return;
         }
@@ -435,19 +376,23 @@ export class FolkShape extends HTMLElement {
 
       switch (event.key) {
         case 'ArrowLeft':
-          this.x -= MOVEMENT_DELTA;
+          this.#rect.x -= MOVEMENT_DELTA;
+          this.#requestUpdate('x');
           event.preventDefault();
           return;
         case 'ArrowRight':
-          this.x += MOVEMENT_DELTA;
+          this.#rect.x += MOVEMENT_DELTA;
+          this.#requestUpdate('x');
           event.preventDefault();
           return;
         case 'ArrowUp':
-          this.y -= MOVEMENT_DELTA;
+          this.#rect.y -= MOVEMENT_DELTA;
+          this.#requestUpdate('y');
           event.preventDefault();
           return;
         case 'ArrowDown':
-          this.y += MOVEMENT_DELTA;
+          this.#rect.y += MOVEMENT_DELTA;
+          this.#requestUpdate('y');
           event.preventDefault();
           return;
       }
@@ -463,8 +408,8 @@ export class FolkShape extends HTMLElement {
 
           // Store initial angle on rotation start
           if (target.getAttribute('part')?.startsWith('rotation')) {
-            const center = this.getClientRect().center;
-            this.#initialRotation = this.#rotation;
+            const center = this.#rect.center;
+            this.#initialRotation = this.#rect.rotation;
             this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
           }
 
@@ -486,8 +431,10 @@ export class FolkShape extends HTMLElement {
           if (target === null) return;
 
           if (target === this) {
-            this.x += event.movementX;
-            this.y += event.movementY;
+            this.#rect.x += event.movementX;
+            this.#rect.y += event.movementY;
+            this.#requestUpdate('x');
+            this.#requestUpdate('y');
             return;
           }
 
@@ -496,16 +443,16 @@ export class FolkShape extends HTMLElement {
 
           if (handle.includes('resize')) {
             const mouse = { x: event.clientX, y: event.clientY };
-            this.#handleResize(handle, mouse, target, event);
+            this.#handleResize(handle as ResizeHandle, mouse, target, event);
             return;
           }
 
           if (handle.startsWith('rotation')) {
-            const center = this.getClientRect().center;
+            const center = this.#rect.center;
             const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
-            this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
+            this.#rect.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
-            let degrees = (this.rotation * 180) / Math.PI;
+            let degrees = (this.#rect.rotation * 180) / Math.PI;
             switch (handle) {
               case 'rotation-ne':
                 degrees = (degrees + 90) % 360;
@@ -521,6 +468,7 @@ export class FolkShape extends HTMLElement {
             const target = event.composedPath()[0] as HTMLElement;
             const rotateCursor = getRotateCursorUrl(degrees);
             target.style.setProperty('cursor', rotateCursor);
+            this.#requestUpdate('rotation');
 
             return;
           }
@@ -558,71 +506,47 @@ export class FolkShape extends HTMLElement {
     this.#isUpdating = true;
     await true;
     this.#isUpdating = false;
-    this.#update(this.#updatedProperties);
+    this.#update();
     this.#updatedProperties.clear();
   }
 
   // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
-  #update(updatedProperties: Set<string>) {
-    this.#dispatchTransformEvent(updatedProperties);
+  #update() {
+    this.#dispatchTransformEvent();
   }
 
-  #dispatchTransformEvent(updatedProperties: Set<string>) {
-    const event = new TransformEvent();
-
+  #dispatchTransformEvent() {
+    const event = new TransformEvent(this.#rect, this.#previousRect);
     this.dispatchEvent(event);
 
-    if (updatedProperties.has('x')) {
-      if (event.xPrevented) {
-        this.#x = this.#previousX;
-      } else {
-        this.style.left = `${this.#x}px`;
-      }
+    if (event.xPrevented) {
+      this.#rect.x = this.#previousRect.x;
+    }
+    if (event.yPrevented) {
+      this.#rect.y = this.#previousRect.y;
+    }
+    if (event.widthPrevented) {
+      this.#rect.width = this.#previousRect.width;
+    }
+    if (event.heightPrevented) {
+      this.#rect.height = this.#previousRect.height;
+    }
+    if (event.rotatePrevented) {
+      this.#rect.rotation = this.#previousRect.rotation;
     }
 
-    if (updatedProperties.has('y')) {
-      if (event.yPrevented) {
-        this.#y = this.#previousY;
-      } else {
-        this.style.top = `${this.#y}px`;
-      }
-    }
-
-    if (updatedProperties.has('height')) {
-      if (event.heightPrevented) {
-        this.#height = this.#previousHeight;
-      } else {
-        this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
-      }
-    }
-
-    if (updatedProperties.has('width')) {
-      if (event.widthPrevented) {
-        this.#width = this.#previousWidth;
-      } else {
-        this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
-      }
-    }
-
-    if (updatedProperties.has('rotation')) {
-      if (event.rotatePrevented) {
-        this.#rotation = this.#previousRotation;
-      } else {
-        this.style.rotate = `${this.#rotation}rad`;
-      }
-    }
+    this.style.transform = this.#rect.toCssString();
+    this.style.width = this.#attrWidth === 'auto' ? '' : `${this.#rect.width}px`;
+    this.style.height = this.#attrHeight === 'auto' ? '' : `${this.#rect.height}px`;
   }
 
   #onAutoResize = (entry: ResizeObserverEntry) => {
-    const previousRect = this.#autoContentRect;
     this.#autoContentRect = entry.contentRect;
-    this.#previousHeight = previousRect.height;
-    this.#previousWidth = previousRect.width;
-    this.#dispatchTransformEvent(new Set(['width', 'height']));
+    this.#dispatchTransformEvent();
   };
 
   #updateCursors() {
-    const degrees = (this.#rotation * 180) / Math.PI;
+    const degrees = (this.#rect.rotation * 180) / Math.PI;
 
     const resizeCursor0 = getResizeCursorUrl(degrees);
     const resizeCursor90 = getResizeCursorUrl((degrees + 90) % 360);
@@ -662,91 +586,87 @@ export class FolkShape extends HTMLElement {
     this.#dynamicStyles.replaceSync(dynamicStyles);
   }
 
-  // Updated helper method to handle resize operations
-  #handleResize(handle: Handle, mouse: Point, target: HTMLElement, event?: PointerEvent) {
-    const rect = this.getClientRect();
+  #handleResize(handle: ResizeHandle, pointerPos: Point, target: HTMLElement, event?: PointerEvent) {
+    const localPointer = this.#rect.toLocalSpace(pointerPos);
 
-    // Map each resize handle to its opposite corner index
-    const OPPOSITE_CORNERS = {
-      'resize-se': rect.topLeft,
-      'resize-sw': rect.topRight,
-      'resize-nw': rect.bottomRight,
-      'resize-ne': rect.bottomLeft,
-    } as const;
+    switch (handle) {
+      case 'resize-se':
+        this.#rect.setBottomRight(localPointer);
+        break;
+      case 'resize-sw':
+        this.#rect.setBottomLeft(localPointer);
+        break;
+      case 'resize-nw':
+        this.#rect.setTopLeft(localPointer);
+        break;
+      case 'resize-ne':
+        this.#rect.setTopRight(localPointer);
+        break;
+    }
 
-    // Get the opposite corner for the current resize handle
-    const oppositeCorner = OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS];
+    let nextHandle: ResizeHandle = handle;
 
-    // Calculate new dimensions based on mouse position and opposite corner
-    const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
-    const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
-    const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
+    const flipWidth = this.#rect.width < 0;
+    const flipHeight = this.#rect.height < 0;
 
-    const HANDLE_BEHAVIOR = {
-      'resize-se': {
-        flipX: unrotatedHandle.x < unrotatedAnchor.x,
-        flipY: unrotatedHandle.y < unrotatedAnchor.y,
-        handleX: 'resize-sw',
-        handleY: 'resize-ne',
-      },
-      'resize-sw': {
-        flipX: unrotatedHandle.x > unrotatedAnchor.x,
-        flipY: unrotatedHandle.y < unrotatedAnchor.y,
-        handleX: 'resize-se',
-        handleY: 'resize-nw',
-      },
-      'resize-nw': {
-        flipX: unrotatedHandle.x > unrotatedAnchor.x,
-        flipY: unrotatedHandle.y > unrotatedAnchor.y,
-        handleX: 'resize-ne',
-        handleY: 'resize-sw',
-      },
-      'resize-ne': {
-        flipX: unrotatedHandle.x < unrotatedAnchor.x,
-        flipY: unrotatedHandle.y > unrotatedAnchor.y,
-        handleX: 'resize-nw',
-        handleY: 'resize-se',
-      },
-    } as const;
+    if (flipWidth && flipHeight) {
+      // Both axes flipped
+      const oppositeHandleMap: Record<ResizeHandle, ResizeHandle> = {
+        'resize-se': 'resize-nw',
+        'resize-sw': 'resize-ne',
+        'resize-nw': 'resize-se',
+        'resize-ne': 'resize-sw',
+      };
+      nextHandle = oppositeHandleMap[handle];
+    } else if (flipWidth) {
+      // Only X axis flipped
+      const flipXHandleMap: Record<ResizeHandle, ResizeHandle> = {
+        'resize-se': 'resize-sw',
+        'resize-sw': 'resize-se',
+        'resize-nw': 'resize-ne',
+        'resize-ne': 'resize-nw',
+      };
+      nextHandle = flipXHandleMap[handle];
+    } else if (flipHeight) {
+      // Only Y axis flipped
+      const flipYHandleMap: Record<ResizeHandle, ResizeHandle> = {
+        'resize-se': 'resize-ne',
+        'resize-sw': 'resize-nw',
+        'resize-nw': 'resize-sw',
+        'resize-ne': 'resize-se',
+      };
+      nextHandle = flipYHandleMap[handle];
+    }
 
-    // Handle flipping logic
-    const behavior = HANDLE_BEHAVIOR[handle as keyof typeof HANDLE_BEHAVIOR];
-    const hasFlippedX = behavior.flipX;
-    const hasFlippedY = behavior.flipY;
+    const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
 
-    if (hasFlippedX || hasFlippedY) {
-      const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
-      const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
+    if (newTarget) {
+      // Update focus for keyboard events
+      newTarget.focus();
 
-      if (newTarget) {
-        // Update focus for keyboard events
-        newTarget.focus();
+      // Update handle state
+      this.#internals.states.delete(handle);
+      this.#internals.states.add(nextHandle);
 
-        // Update handle state
-        this.#internals.states.delete(handle);
-        this.#internals.states.add(nextHandle);
+      // Handle pointer capture swap for mouse events
+      if (event && 'setPointerCapture' in target) {
+        // Clean up old handle state
+        target.removeEventListener('pointermove', this);
+        target.removeEventListener('lostpointercapture', this);
 
-        // Handle pointer capture swap for mouse events
-        if (event && 'setPointerCapture' in target) {
-          // Clean up old handle state
-          target.removeEventListener('pointermove', this);
-          target.removeEventListener('lostpointercapture', this);
+        // Set up new handle state
+        newTarget.addEventListener('pointermove', this);
+        newTarget.addEventListener('lostpointercapture', this);
 
-          // Set up new handle state
-          newTarget.addEventListener('pointermove', this);
-          newTarget.addEventListener('lostpointercapture', this);
-
-          // Transfer pointer capture
-          target.releasePointerCapture(event.pointerId);
-          newTarget.setPointerCapture(event.pointerId);
-        }
+        // Transfer pointer capture
+        target.releasePointerCapture(event.pointerId);
+        newTarget.setPointerCapture(event.pointerId);
       }
     }
 
-    // Update dimensions
-    this.x = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
-    this.y = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
-    this.width = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
-    this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
+    this.#requestUpdate('x');
+    this.#requestUpdate('y');
+    this.#requestUpdate('width');
+    this.#requestUpdate('height');
   }
 }
