@@ -189,6 +189,146 @@ describe('RotatedDOMRect', () => {
       const distanceToBottomRight = Vector.distance(rect.center, rect.bottomRight);
       expect(distanceToTopLeft).toBeCloseTo(distanceToBottomRight);
     });
+
+    test('setting topLeft updates rectangle correctly', () => {
+      const rect = new RotatedDOMRect({
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        rotation: 0,
+      });
+
+      const originalBottomRight = { ...rect.bottomRight };
+
+      rect.topLeft = { x: 30, y: 30 };
+
+      // The bottomRight corner should remain the same
+      expectPointClose(rect.bottomRight, originalBottomRight);
+
+      // The center should be halfway between the new topLeft and the original bottomRight
+      expectPointClose(rect.center, {
+        x: (30 + originalBottomRight.x) / 2,
+        y: (30 + originalBottomRight.y) / 2,
+      });
+
+      // The width and height should be updated accordingly
+      expect(rect.width).toBeCloseTo(originalBottomRight.x - 30);
+      expect(rect.height).toBeCloseTo(originalBottomRight.y - 30);
+
+      // Verify updated topLeft
+      expectPointClose(rect.topLeft, { x: 30, y: 30 });
+    });
+
+    test('setting corners with negative widths and heights', () => {
+      const rect = new RotatedDOMRect({
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 50,
+        rotation: 0,
+      });
+
+      const originalBottomRight = { ...rect.bottomRight };
+
+      // Move topLeft beyond bottomRight to create negative width and height
+      rect.topLeft = { x: 100, y: 100 };
+
+      // The bottomRight corner should remain the same
+      expectPointClose(rect.bottomRight, originalBottomRight);
+
+      // Width and height should be negative
+      expect(rect.width).toBeLessThan(0);
+      expect(rect.height).toBeLessThan(0);
+
+      // Center should be updated accordingly
+      expectPointClose(rect.center, {
+        x: (100 + originalBottomRight.x) / 2,
+        y: (100 + originalBottomRight.y) / 2,
+      });
+    });
+
+    test('setting corners across axes flips rectangle correctly', () => {
+      const rect = new RotatedDOMRect({
+        x: 0,
+        y: 0,
+        width: 80,
+        height: 60,
+        rotation: 0,
+      });
+
+      const originalTopLeft = { ...rect.topLeft };
+      const originalBottomRight = { ...rect.bottomRight };
+
+      // Move bottomRight to the top left of topLeft, flipping both axes
+      rect.bottomRight = { x: -60, y: -40 };
+
+      // The topLeft corner should remain the same
+      expectPointClose(rect.topLeft, originalTopLeft);
+
+      // Width and height should be negative
+      expect(rect.width).toBeLessThan(0);
+      expect(rect.height).toBeLessThan(0);
+
+      // Center should be halfway between the new bottomRight and original topLeft
+      expectPointClose(rect.center, {
+        x: (originalTopLeft.x + -60) / 2,
+        y: (originalTopLeft.y + -40) / 2,
+      });
+    });
+
+    test('setting corners with rotation crosses zero correctly', () => {
+      const rect = new RotatedDOMRect({
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        rotation: Math.PI / 2, // 90 degrees
+      });
+
+      const originalTopRight = { ...rect.topRight };
+
+      // Move bottomLeft across topRight
+      rect.bottomLeft = { x: 60, y: -60 };
+
+      // The topRight corner should remain the same
+      expectPointClose(rect.topRight, originalTopRight);
+
+      // Width and height should adjust correctly (may be negative)
+      const delta = Vector.sub(originalTopRight, rect.bottomLeft);
+      const rotatedDelta = Vector.rotate(delta, -rect.rotation);
+      expect(rect.width).toBeCloseTo(rotatedDelta.x);
+      expect(rect.height).toBeCloseTo(rotatedDelta.y);
+
+      // Verify updated bottomLeft
+      expectPointClose(rect.bottomLeft, { x: 60, y: -60 });
+    });
+
+    test('simple resize by moving corner', () => {
+      const rect = new RotatedDOMRect({
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        rotation: 0,
+      });
+
+      // Initial state verification
+      expectPointClose(rect.topLeft, { x: -50, y: -50 });
+      expectPointClose(rect.bottomRight, { x: 50, y: 50 });
+      expect(rect.width).toBe(100);
+      expect(rect.height).toBe(100);
+
+      // Move bottomRight to double the size
+      rect.bottomRight = { x: 100, y: 100 };
+
+      // Verify new state
+      expectPointClose(rect.topLeft, { x: -50, y: -50 }); // Should stay fixed
+      expectPointClose(rect.bottomRight, { x: 100, y: 100 }); // New position
+      expect(rect.width).toBeCloseTo(150); // New width should be 150
+      expect(rect.height).toBeCloseTo(150); // New height should be 150
+      expectPointClose(rect.center, { x: 25, y: 25 }); // Center should move to midpoint
+    });
   });
 
   describe('edge cases', () => {

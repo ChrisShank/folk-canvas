@@ -1,7 +1,7 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import { Point } from './common/types';
-import { RotatedDOMRectReadonly } from './common/rotated-dom-rect';
+import { RotatedDOMRect } from './common/rotated-dom-rect-2';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 
@@ -216,7 +216,6 @@ declare global {
   }
 }
 
-// TODO: add z coordinate?
 export class FolkShape extends HTMLElement {
   static tagName = 'folk-shape';
 
@@ -239,70 +238,48 @@ export class FolkShape extends HTMLElement {
     this.setAttribute('type', type);
   }
 
-  #previousX = 0;
-  #x = Number(this.getAttribute('x')) || 0;
+  // Use RotatedDOMRect to store shape's dimensions and position
+  #rect = new RotatedDOMRect({
+    x: Number(this.getAttribute('x')) || 0,
+    y: Number(this.getAttribute('y')) || 0,
+    width: Number(this.getAttribute('width')) || 0,
+    height: Number(this.getAttribute('height')) || 0,
+    rotation: (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180),
+  });
+
   get x() {
-    return this.#x;
+    return this.#rect.x;
   }
 
-  set x(x) {
-    this.#previousX = this.#x;
-    this.#x = x;
+  set x(value) {
+    this.#rect.x = value;
     this.#requestUpdate('x');
   }
 
-  #previousY = 0;
-  #y = Number(this.getAttribute('y')) || 0;
   get y() {
-    return this.#y;
+    return this.#rect.y;
   }
 
-  set y(y) {
-    this.#previousY = this.#y;
-    this.#y = y;
+  set y(value) {
+    this.#rect.y = value;
     this.#requestUpdate('y');
   }
 
-  #autoContentRect = this.getBoundingClientRect();
-
-  #previousWidth: Dimension = 0;
-  #width: Dimension = 0;
-  get width(): number {
-    if (this.#width === 'auto') {
-      return this.#autoContentRect.width;
-    }
-    return this.#width;
+  get width() {
+    return this.#rect.width;
   }
 
-  set width(width: Dimension) {
-    if (width === 'auto') {
-      resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#width === 'auto' && this.#height !== 'auto') {
-      resizeObserver.unobserve(this, this.#onAutoResize);
-    }
-    this.#previousWidth = this.#width;
-    this.#width = width;
+  set width(value) {
+    this.#rect.width = value;
     this.#requestUpdate('width');
   }
 
-  #previousHeight: Dimension = 0;
-  #height: Dimension = 0;
-  get height(): number {
-    if (this.#height === 'auto') {
-      return this.#autoContentRect.height;
-    }
-    return this.#height;
+  get height() {
+    return this.#rect.height;
   }
 
-  set height(height: Dimension) {
-    if (height === 'auto') {
-      resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#height === 'auto' && this.#width !== 'auto') {
-      resizeObserver.unobserve(this, this.#onAutoResize);
-    }
-
-    this.#previousHeight = this.#height;
-    this.#height = height;
+  set height(value) {
+    this.#rect.height = value;
     this.#requestUpdate('height');
   }
 
@@ -310,16 +287,12 @@ export class FolkShape extends HTMLElement {
   #startAngle = 0;
   #previousRotation = 0;
 
-  // use degrees in the DOM, but store in radians internally
-  #rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
-
-  get rotation(): number {
-    return this.#rotation;
+  get rotation() {
+    return this.#rect.rotation;
   }
 
-  set rotation(rotation: number) {
-    this.#previousRotation = this.#rotation;
-    this.#rotation = rotation;
+  set rotation(value) {
+    this.#rect.rotation = value;
     this.#requestUpdate('rotation');
   }
 
@@ -342,9 +315,6 @@ export class FolkShape extends HTMLElement {
       <button part="resize-se" aria-label="Resize shape from bottom right"></button>
       <button part="resize-sw" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
-
-    this.height = Number(this.getAttribute('height')) || 'auto';
-    this.width = Number(this.getAttribute('width')) || 'auto';
   }
 
   #isConnected = false;
@@ -355,19 +325,7 @@ export class FolkShape extends HTMLElement {
   }
 
   getClientRect() {
-    const { x, y, width, height, rotation } = this;
-
-    return new RotatedDOMRectReadonly({ x, y, width, height, rotation });
-  }
-
-  // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
-  getBoundingPath(): string {
-    return '';
-  }
-
-  // We might also want some kind of utility function that maps a path into an approximate set of vertices.
-  getBoundingVertices() {
-    return [];
+    return this.#rect;
   }
 
   handleEvent(event: PointerEvent | KeyboardEvent) {
@@ -463,8 +421,8 @@ export class FolkShape extends HTMLElement {
 
           // Store initial angle on rotation start
           if (target.getAttribute('part')?.startsWith('rotation')) {
-            const center = this.getClientRect().center;
-            this.#initialRotation = this.#rotation;
+            const center = this.#rect.center;
+            this.#initialRotation = this.#rect.rotation;
             this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
           }
 
@@ -501,7 +459,7 @@ export class FolkShape extends HTMLElement {
           }
 
           if (handle.startsWith('rotation')) {
-            const center = this.getClientRect().center;
+            const center = this.#rect.center;
             const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
             this.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
@@ -556,7 +514,7 @@ export class FolkShape extends HTMLElement {
     if (this.#isUpdating) return;
 
     this.#isUpdating = true;
-    await true;
+    await Promise.resolve();
     this.#isUpdating = false;
     this.#update(this.#updatedProperties);
     this.#updatedProperties.clear();
@@ -569,60 +527,37 @@ export class FolkShape extends HTMLElement {
 
   #dispatchTransformEvent(updatedProperties: Set<string>) {
     const event = new TransformEvent();
-
     this.dispatchEvent(event);
 
-    if (updatedProperties.has('x')) {
-      if (event.xPrevented) {
-        this.#x = this.#previousX;
-      } else {
-        this.style.left = `${this.#x}px`;
-      }
+    // Create transform matrix
+    const matrix = new DOMMatrix();
+    const center = this.#rect.center;
+    this.style.transformOrigin = 'center';
+
+    if (!event.xPrevented) {
+      matrix.translateSelf(center.x - this.#rect.width / 2, 0);
     }
 
-    if (updatedProperties.has('y')) {
-      if (event.yPrevented) {
-        this.#y = this.#previousY;
-      } else {
-        this.style.top = `${this.#y}px`;
-      }
+    if (!event.yPrevented) {
+      matrix.translateSelf(0, center.y - this.#rect.height / 2);
     }
 
-    if (updatedProperties.has('height')) {
-      if (event.heightPrevented) {
-        this.#height = this.#previousHeight;
-      } else {
-        this.style.height = this.#height === 'auto' ? '' : `${this.#height}px`;
-      }
+    if (!event.rotatePrevented) {
+      matrix.rotateSelf(this.#rect.rotation * (180 / Math.PI));
     }
 
-    if (updatedProperties.has('width')) {
-      if (event.widthPrevented) {
-        this.#width = this.#previousWidth;
-      } else {
-        this.style.width = this.#width === 'auto' ? '' : `${this.#width}px`;
-      }
-    }
+    this.style.transform = matrix.toString();
 
-    if (updatedProperties.has('rotation')) {
-      if (event.rotatePrevented) {
-        this.#rotation = this.#previousRotation;
-      } else {
-        this.style.rotate = `${this.#rotation}rad`;
-      }
+    if (!event.widthPrevented) {
+      this.style.width = `${this.#rect.width}px`;
+    }
+    if (!event.heightPrevented) {
+      this.style.height = `${this.#rect.height}px`;
     }
   }
 
-  #onAutoResize = (entry: ResizeObserverEntry) => {
-    const previousRect = this.#autoContentRect;
-    this.#autoContentRect = entry.contentRect;
-    this.#previousHeight = previousRect.height;
-    this.#previousWidth = previousRect.width;
-    this.#dispatchTransformEvent(new Set(['width', 'height']));
-  };
-
   #updateCursors() {
-    const degrees = (this.#rotation * 180) / Math.PI;
+    const degrees = (this.#rect.rotation * 180) / Math.PI;
 
     const resizeCursor0 = getResizeCursorUrl(degrees);
     const resizeCursor90 = getResizeCursorUrl((degrees + 90) % 360);
@@ -664,58 +599,12 @@ export class FolkShape extends HTMLElement {
 
   // Updated helper method to handle resize operations
   #handleResize(handle: Handle, mouse: Point, target: HTMLElement, event?: PointerEvent) {
-    const rect = this.getClientRect();
-
-    // Map each resize handle to its opposite corner index
-    const OPPOSITE_CORNERS = {
-      'resize-se': rect.topLeft,
-      'resize-sw': rect.topRight,
-      'resize-nw': rect.bottomRight,
-      'resize-ne': rect.bottomLeft,
-    } as const;
-
-    // Get the opposite corner for the current resize handle
-    const oppositeCorner = OPPOSITE_CORNERS[handle as keyof typeof OPPOSITE_CORNERS];
-
-    // Calculate new dimensions based on mouse position and opposite corner
-    const newCenter = Vector.lerp(oppositeCorner, mouse, 0.5);
-    const unrotatedHandle = Vector.rotateAround(mouse, newCenter, -this.rotation);
-    const unrotatedAnchor = Vector.rotateAround(oppositeCorner, newCenter, -this.rotation);
-
-    const HANDLE_BEHAVIOR = {
-      'resize-se': {
-        flipX: unrotatedHandle.x < unrotatedAnchor.x,
-        flipY: unrotatedHandle.y < unrotatedAnchor.y,
-        handleX: 'resize-sw',
-        handleY: 'resize-ne',
-      },
-      'resize-sw': {
-        flipX: unrotatedHandle.x > unrotatedAnchor.x,
-        flipY: unrotatedHandle.y < unrotatedAnchor.y,
-        handleX: 'resize-se',
-        handleY: 'resize-nw',
-      },
-      'resize-nw': {
-        flipX: unrotatedHandle.x > unrotatedAnchor.x,
-        flipY: unrotatedHandle.y > unrotatedAnchor.y,
-        handleX: 'resize-ne',
-        handleY: 'resize-sw',
-      },
-      'resize-ne': {
-        flipX: unrotatedHandle.x < unrotatedAnchor.x,
-        flipY: unrotatedHandle.y > unrotatedAnchor.y,
-        handleX: 'resize-nw',
-        handleY: 'resize-se',
-      },
-    } as const;
-
     // Handle flipping logic
-    const behavior = HANDLE_BEHAVIOR[handle as keyof typeof HANDLE_BEHAVIOR];
-    const hasFlippedX = behavior.flipX;
-    const hasFlippedY = behavior.flipY;
+    const hasFlippedX = false;
+    const hasFlippedY = false;
 
     if (hasFlippedX || hasFlippedY) {
-      const nextHandle = hasFlippedX ? behavior.handleX : behavior.handleY;
+      const nextHandle = hasFlippedX ? 'resize-sw' : 'resize-ne';
       const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
 
       if (newTarget) {
@@ -743,10 +632,22 @@ export class FolkShape extends HTMLElement {
       }
     }
 
-    // Update dimensions
-    this.x = Math.min(unrotatedHandle.x, unrotatedAnchor.x);
-    this.y = Math.min(unrotatedHandle.y, unrotatedAnchor.y);
-    this.width = Math.abs(unrotatedAnchor.x - unrotatedHandle.x);
-    this.height = Math.abs(unrotatedAnchor.y - unrotatedHandle.y);
+    switch (handle) {
+      case 'resize-se':
+        this.#rect.bottomRight = mouse;
+        break;
+      case 'resize-sw':
+        this.#rect.bottomLeft = mouse;
+        break;
+      case 'resize-nw':
+        this.#rect.topLeft = mouse;
+        break;
+      case 'resize-ne':
+        this.#rect.topRight = mouse;
+        break;
+    }
+
+    // Request update after changing the rect
+    this.#requestUpdate('rect');
   }
 }
