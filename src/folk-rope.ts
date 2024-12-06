@@ -2,7 +2,7 @@
 
 import { Vector } from './common/Vector.ts';
 import type { Point } from './common/types.ts';
-import { RotatedDOMRect } from './common/rotated-dom-rect.ts';
+import { TransformDOMRect } from './common/transform-dom-rect.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
@@ -120,11 +120,11 @@ export class FolkRope extends FolkBaseConnection {
     this.draw();
   };
 
-  override render(sourceRect: RotatedDOMRect | DOMRectReadOnly, targetRect: RotatedDOMRect | DOMRectReadOnly) {
+  override render(sourceRect: TransformDOMRect | DOMRectReadOnly, targetRect: TransformDOMRect | DOMRectReadOnly) {
     let source: Point;
     let target: Point;
 
-    if (sourceRect instanceof RotatedDOMRect) {
+    if (sourceRect instanceof TransformDOMRect) {
       source = Vector.lerp(sourceRect.bottomRight, sourceRect.bottomLeft, 0.5);
     } else {
       source = {
@@ -133,7 +133,7 @@ export class FolkRope extends FolkBaseConnection {
       };
     }
 
-    if (targetRect instanceof RotatedDOMRect) {
+    if (targetRect instanceof TransformDOMRect) {
       target = Vector.lerp(targetRect.bottomRight, targetRect.bottomLeft, 0.5);
     } else {
       target = {

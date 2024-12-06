@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'bun:test';
-import { RotatedDOMRect } from '../common/rotated-dom-rect-2';
+import { TransformDOMRect } from '../common/transform-dom-rect';
 import { Vector } from '../common/Vector';
 
 // Helper for comparing points with floating point values
@@ -11,7 +11,7 @@ const expectPointClose = (actual: { x: number; y: number }, expected: { x: numbe
 describe('RotatedDOMRect', () => {
   describe('constructor', () => {
     test('initializes with default values', () => {
-      const rect = new RotatedDOMRect();
+      const rect = new TransformDOMRect();
       expect(rect.x).toBe(0);
       expect(rect.y).toBe(0);
       expect(rect.width).toBe(0);
@@ -20,7 +20,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('initializes with custom values', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 10,
         y: 20,
         width: 100,
@@ -37,7 +37,7 @@ describe('RotatedDOMRect', () => {
 
   describe('corner calculations', () => {
     test('calculates corners for unrotated rectangle', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -52,7 +52,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('calculates corners for 90-degree rotated rectangle', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -69,7 +69,7 @@ describe('RotatedDOMRect', () => {
 
   describe('bounds', () => {
     test('calculates bounds for unrotated rectangle', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -86,7 +86,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('calculates bounds for 45-degree rotated rectangle', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -109,7 +109,7 @@ describe('RotatedDOMRect', () => {
 
   describe('setters', () => {
     test('updates corners when center is modified', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         width: 100,
         height: 50,
       });
@@ -120,7 +120,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('updates dimensions and rotation when setting topRight', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -143,7 +143,7 @@ describe('RotatedDOMRect', () => {
 
   describe('corner setters', () => {
     test('updates dimensions when setting bottomLeft', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -174,7 +174,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('maintains rectangle properties when setting corners', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 0,
         y: 0,
         width: 100,
@@ -193,7 +193,7 @@ describe('RotatedDOMRect', () => {
 
   describe('edge cases', () => {
     test('handles zero dimensions', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         x: 10,
         y: 10,
         width: 0,
@@ -210,7 +210,7 @@ describe('RotatedDOMRect', () => {
     });
 
     test('handles 360-degree rotation', () => {
-      const rect = new RotatedDOMRect({
+      const rect = new TransformDOMRect({
         width: 100,
         height: 50,
         rotation: Math.PI * 2,

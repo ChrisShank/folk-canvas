@@ -1,7 +1,7 @@
 import { Point } from './types';
 import { Vector } from './Vector';
 
-interface RotatedDOMRectInit {
+interface TransformDOMRectInit {
   height?: number;
   width?: number;
   x?: number;
@@ -9,10 +9,10 @@ interface RotatedDOMRectInit {
   rotation?: number;
 }
 
-export class RotatedDOMRect implements DOMRect {
-  #other: RotatedDOMRectInit;
+export class TransformDOMRect implements DOMRect {
+  #other: TransformDOMRectInit;
 
-  constructor(other: RotatedDOMRectInit = {}) {
+  constructor(other: TransformDOMRectInit = {}) {
     this.#other = other;
   }
 
@@ -135,10 +135,10 @@ export class RotatedDOMRect implements DOMRect {
 }
 
 // We cant just override the setter, we need to override the getter and setter.
-export class RotatedDOMRectReadonly extends RotatedDOMRect {
-  #other: RotatedDOMRectInit;
+export class TransformDOMRectReadonly extends TransformDOMRect {
+  #other: TransformDOMRectInit;
 
-  constructor(other: RotatedDOMRectInit = {}) {
+  constructor(other: TransformDOMRectInit = {}) {
     super(other);
     this.#other = other;
   }

@@ -1,7 +1,7 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import { Point } from './common/types';
-import { RotatedDOMRectReadonly } from './common/rotated-dom-rect';
+import { TransformDOMRectReadonly } from './common/transform-dom-rect';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 
@@ -357,7 +357,7 @@ export class FolkShape extends HTMLElement {
   getClientRect() {
     const { x, y, width, height, rotation } = this;
 
-    return new RotatedDOMRectReadonly({ x, y, width, height, rotation });
+    return new TransformDOMRectReadonly({ x, y, width, height, rotation });
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
