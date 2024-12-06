@@ -150,18 +150,21 @@ export class FolkDistanceField extends HTMLElement {
 
     // Collect positions and assign unique IDs to all shapes
     this.shapes.forEach((geometry, index) => {
-      const rect = geometry.getClientRect();
-      const { topLeft, topRight, bottomRight, bottomLeft } = rect;
+      const rect = geometry.getTransformDOMRect();
+      const topLeftParent = rect.toParentSpace(rect.topLeft);
+      const topRightParent = rect.toParentSpace(rect.topRight);
+      const bottomLeftParent = rect.toParentSpace(rect.bottomLeft);
+      const bottomRightParent = rect.toParentSpace(rect.bottomRight);
 
       // Convert rotated coordinates to NDC using container dimensions
-      const x1 = (topLeft.x / containerWidth) * 2 - 1;
-      const y1 = -((topLeft.y / containerHeight) * 2 - 1);
-      const x2 = (topRight.x / containerWidth) * 2 - 1;
-      const y2 = -((topRight.y / containerHeight) * 2 - 1);
-      const x3 = (bottomLeft.x / containerWidth) * 2 - 1;
-      const y3 = -((bottomLeft.y / containerHeight) * 2 - 1);
-      const x4 = (bottomRight.x / containerWidth) * 2 - 1;
-      const y4 = -((bottomRight.y / containerHeight) * 2 - 1);
+      const x1 = (topLeftParent.x / containerWidth) * 2 - 1;
+      const y1 = -((topLeftParent.y / containerHeight) * 2 - 1);
+      const x2 = (topRightParent.x / containerWidth) * 2 - 1;
+      const y2 = -((topRightParent.y / containerHeight) * 2 - 1);
+      const x3 = (bottomLeftParent.x / containerWidth) * 2 - 1;
+      const y3 = -((bottomLeftParent.y / containerHeight) * 2 - 1);
+      const x4 = (bottomRightParent.x / containerWidth) * 2 - 1;
+      const y4 = -((bottomRightParent.y / containerHeight) * 2 - 1);
 
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 

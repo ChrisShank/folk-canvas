@@ -281,9 +281,11 @@ export class FolkShape extends HTMLElement {
     this.#update();
   }
 
-  // TODO: rename to getTransformDOMRect()
-  getClientRect() {
+  getTransformDOMRectReadonly() {
     return new TransformDOMRectReadonly(this.#rect);
+  }
+  getTransformDOMRect() {
+    return this.#rect;
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
