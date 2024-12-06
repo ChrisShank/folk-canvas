@@ -29,7 +29,7 @@ export interface IMatrix extends MatrixInit {
   point(): Point;
   decompose(): { x: number; y: number; scaleX: number; scaleY: number; rotation: number };
   clone(): Matrix;
-  toString(): string;
+  toCssString(): string;
   toDOMMatrix(): DOMMatrix;
 }
 
@@ -127,6 +127,10 @@ export class Matrix implements IMatrix {
 
   toDOMMatrix(): DOMMatrix {
     return new DOMMatrix([this.a, this.b, this.c, this.d, this.e, this.f]);
+  }
+
+  toCssString() {
+    return Matrix.ToCssString(this);
   }
 
   static Rotate(r: number, cx?: number, cy?: number) {
@@ -271,7 +275,7 @@ export class Matrix implements IMatrix {
     return new Matrix(domMatrix.a, domMatrix.b, domMatrix.c, domMatrix.d, domMatrix.e, domMatrix.f);
   }
 
-  static toString(m: MatrixInit) {
+  static ToCssString(m: MatrixInit) {
     return `matrix(${roundToDomPrecision(m.a)}, ${roundToDomPrecision(m.b)}, ${roundToDomPrecision(
       m.c
     )}, ${roundToDomPrecision(m.d)}, ${roundToDomPrecision(m.e)}, ${roundToDomPrecision(m.f)})`;
