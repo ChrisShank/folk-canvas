@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'bun:test';
-import { RotatedDOMRect } from '../common/rotated-dom-rect-2';
+import { RotatedDOMRect } from '../common/rotated-dom-rect';
 import { Vector } from '../common/Vector';
 
 // Helper for comparing points with floating point values

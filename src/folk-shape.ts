@@ -1,7 +1,7 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import { Point } from './common/types';
-import { RotatedDOMRect } from './common/rotated-dom-rect-2';
+import { RotatedDOMRect } from './common/rotated-dom-rect';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 

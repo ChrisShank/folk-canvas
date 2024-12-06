@@ -1,170 +1,306 @@
 import { Point } from './types';
 import { Vector } from './Vector';
 
-interface RotatedDOMRectInit {
-  height?: number;
-  width?: number;
+type RotatedDOMRectInit = {
   x?: number;
   y?: number;
+  width?: number;
+  height?: number;
   rotation?: number;
+};
+
+/**
+ * Represents a rectangle that can be rotated in 2D space.
+ * All coordinates are relative to the center of the rectangle.
+ */
+interface IRotatedDOMRect {
+  /** X coordinate of the rectangle's center */
+  x: number;
+  /** Y coordinate of the rectangle's center */
+  y: number;
+  /** Center point of the rectangle */
+  center: Readonly<Point>;
+  /** Width of the rectangle */
+  width: number;
+  /** Height of the rectangle */
+  height: number;
+  /** Rotation of the rectangle in radians */
+  rotation: number;
+  /** Top-left corner of the rotated rectangle */
+  topLeft: Readonly<Point>;
+  /** Top-right corner of the rotated rectangle */
+  topRight: Readonly<Point>;
+  /** Bottom-left corner of the rotated rectangle */
+  bottomLeft: Readonly<Point>;
+  /** Bottom-right corner of the rotated rectangle */
+  bottomRight: Readonly<Point>;
+  /**
+   * Returns an axis-aligned bounding box that contains the rotated rectangle
+   * @returns A DOMRectInit object representing the bounds
+   */
+  getBounds(): Required<DOMRectInit>;
+
+  /** Mutate multiple properties at once efficiently */
+  update(updates: Partial<RotatedDOMRectInit>): void;
+
+  /** Create a new instance with modified properties */
+  with(updates: Partial<RotatedDOMRectInit>): RotatedDOMRect;
 }
 
-export class RotatedDOMRect implements DOMRect {
-  #other: RotatedDOMRectInit;
+export class RotatedDOMRect implements IRotatedDOMRect {
+  private _center: Point = { x: 0, y: 0 };
+  private _width: number = 0;
+  private _height: number = 0;
+  private _rotation: number = 0;
 
-  constructor(other: RotatedDOMRectInit = {}) {
-    this.#other = other;
+  // Cached derived values
+  private _sinR: number | null = null;
+  private _cosR: number | null = null;
+  private _topLeftX: number | null = null;
+  private _topLeftY: number | null = null;
+  private _topRightX: number | null = null;
+  private _topRightY: number | null = null;
+  private _bottomLeftX: number | null = null;
+  private _bottomLeftY: number | null = null;
+  private _bottomRightX: number | null = null;
+  private _bottomRightY: number | null = null;
+
+  constructor({ x, y, width, height, rotation }: RotatedDOMRectInit = {}) {
+    this._center = { x: x ?? 0, y: y ?? 0 };
+    this._width = width ?? 0;
+    this._height = height ?? 0;
+    this._rotation = rotation ?? 0;
+  }
+
+  /* ——— Getters ——— */
+
+  get center(): Readonly<Point> {
+    return { ...this._center };
   }
 
   get x(): number {
-    return this.#other.x ?? 0;
-  }
-  set x(x: number) {
-    this.#other.x = x;
-    this.#reset();
+    return this._center.x;
   }
 
   get y(): number {
-    return this.#other.y ?? 0;
-  }
-  set y(y: number) {
-    this.#other.y = y;
-    this.#reset();
-  }
-
-  get height(): number {
-    return this.#other.height ?? 0;
-  }
-  set height(height: number) {
-    this.#other.height = height;
-    this.#reset();
+    return this._center.y;
   }
 
   get width(): number {
-    return this.#other.width ?? 0;
+    return this._width;
   }
-  set width(width: number) {
-    this.#other.width = width;
-    this.#reset();
-  }
-
-  get rotation(): number {
-    return this.#other.rotation ?? 0;
-  }
-  set rotation(rotation: number) {
-    this.#other.rotation = rotation;
-    this.#reset();
-  }
-
-  get left(): number {
-    return this.x;
-  }
-
-  get top(): number {
-    return this.y;
-  }
-
-  get right(): number {
-    return this.x + this.width;
-  }
-
-  get bottom(): number {
-    return this.y + this.height;
-  }
-
-  #center: Point | null = null;
-  /** Returns the center point in worldspace coordinates */
-  get center(): Point {
-    if (this.#center === null) {
-      this.#center = {
-        x: this.x + this.width / 2,
-        y: this.y + this.height / 2,
-      };
-    }
-    return this.#center;
-  }
-
-  #topLeft: Point | null = null;
-  get topLeft() {
-    if (this.#topLeft === null) {
-      this.#topLeft = Vector.rotateAround({ x: this.x, y: this.y }, this.center, this.rotation);
-    }
-    return this.#topLeft;
-  }
-
-  #topRight: Point | null = null;
-  get topRight() {
-    if (this.#topRight === null) {
-      this.#topRight = Vector.rotateAround({ x: this.right, y: this.y }, this.center, this.rotation);
-    }
-    return this.#topRight;
-  }
-
-  #bottomRight: Point | null = null;
-  get bottomRight() {
-    if (this.#bottomRight === null) {
-      this.#bottomRight = Vector.rotateAround({ x: this.right, y: this.bottom }, this.center, this.rotation);
-    }
-    return this.#bottomRight;
-  }
-
-  #bottomLeft: Point | null = null;
-  get bottomLeft() {
-    if (this.#bottomLeft === null) {
-      this.#bottomLeft = Vector.rotateAround({ x: this.x, y: this.bottom }, this.center, this.rotation);
-    }
-    return this.#bottomLeft;
-  }
-
-  #reset() {
-    this.#center = null;
-    this.#topLeft = null;
-    this.#topRight = null;
-    this.#bottomLeft = null;
-    this.#bottomRight = null;
-  }
-
-  /** Returns all the vertices in worldspace coordinates */
-  vertices(): Point[] {
-    return [];
-  }
-
-  toJSON() {
-    return {};
-  }
-}
-
-// We cant just override the setter, we need to override the getter and setter.
-export class RotatedDOMRectReadonly extends RotatedDOMRect {
-  #other: RotatedDOMRectInit;
-
-  constructor(other: RotatedDOMRectInit = {}) {
-    super(other);
-    this.#other = other;
-  }
-
-  get x(): number {
-    return this.#other.x ?? 0;
-  }
-  set x(x: number) {}
-
-  get y(): number {
-    return this.#other.y ?? 0;
-  }
-  set y(y: number) {}
 
   get height(): number {
-    return this.#other.height ?? 0;
+    return this._height;
   }
-  set height(height: number) {}
-
-  get width(): number {
-    return this.#other.width ?? 0;
-  }
-  set width(width: number) {}
 
   get rotation(): number {
-    return this.#other.rotation ?? 0;
+    return this._rotation;
   }
-  set rotation(rotation: number) {}
+
+  get topLeft(): Readonly<Point> {
+    this.deriveValuesIfCacheInvalid();
+    return { x: this._topLeftX!, y: this._topLeftY! };
+  }
+
+  get topRight(): Readonly<Point> {
+    this.deriveValuesIfCacheInvalid();
+    return { x: this._topRightX!, y: this._topRightY! };
+  }
+
+  get bottomLeft(): Readonly<Point> {
+    this.deriveValuesIfCacheInvalid();
+    return { x: this._bottomLeftX!, y: this._bottomLeftY! };
+  }
+
+  get bottomRight(): Readonly<Point> {
+    this.deriveValuesIfCacheInvalid();
+    return { x: this._bottomRightX!, y: this._bottomRightY! };
+  }
+
+  /* ——— Setters ——— */
+
+  set center(point: Point) {
+    this._center = point;
+    this.invalidateCache();
+  }
+
+  set x(value: number) {
+    this._center.x = value;
+    this.invalidateCache();
+  }
+
+  set y(value: number) {
+    this._center.y = value;
+    this.invalidateCache();
+  }
+
+  set width(value: number) {
+    this._width = value;
+    this.invalidateCache();
+  }
+
+  set height(value: number) {
+    this._height = value;
+    this.invalidateCache();
+  }
+
+  set rotation(value: number) {
+    this._rotation = value;
+    this.invalidateCache();
+  }
+
+  set topLeft(point: Point) {
+    const oppositeCorner = this.bottomRight;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = -unrotated.x * 2;
+    this._height = -unrotated.y * 2;
+    this.invalidateCache();
+  }
+
+  set topRight(point: Point) {
+    const oppositeCorner = this.bottomLeft;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = unrotated.x * 2;
+    this._height = -unrotated.y * 2;
+    this.invalidateCache();
+  }
+
+  set bottomLeft(point: Point) {
+    const oppositeCorner = this.topRight;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = -unrotated.x * 2;
+    this._height = unrotated.y * 2;
+    this.invalidateCache();
+  }
+
+  set bottomRight(point: Point) {
+    const oppositeCorner = this.topLeft;
+    this._center = {
+      x: (point.x + oppositeCorner.x) / 2,
+      y: (point.y + oppositeCorner.y) / 2,
+    };
+    const toCorner = Vector.sub(point, this._center);
+    const unrotated = Vector.rotate(toCorner, -this._rotation);
+    this._width = unrotated.x * 2;
+    this._height = unrotated.y * 2;
+    this.invalidateCache();
+  }
+
+  getBounds(): Required<DOMRectInit> {
+    if (!this.isCacheValid()) {
+      this.deriveValuesIfCacheInvalid();
+    }
+
+    const minX = Math.min(this._topLeftX!, this._topRightX!, this._bottomLeftX!, this._bottomRightX!);
+    const maxX = Math.max(this._topLeftX!, this._topRightX!, this._bottomLeftX!, this._bottomRightX!);
+    const minY = Math.min(this._topLeftY!, this._topRightY!, this._bottomLeftY!, this._bottomRightY!);
+    const maxY = Math.max(this._topLeftY!, this._topRightY!, this._bottomLeftY!, this._bottomRightY!);
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
+  }
+
+  /** Mutate multiple properties at once efficiently */
+  update(updates: Partial<RotatedDOMRectInit>) {
+    if (updates.x !== undefined) this._center.x = updates.x;
+    if (updates.y !== undefined) this._center.y = updates.y;
+    if (updates.width !== undefined) this._width = updates.width;
+    if (updates.height !== undefined) this._height = updates.height;
+    if (updates.rotation !== undefined) this._rotation = updates.rotation;
+    this.invalidateCache();
+  }
+
+  /** Create a new instance with modified properties */
+  with(updates: Partial<RotatedDOMRectInit>): RotatedDOMRect {
+    return new RotatedDOMRect({
+      x: updates.x ?? this._center.x,
+      y: updates.y ?? this._center.y,
+      width: updates.width ?? this._width,
+      height: updates.height ?? this._height,
+      rotation: updates.rotation ?? this._rotation,
+    });
+  }
+
+  /* ——— Private methods ——— */
+
+  private getTrigValues(): { sin: number; cos: number } {
+    if (this._sinR === null || this._cosR === null) {
+      this._sinR = Math.sin(this._rotation);
+      this._cosR = Math.cos(this._rotation);
+    }
+    return { sin: this._sinR, cos: this._cosR };
+  }
+
+  private deriveValuesIfCacheInvalid() {
+    if (this.isCacheValid()) return;
+
+    const halfWidth = this._width / 2;
+    const halfHeight = this._height / 2;
+    const { sin, cos } = this.getTrigValues();
+
+    this._topLeftX = this._center.x - halfWidth * cos + halfHeight * sin;
+    this._topLeftY = this._center.y - halfWidth * sin - halfHeight * cos;
+
+    this._topRightX = this._center.x + halfWidth * cos + halfHeight * sin;
+    this._topRightY = this._center.y + halfWidth * sin - halfHeight * cos;
+
+    this._bottomLeftX = this._center.x - halfWidth * cos - halfHeight * sin;
+    this._bottomLeftY = this._center.y - halfWidth * sin + halfHeight * cos;
+
+    this._bottomRightX = this._center.x + halfWidth * cos - halfHeight * sin;
+    this._bottomRightY = this._center.y + halfWidth * sin + halfHeight * cos;
+  }
+
+  private invalidateCache() {
+    this._sinR = null;
+    this._cosR = null;
+    this._topLeftX = null;
+    this._topLeftY = null;
+    this._topRightX = null;
+    this._topRightY = null;
+    this._bottomLeftX = null;
+    this._bottomLeftY = null;
+    this._bottomRightX = null;
+    this._bottomRightY = null;
+  }
+
+  /**
+   * Checks if the cached corner coordinates are valid.
+   * Type assertion is safe because invalidateCache() clears all values atomically,
+   * and calculateCorners() sets all values atomically.
+   */
+  private isCacheValid(): this is {
+    _topLeftX: number;
+    _topLeftY: number;
+    _topRightX: number;
+    _topRightY: number;
+    _bottomLeftX: number;
+    _bottomLeftY: number;
+    _bottomRightX: number;
+    _bottomRightY: number;
+    _sinR: number;
+    _cosR: number;
+  } {
+    return this._topLeftX !== null;
+  }
 }
