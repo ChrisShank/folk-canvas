@@ -57,7 +57,7 @@ export class Vector {
    * @returns {number} The magnitude of the vector
    */
   static mag(v: Point): number {
-    return hypot(v.x, v.y);
+    return Math.sqrt(v.x * v.x + v.y * v.y);
   }
 
   /**
@@ -80,7 +80,9 @@ export class Vector {
    * @returns {number} The distance between the points
    */
   static distance(a: Point, b: Point): number {
-    return hypot(a.x - b.x, a.y - b.y);
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   /**
@@ -178,5 +180,14 @@ export class Vector {
       x: point.x - origin.x,
       y: point.y - origin.y,
     });
+  }
+
+  /**
+   * Calculates the squared magnitude of a vector
+   * @param {Point} v - The vector
+   * @returns {number} The squared magnitude of the vector
+   */
+  static magSquared(v: Point): number {
+    return v.x * v.x + v.y * v.y;
   }
 }
