@@ -18,7 +18,7 @@ export class FolkMetronome extends HTMLElement {
     this.addEventListener('click', this);
   }
 
-  #timeoutId: NodeJS.Timeout | -1 = -1;
+  #timeoutId: number = -1;
 
   get isPlaying() {
     return this.#timeoutId !== -1;
@@ -49,7 +49,7 @@ export class FolkMetronome extends HTMLElement {
   }
 
   play() {
-    this.#timeoutId = setInterval(() => {
+    this.#timeoutId = window.setInterval(() => {
       this.#updateBeat(this.#beat + 1);
       this.dispatchEvent(new Event('beat'));
     }, this.#intervalMs);
