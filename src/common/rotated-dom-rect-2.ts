@@ -151,71 +151,19 @@ export class RotatedDOMRect implements IRotatedDOMRect {
   }
 
   set topLeft(point: Point) {
-    console.log('Setting topLeft:', {
-      newPoint: point,
-      currentTopLeft: this.topLeft,
-      currentBottomRight: this.bottomRight,
-      currentRotation: this.rotation,
-    });
     this.moveCorner(point, this.bottomRight);
-    console.log('After topLeft set:', {
-      newTopLeft: this.topLeft,
-      newBottomRight: this.bottomRight,
-      newWidth: this.width,
-      newHeight: this.height,
-      newCenter: this.center,
-    });
   }
 
   set topRight(point: Point) {
-    console.log('Setting topRight:', {
-      newPoint: point,
-      currentTopRight: this.topRight,
-      currentBottomLeft: this.bottomLeft,
-      currentRotation: this.rotation,
-    });
     this.moveCorner(point, this.bottomLeft);
-    console.log('After topRight set:', {
-      newTopRight: this.topRight,
-      newBottomLeft: this.bottomLeft,
-      newWidth: this.width,
-      newHeight: this.height,
-      newCenter: this.center,
-    });
   }
 
   set bottomLeft(point: Point) {
-    console.log('Setting bottomLeft:', {
-      newPoint: point,
-      currentBottomLeft: this.bottomLeft,
-      currentTopRight: this.topRight,
-      currentRotation: this.rotation,
-    });
     this.moveCorner(point, this.topRight);
-    console.log('After bottomLeft set:', {
-      newBottomLeft: this.bottomLeft,
-      newTopRight: this.topRight,
-      newWidth: this.width,
-      newHeight: this.height,
-      newCenter: this.center,
-    });
   }
 
   set bottomRight(point: Point) {
-    console.log('Setting bottomRight:', {
-      newPoint: point,
-      currentBottomRight: this.bottomRight,
-      currentTopLeft: this.topLeft,
-      currentRotation: this.rotation,
-    });
     this.moveCorner(point, this.topLeft);
-    console.log('After bottomRight set:', {
-      newBottomRight: this.bottomRight,
-      newTopLeft: this.topLeft,
-      newWidth: this.width,
-      newHeight: this.height,
-      newCenter: this.center,
-    });
   }
 
   getBounds(): Required<DOMRectInit> {
@@ -277,8 +225,8 @@ export class RotatedDOMRect implements IRotatedDOMRect {
     const unrotatedY = cornerVector.x * Math.sin(-this._rotation) + cornerVector.y * Math.cos(-this._rotation);
 
     // The width and height are twice the unrotated vector components
-    this._width = Math.abs(unrotatedX * 2);
-    this._height = Math.abs(unrotatedY * 2);
+    this._width = unrotatedX * 2;
+    this._height = unrotatedY * 2;
 
     this.invalidateCache();
   }
