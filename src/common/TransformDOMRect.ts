@@ -1,5 +1,5 @@
 import { Point } from './types';
-import { Vector } from './Vector';
+import { Matrix } from './Matrix';
 
 interface TransformDOMRectInit {
   height?: number;
@@ -10,52 +10,73 @@ interface TransformDOMRectInit {
 }
 
 export class TransformDOMRect implements DOMRect {
-  #other: TransformDOMRectInit;
+  // Private properties
+  private _x: number;
+  private _y: number;
+  private _width: number;
+  private _height: number;
+  private _rotation: number;
 
-  constructor(other: TransformDOMRectInit = {}) {
-    this.#other = other;
+  // Internal matrices
+  #transformMatrix: Matrix;
+  #inverseMatrix: Matrix;
+
+  constructor(init: TransformDOMRectInit = {}) {
+    this._x = init.x ?? 0;
+    this._y = init.y ?? 0;
+    this._width = init.width ?? 0;
+    this._height = init.height ?? 0;
+    this._rotation = init.rotation ?? 0;
+
+    // Initialize matrices
+    this.#transformMatrix = Matrix.Identity();
+    this.#inverseMatrix = Matrix.Identity();
+
+    this.#updateMatrices();
   }
 
+  // Getters and setters for properties
   get x(): number {
-    return this.#other.x ?? 0;
+    return this._x;
   }
-  set x(x: number) {
-    this.#other.x = x;
-    this.#reset();
+  set x(value: number) {
+    this._x = value;
+    this.#updateMatrices();
   }
 
   get y(): number {
-    return this.#other.y ?? 0;
+    return this._y;
   }
-  set y(y: number) {
-    this.#other.y = y;
-    this.#reset();
-  }
-
-  get height(): number {
-    return this.#other.height ?? 0;
-  }
-  set height(height: number) {
-    this.#other.height = height;
-    this.#reset();
+  set y(value: number) {
+    this._y = value;
+    this.#updateMatrices();
   }
 
   get width(): number {
-    return this.#other.width ?? 0;
+    return this._width;
   }
-  set width(width: number) {
-    this.#other.width = width;
-    this.#reset();
+  set width(value: number) {
+    this._width = value;
+    this.#updateMatrices();
+  }
+
+  get height(): number {
+    return this._height;
+  }
+  set height(value: number) {
+    this._height = value;
+    this.#updateMatrices();
   }
 
   get rotation(): number {
-    return this.#other.rotation ?? 0;
+    return this._rotation;
   }
-  set rotation(rotation: number) {
-    this.#other.rotation = rotation;
-    this.#reset();
+  set rotation(value: number) {
+    this._rotation = value;
+    this.#updateMatrices();
   }
 
+  // DOMRect read-only properties
   get left(): number {
     return this.x;
   }
@@ -72,99 +93,141 @@ export class TransformDOMRect implements DOMRect {
     return this.y + this.height;
   }
 
-  #center: Point | null = null;
-  /** Returns the center point in worldspace coordinates */
+  // Updates the transformation matrices using instance functions
+  #updateMatrices() {
+    // Reset the transformMatrix to identity
+    this.#transformMatrix.identity();
+
+    // Compute the center point
+    const centerX = this._x + this._width / 2;
+    const centerY = this._y + this._height / 2;
+
+    // Apply transformations: translate to center, rotate, translate back
+    this.#transformMatrix.translate(centerX, centerY);
+    this.#transformMatrix.rotate(this._rotation);
+    this.#transformMatrix.translate(-this._width / 2, -this._height / 2);
+
+    // Update inverseMatrix as the inverse of transformMatrix
+    this.#inverseMatrix = this.#transformMatrix.clone().invert();
+  }
+
+  // Accessors for the transformation matrices
+  get transformMatrix(): Matrix {
+    return this.#transformMatrix;
+  }
+
+  get inverseMatrix(): Matrix {
+    return this.#inverseMatrix;
+  }
+
+  // Converts a point from parent space to local space
+  toLocalSpace(point: Point): Point {
+    return this.#inverseMatrix.applyToPoint(point);
+  }
+
+  // Converts a point from local space to parent space
+  toParentSpace(point: Point): Point {
+    return this.#transformMatrix.applyToPoint(point);
+  }
+
+  // Local space corners
+  get topLeft(): Point {
+    return { x: 0, y: 0 };
+  }
+
+  get topRight(): Point {
+    return { x: this.width, y: 0 };
+  }
+
+  get bottomRight(): Point {
+    return { x: this.width, y: this.height };
+  }
+
+  get bottomLeft(): Point {
+    return { x: 0, y: this.height };
+  }
+
   get center(): Point {
-    if (this.#center === null) {
-      this.#center = {
-        x: this.x + this.width / 2,
-        y: this.y + this.height / 2,
-      };
-    }
-    return this.#center;
+    return {
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2,
+    };
   }
 
-  #topLeft: Point | null = null;
-  get topLeft() {
-    if (this.#topLeft === null) {
-      this.#topLeft = Vector.rotateAround({ x: this.x, y: this.y }, this.center, this.rotation);
-    }
-    return this.#topLeft;
-  }
-
-  #topRight: Point | null = null;
-  get topRight() {
-    if (this.#topRight === null) {
-      this.#topRight = Vector.rotateAround({ x: this.right, y: this.y }, this.center, this.rotation);
-    }
-    return this.#topRight;
-  }
-
-  #bottomRight: Point | null = null;
-  get bottomRight() {
-    if (this.#bottomRight === null) {
-      this.#bottomRight = Vector.rotateAround({ x: this.right, y: this.bottom }, this.center, this.rotation);
-    }
-    return this.#bottomRight;
-  }
-
-  #bottomLeft: Point | null = null;
-  get bottomLeft() {
-    if (this.#bottomLeft === null) {
-      this.#bottomLeft = Vector.rotateAround({ x: this.x, y: this.bottom }, this.center, this.rotation);
-    }
-    return this.#bottomLeft;
-  }
-
-  #reset() {
-    this.#center = null;
-    this.#topLeft = null;
-    this.#topRight = null;
-    this.#bottomLeft = null;
-    this.#bottomRight = null;
-  }
-
-  /** Returns all the vertices in worldspace coordinates */
   vertices(): Point[] {
-    return [];
+    return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft];
+  }
+
+  toCssString(): string {
+    return this.transformMatrix.toCssString();
   }
 
   toJSON() {
-    return {};
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      rotation: this.rotation,
+    };
+  }
+
+  setTopLeft(point: Point) {
+    const oldBottomRight = this.bottomRight;
+    this._width = oldBottomRight.x - point.x;
+    this._height = oldBottomRight.y - point.y;
+    this._x = point.x;
+    this._y = point.y;
+    this.#updateMatrices();
+  }
+
+  setTopRight(point: Point) {
+    const oldBottomLeft = this.bottomLeft;
+    this._width = point.x;
+    this._height = oldBottomLeft.y - point.y;
+    this._y = point.y;
+    this.#updateMatrices();
+  }
+
+  setBottomRight(point: Point) {
+    this._width = point.x;
+    this._height = point.y;
+    this.#updateMatrices();
+  }
+
+  setBottomLeft(point: Point) {
+    const oldTopRight = this.topRight;
+    this._width = oldTopRight.x - point.x;
+    this._height = point.y;
+    this._x = point.x;
+    this.#updateMatrices();
   }
 }
 
-// We cant just override the setter, we need to override the getter and setter.
+// Read-only version of TransformDOMRect
 export class TransformDOMRectReadonly extends TransformDOMRect {
-  #other: TransformDOMRectInit;
-
-  constructor(other: TransformDOMRectInit = {}) {
-    super(other);
-    this.#other = other;
+  constructor(init: TransformDOMRectInit = {}) {
+    super(init);
   }
 
-  get x(): number {
-    return this.#other.x ?? 0;
+  // Override setters to prevent modification
+  set x(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
   }
-  set x(x: number) {}
 
-  get y(): number {
-    return this.#other.y ?? 0;
+  set y(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
   }
-  set y(y: number) {}
 
-  get height(): number {
-    return this.#other.height ?? 0;
+  set width(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
   }
-  set height(height: number) {}
 
-  get width(): number {
-    return this.#other.width ?? 0;
+  set height(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
   }
-  set width(width: number) {}
 
-  get rotation(): number {
-    return this.#other.rotation ?? 0;
+  set rotation(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
   }
-  set rotation(rotation: number) {}
 }
