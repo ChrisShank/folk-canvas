@@ -48,29 +48,6 @@
     <script type="module">
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-rope.ts';
-
-      let timeout = -1;
-      let isBlowing = false;
-      const ropes = document.querySelectorAll('folk-rope');
-      const randomInt = (multiplier, adjust = 0) => Math.floor(Math.random() * multiplier) + adjust;
-      const updateGravity = (gravity) => ropes.forEach((rope) => (rope.gravity = gravity));
-
-      function simulateWind() {
-        updateGravity({ x: randomInt(5000), y: randomInt(5000) });
-        timeout = setTimeout(simulateWind, randomInt(1000, 200));
-      }
-
-      wind.addEventListener('click', () => {
-        if (isBlowing) {
-          clearTimeout(timeout);
-          updateGravity({ x: 0, y: 3000 });
-          wind.textContent = '☁️';
-        } else {
-          simulateWind();
-          wind.textContent = '🌬️';
-        }
-        isBlowing = !isBlowing;
-      });
     </script>
   </body>
 </html>
