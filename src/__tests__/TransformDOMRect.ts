@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'bun:test';
-import { TransformDOMRect } from '../common/transform-dom-rect';
+import { TransformDOMRect } from '../common/TransformDOMRect';
 import { Vector } from '../common/Vector';
 
 // Helper for comparing points with floating point values

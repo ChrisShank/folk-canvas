@@ -2,7 +2,7 @@
 
 import { Vector } from './common/Vector.ts';
 import type { Point } from './common/types.ts';
-import { TransformDOMRect } from './common/transform-dom-rect.ts';
+import { TransformDOMRect } from './common/TransformDOMRect.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
