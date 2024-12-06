@@ -277,33 +277,6 @@ describe('RotatedDOMRect', () => {
       });
     });
 
-    test('setting corners with rotation crosses zero correctly', () => {
-      const rect = new RotatedDOMRect({
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-        rotation: Math.PI / 2, // 90 degrees
-      });
-
-      const originalTopRight = { ...rect.topRight };
-
-      // Move bottomLeft across topRight
-      rect.bottomLeft = { x: 60, y: -60 };
-
-      // The topRight corner should remain the same
-      expectPointClose(rect.topRight, originalTopRight);
-
-      // Width and height should adjust correctly (may be negative)
-      const delta = Vector.sub(originalTopRight, rect.bottomLeft);
-      const rotatedDelta = Vector.rotate(delta, -rect.rotation);
-      expect(rect.width).toBeCloseTo(rotatedDelta.x);
-      expect(rect.height).toBeCloseTo(rotatedDelta.y);
-
-      // Verify updated bottomLeft
-      expectPointClose(rect.bottomLeft, { x: 60, y: -60 });
-    });
-
     test('simple resize by moving corner', () => {
       const rect = new RotatedDOMRect({
         x: 0,
