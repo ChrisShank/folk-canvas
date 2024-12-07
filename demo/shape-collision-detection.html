@@ -52,7 +52,7 @@
       import { FolkShape } from '../src/standalone/folk-shape.ts';
       import { aabbHitDetection } from '../src/common/collision.ts';
 
-      const shapes = Array.from(document.querySelectorAll('folk-shape'));
+      const shapes = Array.from(document.querySelectorAll('folk-shape, p'));
 
       const getBoundingBox = (el) => (el instanceof FolkShape ? el.getTransformDOMRect() : el.getBoundingClientRect());
 
@@ -60,13 +60,13 @@
         for (const shape of shapes) {
           if (shape === e.target) continue;
 
-          const hit = aabbHitDetection(getBoundingBox(shape), getBoundingBox(e.target));
+          const hit = aabbHitDetection(getBoundingBox(e.target), getBoundingBox(shape));
 
           if (hit === null) continue;
 
           if (shape instanceof FolkShape) {
-            if (hit.delta.x !== 0) shape.x -= hit.delta.x;
-            if (hit.delta.y !== 0) shape.y -= hit.delta.y;
+            if (hit.delta.x !== 0) shape.x += hit.delta.x;
+            if (hit.delta.y !== 0) shape.y += hit.delta.y;
           } else {
             if (hit.delta.x !== 0) e.preventX();
             if (hit.delta.y !== 0) e.preventY();
