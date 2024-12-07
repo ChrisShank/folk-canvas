@@ -17,7 +17,7 @@ export class FolkXanadu extends FolkBaseConnection {
       targetRect = temp;
     }
 
-    // TODO: add getClientRects to iframe protocol.
+    // TODO: add getTransformDOMRects to iframe protocol.
     let sourceVertices = computeInlineVertices(Array.from([sourceRect]));
     const targetVertices = computeInlineVertices(Array.from([targetRect]));
 

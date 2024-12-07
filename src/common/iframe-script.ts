@@ -65,7 +65,7 @@ if (window.parent !== window) {
     window.parent.postMessage({
       type: 'folk-element-change',
       selector: observedSelectors.get(event.target),
-      boundingBox: event.target?.getClientRect(),
+      boundingBox: event.target?.getTransformDOMRect(),
     });
   }
 
@@ -86,7 +86,7 @@ if (window.parent !== window) {
           window.parent.postMessage({
             type: 'folk-element-change',
             selector: selector,
-            boundingBox: element.getClientRect(),
+            boundingBox: element.getTransformDOMRect(),
           });
         } else {
           clientRectObserver.observe(element, boundingBoxCallback);

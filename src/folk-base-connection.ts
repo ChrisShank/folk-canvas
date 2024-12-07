@@ -46,7 +46,7 @@ export class FolkBaseConnection extends HTMLElement {
 
   #sourceHandler = (e: Event) => {
     const geometry = e.target as FolkShape;
-    this.#sourceRect = geometry.getClientRect();
+    this.#sourceRect = geometry.getTransformDOMRect();
     this.#update();
   };
 
@@ -120,7 +120,7 @@ export class FolkBaseConnection extends HTMLElement {
 
   #targetHandler = (e: Event) => {
     const geometry = e.target as FolkShape;
-    this.#targetRect = geometry.getClientRect();
+    this.#targetRect = geometry.getTransformDOMRect();
     this.#update();
   };
 
@@ -195,7 +195,7 @@ export class FolkBaseConnection extends HTMLElement {
       } else if (this.#sourceElement instanceof FolkShape) {
         this.#sourceElement.addEventListener('transform', this.#sourceHandler);
 
-        this.#sourceRect = this.#sourceElement.getClientRect();
+        this.#sourceRect = this.#sourceElement.getTransformDOMRect();
 
         this.#update();
       } else if (this.#sourceElement instanceof HTMLIFrameElement && this.#sourceIframeSelector) {
@@ -248,7 +248,7 @@ export class FolkBaseConnection extends HTMLElement {
         throw new Error('target is not a valid element');
       } else if (this.#targetElement instanceof FolkShape) {
         this.#targetElement.addEventListener('transform', this.#targetHandler);
-        this.#targetRect = this.#targetElement.getClientRect();
+        this.#targetRect = this.#targetElement.getTransformDOMRect();
         this.#update();
       } else if (this.#targetElement instanceof HTMLIFrameElement && this.#targetIframeSelector) {
         window.addEventListener('message', this.#targetPostMessage);
