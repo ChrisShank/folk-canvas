@@ -182,8 +182,6 @@ describe('Performance Tests', () => {
     measurePerformance('vertices()', 1_000_000, () => {
       rect.vertices();
     });
-
-    // Note: We might want to add an assertion here if needed
   });
 });
 
