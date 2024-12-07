@@ -7,6 +7,8 @@ interface TransformDOMRectInit {
   x?: number;
   y?: number;
   rotation?: number;
+  transformOrigin?: Point;
+  rotateOrigin?: Point;
 }
 
 /**
@@ -20,12 +22,16 @@ interface TransformDOMRectInit {
  * - Rotation is **clockwise**, in **radians**, around the rectangle's **center**.
  */
 export class TransformDOMRect implements DOMRect {
-  // Private properties for position, size, and rotation
+  // Private properties for position, size, rotation, and origins
   private _x: number; // X-coordinate of the top-left corner
   private _y: number; // Y-coordinate of the top-left corner
   private _width: number; // Width of the rectangle
   private _height: number; // Height of the rectangle
   private _rotation: number; // Rotation angle in radians, clockwise
+
+  // New properties for transform origin and rotation origin
+  private _transformOrigin: Point; // Origin for transformations
+  private _rotateOrigin: Point; // Origin for rotation
 
   // Internal transformation matrices
   #transformMatrix: Matrix; // Transforms from local to parent space
@@ -42,11 +48,14 @@ export class TransformDOMRect implements DOMRect {
     this._height = init.height ?? 0;
     this._rotation = init.rotation ?? 0;
 
+    // Initialize origins with relative values (0.5, 0.5 is center)
+    this._transformOrigin = init.transformOrigin ?? { x: 0.5, y: 0.5 };
+    this._rotateOrigin = init.rotateOrigin ?? { x: 0.5, y: 0.5 };
+
     // Initialize transformation matrices
     this.#transformMatrix = Matrix.Identity();
     this.#inverseMatrix = Matrix.Identity();
 
-    // Update matrices based on current properties
     this.#updateMatrices();
   }
 
@@ -97,6 +106,24 @@ export class TransformDOMRect implements DOMRect {
     this.#updateMatrices();
   }
 
+  /** Gets or sets the **transform origin** as relative values (0 to 1). */
+  get transformOrigin(): Point {
+    return this._transformOrigin;
+  }
+  set transformOrigin(value: Point) {
+    this._transformOrigin = value;
+    this.#updateMatrices();
+  }
+
+  /** Gets or sets the **rotation origin** as relative values (0 to 1). */
+  get rotateOrigin(): Point {
+    return this._rotateOrigin;
+  }
+  set rotateOrigin(value: Point) {
+    this._rotateOrigin = value;
+    this.#updateMatrices();
+  }
+
   // DOMRect read-only properties
 
   /** The **left** coordinate of the rectangle (same as `x`). */
@@ -121,33 +148,52 @@ export class TransformDOMRect implements DOMRect {
 
   /**
    * Updates the transformation matrices based on the current position,
-   * size, and rotation of the rectangle.
+   * size, rotation, and origins of the rectangle.
    *
    * The transformation sequence is:
-   * 1. **Translate** to the center of the rectangle.
-   * 2. **Rotate** around the center.
-   * 3. **Translate** back to the top-left corner.
+   * 1. **Translate** to the global position.
+   * 2. **Translate** to the transform origin.
+   * 3. **Rotate** around the rotation origin.
+   * 4. **Translate** back from the transform origin.
    */
   #updateMatrices() {
     // Reset the transformMatrix to identity
     this.#transformMatrix.identity();
 
-    // Compute the center point of the rectangle
-    const centerX = this._x + this._width / 2;
-    const centerY = this._y + this._height / 2;
+    // Get absolute positions for origins
+    const transformOrigin = this.#getAbsoluteTransformOrigin();
+    const rotateOrigin = this.#getAbsoluteRotateOrigin();
 
-    // Apply transformations in this order:
-    // 1. Translate to center
-    // 2. Rotate around center
-    // 3. Translate back to position
+    // Apply transformations
     this.#transformMatrix
-      .translate(centerX, centerY)
+      // Step 1: Translate to global position
+      .translate(this._x, this._y)
+      // Step 2: Translate to the transform origin
+      .translate(transformOrigin.x, transformOrigin.y)
+      // Step 3: Rotate around the rotation origin
+      .translate(rotateOrigin.x - transformOrigin.x, rotateOrigin.y - transformOrigin.y)
       .rotate(this._rotation)
-      .translate(-centerX, -centerY)
-      .translate(this._x, this._y);
+      .translate(-(rotateOrigin.x - transformOrigin.x), -(rotateOrigin.y - transformOrigin.y))
+      // Step 4: Translate back from the transform origin
+      .translate(-transformOrigin.x, -transformOrigin.y);
 
     // Update inverseMatrix as the inverse of transformMatrix
     this.#inverseMatrix = this.#transformMatrix.clone().invert();
+  }
+
+  // Convert relative origins to absolute points
+  #getAbsoluteTransformOrigin(): Point {
+    return {
+      x: this._width * this._transformOrigin.x,
+      y: this._height * this._transformOrigin.y,
+    };
+  }
+
+  #getAbsoluteRotateOrigin(): Point {
+    return {
+      x: this._width * this._rotateOrigin.x,
+      y: this._height * this._rotateOrigin.y,
+    };
   }
 
   // Accessors for the transformation matrices

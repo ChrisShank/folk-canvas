@@ -272,6 +272,10 @@ export class FolkShape extends HTMLElement {
     this.width = Number(this.getAttribute('width')) || 'auto';
     this.height = Number(this.getAttribute('height')) || 'auto';
     this.rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
+
+    this.#rect.transformOrigin = { x: 0, y: 0 };
+    this.#rect.rotateOrigin = { x: 0.5, y: 0.5 };
+
     this.#previousRect = new TransformDOMRect(this.#rect);
   }
 
@@ -405,9 +409,9 @@ export class FolkShape extends HTMLElement {
 
           // Store initial angle on rotation start
           if (target.getAttribute('part')?.startsWith('rotation')) {
-            const center = this.#rect.center;
             this.#initialRotation = this.#rect.rotation;
-            this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
+            const parentRotateOrigin = this.#rect.toParentSpace(this.#rect.rotateOrigin);
+            this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
           }
 
           // ignore interactions from slotted elements.
@@ -443,8 +447,8 @@ export class FolkShape extends HTMLElement {
           }
 
           if (handle.startsWith('rotation')) {
-            const center = this.#rect.center;
-            const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
+            const parentRotateOrigin = this.#rect.toParentSpace(this.#rect.rotateOrigin);
+            const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
             const rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
             let degrees = (rotation * 180) / Math.PI;
