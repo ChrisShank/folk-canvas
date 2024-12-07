@@ -169,9 +169,12 @@ export class FolkShape extends HTMLElement {
   #shadow = this.attachShadow({ mode: 'open' });
   #internals = this.attachInternals();
   #dynamicStyles = css``;
-  #autoContentRect = this.getBoundingClientRect();
+
   #attrWidth: Dimension = 0;
   #attrHeight: Dimension = 0;
+
+  #rect = new TransformDOMRect();
+  #previousRect = new TransformDOMRect();
 
   // Used for rotation handling, would love a better way to do this that avoids this clutter.
   #initialRotation = 0;
@@ -182,7 +185,6 @@ export class FolkShape extends HTMLElement {
   }
 
   set x(x) {
-    if (this.#rect.x === x) return;
     this.#previousRect.x = this.#rect.x;
     this.#rect.x = x;
     this.#requestUpdate();
@@ -193,43 +195,40 @@ export class FolkShape extends HTMLElement {
   }
 
   set y(y) {
-    if (this.#rect.y === y) return;
     this.#previousRect.y = this.#rect.y;
     this.#rect.y = y;
     this.#requestUpdate();
   }
 
   get width(): number {
-    if (this.#attrWidth === 'auto') {
-      return this.#autoContentRect.width;
-    }
     return this.#rect.width;
   }
 
   set width(width: Dimension) {
-    if (this.#attrWidth === width) return;
     if (width === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
       resizeObserver.unobserve(this, this.#onAutoResize);
+    } else {
+      this.#previousRect.width = this.#rect.width;
+      this.#rect.width = width;
     }
     this.#attrWidth = width;
     this.#requestUpdate();
   }
 
   get height(): number {
-    if (this.#attrHeight === 'auto') {
-      return this.#autoContentRect.height;
-    }
-    return this.#attrHeight;
+    return this.#rect.height;
   }
 
   set height(height: Dimension) {
-    if (this.#attrHeight === height) return;
     if (height === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
       resizeObserver.unobserve(this, this.#onAutoResize);
+    } else {
+      this.#previousRect.height = this.#rect.height;
+      this.#rect.height = height;
     }
 
     this.#attrHeight = height;
@@ -241,14 +240,10 @@ export class FolkShape extends HTMLElement {
   }
 
   set rotation(rotation: number) {
-    if (this.#rect.rotation === rotation) return;
     this.#previousRect.rotation = this.#rect.rotation;
     this.#rect.rotation = rotation;
     this.#requestUpdate();
   }
-
-  #rect: TransformDOMRect;
-  #previousRect: TransformDOMRect;
 
   constructor() {
     super();
@@ -270,16 +265,11 @@ export class FolkShape extends HTMLElement {
       <button part="resize-sw" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
 
-    this.#rect = new TransformDOMRect({
-      x: Number(this.getAttribute('x')) || 0,
-      y: Number(this.getAttribute('y')) || 0,
-      width: Number(this.getAttribute('width')) || 0,
-      height: Number(this.getAttribute('height')) || 0,
-      rotation: (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180),
-    });
-
-    // Initialize previousRect with same values as rect
-    this.#previousRect = new TransformDOMRect(this.#rect);
+    this.x = Number(this.getAttribute('x')) || 0;
+    this.y = Number(this.getAttribute('y')) || 0;
+    this.width = Number(this.getAttribute('width')) || 'auto';
+    this.height = Number(this.getAttribute('height')) || 'auto';
+    this.rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
   }
 
   #isConnected = false;
@@ -538,7 +528,10 @@ export class FolkShape extends HTMLElement {
   }
 
   #onAutoResize = (entry: ResizeObserverEntry) => {
-    this.#autoContentRect = entry.contentRect;
+    this.#previousRect.height = this.#rect.height;
+    this.#rect.height = entry.contentRect.height;
+    this.#previousRect.width = this.#rect.width;
+    this.#rect.width = entry.contentRect.width;
     this.#dispatchTransformEvent();
   };
 
@@ -552,6 +545,7 @@ export class FolkShape extends HTMLElement {
     const rotateCursor180 = getRotateCursorUrl((degrees + 180) % 360);
     const rotateCursor270 = getRotateCursorUrl((degrees + 270) % 360);
 
+    // TODO use css variables
     const dynamicStyles = `
       [part='resize-nw'],
       [part='resize-se'] {
