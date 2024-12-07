@@ -83,7 +83,7 @@ export class FolkSpaceRadial extends HTMLElement {
       });
 
       // Set the transform on the child
-      element.setTransform(transform);
+      // element.setTransform(transform);
     });
   }
 }
