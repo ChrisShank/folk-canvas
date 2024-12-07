@@ -1,7 +1,7 @@
 import { css, html } from './common/tags';
 import { ResizeObserverManager } from './common/resize-observer';
 import { Point } from './common/types';
-import { TransformDOMRect, TransformDOMRectReadonly } from './common/TransformDOMRect';
+import { DOMRectTransform, DOMRectTransformReadonly } from './common/DOMRectTransform';
 import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 import { TransformEvent } from './common/TransformEvent';
@@ -175,8 +175,8 @@ export class FolkShape extends HTMLElement {
   #attrWidth: Dimension = 0;
   #attrHeight: Dimension = 0;
 
-  #rect = new TransformDOMRect();
-  #previousRect = new TransformDOMRect();
+  #rect = new DOMRectTransform();
+  #previousRect = new DOMRectTransform();
 
   // Used for rotation handling, would love a better way to do this that avoids this clutter.
   #initialRotation = 0;
@@ -276,7 +276,7 @@ export class FolkShape extends HTMLElement {
     this.#rect.transformOrigin = { x: 0, y: 0 };
     this.#rect.rotateOrigin = { x: 0.5, y: 0.5 };
 
-    this.#previousRect = new TransformDOMRect(this.#rect);
+    this.#previousRect = new DOMRectTransform(this.#rect);
   }
 
   #isConnected = false;
@@ -287,7 +287,7 @@ export class FolkShape extends HTMLElement {
   }
 
   getTransformDOMRectReadonly() {
-    return new TransformDOMRectReadonly(this.#rect);
+    return new DOMRectTransformReadonly(this.#rect);
   }
   getTransformDOMRect() {
     return this.#rect;

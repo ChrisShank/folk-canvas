@@ -1,7 +1,7 @@
 import { Point } from './types';
 import { Matrix } from './Matrix';
 
-interface TransformDOMRectInit {
+interface DOMRectTransformInit {
   height?: number;
   width?: number;
   x?: number;
@@ -21,7 +21,7 @@ interface TransformDOMRectInit {
  * - Positive `y` values extend **downward**.
  * - Rotation is **clockwise**, in **radians**, around the rectangle's **center**.
  */
-export class TransformDOMRect implements DOMRect {
+export class DOMRectTransform implements DOMRect {
   // Private properties for position, size, rotation, and origins
   private _x: number; // X-coordinate of the top-left corner
   private _y: number; // Y-coordinate of the top-left corner
@@ -41,7 +41,7 @@ export class TransformDOMRect implements DOMRect {
    * Constructs a new `TransformDOMRect`.
    * @param init - Optional initial values.
    */
-  constructor(init: TransformDOMRectInit = {}) {
+  constructor(init: DOMRectTransformInit = {}) {
     this._x = init.x ?? 0;
     this._y = init.y ?? 0;
     this._width = init.width ?? 0;
@@ -460,8 +460,8 @@ export class TransformDOMRect implements DOMRect {
  * A **read-only** version of `TransformDOMRect` that prevents modification of position,
  * size, and rotation properties.
  */
-export class TransformDOMRectReadonly extends TransformDOMRect {
-  constructor(init: TransformDOMRectInit = {}) {
+export class DOMRectTransformReadonly extends DOMRectTransform {
+  constructor(init: DOMRectTransformInit = {}) {
     super(init);
   }
 

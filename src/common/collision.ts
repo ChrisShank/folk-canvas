@@ -1,4 +1,4 @@
-import { TransformDOMRect } from './TransformDOMRect';
+import { DOMRectTransform } from './DOMRectTransform';
 import { Point } from './types';
 
 const sign = (value: number): -1 | 1 => (value < 0 ? -1 : 1);
@@ -59,7 +59,7 @@ export function aabbIntersection(rect1: DOMRect, rect2: DOMRect, proximity = 0) 
   );
 }
 
-export function collisionDetection(rect1: TransformDOMRect, rect2: TransformDOMRect) {
+export function collisionDetection(rect1: DOMRectTransform, rect2: DOMRectTransform) {
   // Performance optimization to test if
   if (!aabbIntersection(rect1, rect2)) return false;
 }

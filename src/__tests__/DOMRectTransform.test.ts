@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'bun:test';
-import { TransformDOMRect, TransformDOMRectReadonly } from '../common/TransformDOMRect';
+import { DOMRectTransform, DOMRectTransformReadonly } from '../common/DOMRectTransform';
 import { Point } from '../common/types';
 
 // Helper for comparing points with floating point values
@@ -10,7 +10,7 @@ const expectPointClose = (actual: Point, expected: Point) => {
 
 describe('TransformDOMRect', () => {
   test('constructor initializes with default values', () => {
-    const rect = new TransformDOMRect();
+    const rect = new DOMRectTransform();
     expect(rect.x).toBe(0);
     expect(rect.y).toBe(0);
     expect(rect.width).toBe(0);
@@ -19,7 +19,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('constructor initializes with provided values', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 10,
       y: 20,
       width: 100,
@@ -34,7 +34,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('DOMRect properties are calculated correctly', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 10,
       y: 20,
       width: 100,
@@ -47,7 +47,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('vertices returns correct local space corners', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       width: 100,
       height: 50,
     });
@@ -60,7 +60,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('coordinate space conversion with rotation', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 10,
       y: 20,
       width: 100,
@@ -76,7 +76,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('getBounds returns correct bounding box after rotation', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 0,
       y: 0,
       width: 100,
@@ -90,7 +90,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('setters update matrices correctly', () => {
-    const rect = new TransformDOMRect();
+    const rect = new DOMRectTransform();
     rect.x = 10;
     rect.y = 20;
     rect.width = 100;
@@ -105,7 +105,7 @@ describe('TransformDOMRect', () => {
   });
 
   test('coordinate transformations with rotation and translation', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 100,
       y: 100,
       width: 200,
@@ -129,7 +129,7 @@ describe('TransformDOMRect', () => {
 
   describe('corner', () => {
     test('setTopLeft with local space coordinates', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -145,7 +145,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('setTopRight with local space coordinates', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -161,7 +161,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('setBottomRight with local space coordinates', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -177,7 +177,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('setBottomLeft with local space coordinates', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -193,7 +193,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('corner setters with rotation', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -216,7 +216,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('setBottomRight works with upside down rotation', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -235,7 +235,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('resizing from corners keeps the opposite corner fixed without rotation', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -253,7 +253,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('resizing from corners keeps the opposite corner fixed with rotation', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -285,7 +285,7 @@ describe('TransformDOMRect', () => {
 
   describe('point conversion with rotation', () => {
     test('converts points correctly with 45-degree rotation', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 100,
@@ -309,7 +309,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('maintains relative positions through multiple transformations', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 100,
@@ -363,7 +363,7 @@ describe('TransformDOMRect', () => {
       ];
 
       testRotations.forEach((rotation) => {
-        const rect = new TransformDOMRect({
+        const rect = new DOMRectTransform({
           x: 100,
           y: 100,
           width: 100,
@@ -393,7 +393,7 @@ describe('TransformDOMRect', () => {
     });
 
     test('maintains aspect ratio through transformations', () => {
-      const rect = new TransformDOMRect({
+      const rect = new DOMRectTransform({
         x: 100,
         y: 100,
         width: 200,
@@ -422,7 +422,7 @@ describe('TransformDOMRect', () => {
 
 describe('TransformDOMRectReadonly', () => {
   test('prevents modifications through setters', () => {
-    const rect = new TransformDOMRectReadonly({
+    const rect = new DOMRectTransformReadonly({
       x: 10,
       y: 20,
       width: 100,
@@ -444,7 +444,7 @@ describe('TransformDOMRectReadonly', () => {
   });
 
   test('allows reading properties', () => {
-    const rect = new TransformDOMRectReadonly({
+    const rect = new DOMRectTransformReadonly({
       x: 10,
       y: 20,
       width: 100,
@@ -460,7 +460,7 @@ describe('TransformDOMRectReadonly', () => {
 
 describe('Performance Tests', () => {
   test('matrix operations performance', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 10,
       y: 20,
       width: 100,
@@ -479,7 +479,7 @@ describe('Performance Tests', () => {
   });
 
   test('vertices calculation performance', () => {
-    const rect = new TransformDOMRect({
+    const rect = new DOMRectTransform({
       x: 10,
       y: 20,
       width: 100,

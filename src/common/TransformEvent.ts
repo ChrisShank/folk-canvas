@@ -1,11 +1,11 @@
-import type { TransformDOMRectReadonly } from './TransformDOMRect';
+import type { DOMRectTransformReadonly } from './DOMRectTransform';
 
 // TODO: expose previous and current rects
 export class TransformEvent extends Event {
-  readonly #current: TransformDOMRectReadonly;
-  readonly #previous: TransformDOMRectReadonly;
+  readonly #current: DOMRectTransformReadonly;
+  readonly #previous: DOMRectTransformReadonly;
 
-  constructor(current: TransformDOMRectReadonly, previous?: TransformDOMRectReadonly) {
+  constructor(current: DOMRectTransformReadonly, previous?: DOMRectTransformReadonly) {
     super('transform', { cancelable: true, bubbles: true });
     this.#current = current;
     this.#previous = previous ?? current;
