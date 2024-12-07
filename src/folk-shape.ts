@@ -14,8 +14,8 @@ declare global {
 
 const resizeObserver = new ResizeObserverManager();
 
-type ResizeHandle = 'resize-nw' | 'resize-ne' | 'resize-se' | 'resize-sw';
-type RotateHandle = 'rotation-nw' | 'rotation-ne' | 'rotation-se' | 'rotation-sw';
+type ResizeHandle = 'resize-top-left' | 'resize-top-right' | 'resize-bottom-right' | 'resize-bottom-left';
+type RotateHandle = 'rotation-top-left' | 'rotation-top-right' | 'rotation-bottom-right' | 'rotation-bottom-left';
 type Handle = ResizeHandle | RotateHandle | 'move';
 export type Dimension = number | 'auto';
 
@@ -61,17 +61,17 @@ const styles = css`
 
   :host(:state(move)),
   :host(:state(rotate)),
-  :host(:state(resize-nw)),
-  :host(:state(resize-ne)),
-  :host(:state(resize-se)),
-  :host(:state(resize-sw)) {
+  :host(:state(resize-top-left)),
+  :host(:state(resize-top-right)),
+  :host(:state(resize-bottom-right)),
+  :host(:state(resize-bottom-left)) {
     user-select: none;
   }
 
-  [part='resize-nw'],
-  [part='resize-ne'],
-  [part='resize-se'],
-  [part='resize-sw'] {
+  [part='resize-top-left'],
+  [part='resize-top-right'],
+  [part='resize-bottom-right'],
+  [part='resize-bottom-left'] {
     display: block;
     position: absolute;
     box-sizing: border-box;
@@ -85,33 +85,33 @@ const styles = css`
     border-radius: 2px;
   }
 
-  [part='resize-nw'] {
+  [part='resize-top-left'] {
     top: 0;
     left: 0;
   }
 
-  [part='resize-ne'] {
+  [part='resize-top-right'] {
     top: 0;
     left: 100%;
   }
 
-  [part='resize-se'] {
+  [part='resize-bottom-right'] {
     top: 100%;
     left: 100%;
   }
 
-  [part='resize-sw'] {
+  [part='resize-bottom-left'] {
     top: 100%;
     left: 0;
   }
 
-  [part='resize-nw'],
-  [part='resize-se'] {
+  [part='resize-top-left'],
+  [part='resize-bottom-right'] {
     cursor: var(--resize-handle-cursor-nw);
   }
 
-  [part='resize-ne'],
-  [part='resize-sw'] {
+  [part='resize-top-right'],
+  [part='resize-bottom-left'] {
     cursor: var(--resize-handle-cursor-ne);
   }
 
@@ -128,25 +128,25 @@ const styles = css`
     cursor: var(--fc-rotate, url('${getRotateCursorUrl(0)}') 16 16, pointer);
   }
 
-  [part='rotation-nw'] {
+  [part='rotation-top-left'] {
     top: 0;
     left: 0;
     translate: -100% -100%;
   }
 
-  [part='rotation-ne'] {
+  [part='rotation-top-right'] {
     top: 0;
     left: 100%;
     translate: 0% -100%;
   }
 
-  [part='rotation-se'] {
+  [part='rotation-bottom-right'] {
     top: 100%;
     left: 100%;
     translate: 0% 0%;
   }
 
-  [part='rotation-sw'] {
+  [part='rotation-bottom-left'] {
     top: 100%;
     left: 0;
     translate: -100% 0%;
@@ -257,14 +257,14 @@ export class FolkShape extends HTMLElement {
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    this.#shadow.innerHTML = html` <button part="rotation-nw" tabindex="-1"></button>
-      <button part="rotation-ne" tabindex="-1"></button>
-      <button part="rotation-se" tabindex="-1"></button>
-      <button part="rotation-sw" tabindex="-1"></button>
-      <button part="resize-nw" aria-label="Resize shape from top left"></button>
-      <button part="resize-ne" aria-label="Resize shape from top right"></button>
-      <button part="resize-se" aria-label="Resize shape from bottom right"></button>
-      <button part="resize-sw" aria-label="Resize shape from bottom left"></button>
+    this.#shadow.innerHTML = html` <button part="rotation-top-left" tabindex="-1"></button>
+      <button part="rotation-top-right" tabindex="-1"></button>
+      <button part="rotation-bottom-right" tabindex="-1"></button>
+      <button part="rotation-bottom-left" tabindex="-1"></button>
+      <button part="resize-top-left" aria-label="Resize shape from top left"></button>
+      <button part="resize-top-right" aria-label="Resize shape from top right"></button>
+      <button part="resize-bottom-right" aria-label="Resize shape from bottom right"></button>
+      <button part="resize-bottom-left" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
 
     this.x = Number(this.getAttribute('x')) || 0;
@@ -344,10 +344,10 @@ export class FolkShape extends HTMLElement {
 
         // Map handle names to corner points
         const HANDLE_TO_CORNER: Record<string, Point> = {
-          'resize-nw': rect.topLeft,
-          'resize-ne': rect.topRight,
-          'resize-se': rect.bottomRight,
-          'resize-sw': rect.bottomLeft,
+          'resize-top-left': rect.topLeft,
+          'resize-top-right': rect.topRight,
+          'resize-bottom-right': rect.bottomRight,
+          'resize-bottom-left': rect.bottomLeft,
         };
 
         const currentPos = rect.toParentSpace(HANDLE_TO_CORNER[handle]);
@@ -410,7 +410,11 @@ export class FolkShape extends HTMLElement {
           // Store initial angle on rotation start
           if (target.getAttribute('part')?.startsWith('rotation')) {
             this.#initialRotation = this.#rect.rotation;
-            const parentRotateOrigin = this.#rect.toParentSpace(this.#rect.rotateOrigin);
+            // Calculate the absolute rotation origin in parent space
+            const parentRotateOrigin = this.#rect.toParentSpace({
+              x: this.#rect.width * this.#rect.rotateOrigin.x,
+              y: this.#rect.height * this.#rect.rotateOrigin.y,
+            });
             this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
           }
 
@@ -440,32 +444,37 @@ export class FolkShape extends HTMLElement {
           const handle = target.getAttribute('part') as Handle;
           if (handle === null) return;
 
-          if (handle.includes('resize')) {
+          if (handle.startsWith('resize')) {
             const mouse = { x: event.clientX, y: event.clientY };
             this.#handleResize(handle as ResizeHandle, mouse, target, event);
             return;
           }
 
           if (handle.startsWith('rotation')) {
-            const parentRotateOrigin = this.#rect.toParentSpace(this.#rect.rotateOrigin);
+            // Calculate the absolute rotation origin in parent space
+            const parentRotateOrigin = this.#rect.toParentSpace({
+              x: this.#rect.width * this.#rect.rotateOrigin.x,
+              y: this.#rect.height * this.#rect.rotateOrigin.y,
+            });
             const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
             const rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
-            let degrees = (rotation * 180) / Math.PI;
+            let cursorRotation = (rotation * 180) / Math.PI;
             switch (handle) {
-              case 'rotation-ne':
-                degrees = (degrees + 90) % 360;
+              case 'rotation-top-right':
+                cursorRotation = (cursorRotation + 90) % 360;
                 break;
-              case 'rotation-se':
-                degrees = (degrees + 180) % 360;
+              case 'rotation-bottom-right':
+                cursorRotation = (cursorRotation + 180) % 360;
                 break;
-              case 'rotation-sw':
-                degrees = (degrees + 270) % 360;
+              case 'rotation-bottom-left':
+                cursorRotation = (cursorRotation + 270) % 360;
                 break;
+              // top-left handle doesn't need adjustment
             }
 
             const target = event.composedPath()[0] as HTMLElement;
-            const rotateCursor = getRotateCursorUrl(degrees);
+            const rotateCursor = getRotateCursorUrl(cursorRotation);
             target.style.setProperty('cursor', rotateCursor);
             this.rotation = rotation;
             return;
@@ -554,29 +563,29 @@ export class FolkShape extends HTMLElement {
 
     // TODO use css variables
     const dynamicStyles = `
-      [part='resize-nw'],
-      [part='resize-se'] {
+      [part='resize-top-left'],
+      [part='resize-bottom-right'] {
         cursor: ${resizeCursor0};
       }
 
-      [part='resize-ne'],
-      [part='resize-sw'] {
+      [part='resize-top-right'],
+      [part='resize-bottom-left'] {
         cursor: ${resizeCursor90};
       }
 
-      [part='rotation-nw'] {
+      [part='rotation-top-left'] {
         cursor: ${rotateCursor0};
       }
 
-      [part='rotation-ne'] {
+      [part='rotation-top-right'] {
         cursor: ${rotateCursor90};
       }
 
-      [part='rotation-se'] {
+      [part='rotation-bottom-right'] {
         cursor: ${rotateCursor180};
       }
 
-      [part='rotation-sw'] {
+      [part='rotation-bottom-left'] {
         cursor: ${rotateCursor270};
       }
     `;
@@ -588,16 +597,16 @@ export class FolkShape extends HTMLElement {
     const localPointer = this.#rect.toLocalSpace(pointerPos);
 
     switch (handle) {
-      case 'resize-se':
+      case 'resize-bottom-right':
         this.#rect.setBottomRight(localPointer);
         break;
-      case 'resize-sw':
+      case 'resize-bottom-left':
         this.#rect.setBottomLeft(localPointer);
         break;
-      case 'resize-nw':
+      case 'resize-top-left':
         this.#rect.setTopLeft(localPointer);
         break;
-      case 'resize-ne':
+      case 'resize-top-right':
         this.#rect.setTopRight(localPointer);
         break;
     }
@@ -610,28 +619,28 @@ export class FolkShape extends HTMLElement {
     if (flipWidth && flipHeight) {
       // Both axes flipped
       const oppositeHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-se': 'resize-nw',
-        'resize-sw': 'resize-ne',
-        'resize-nw': 'resize-se',
-        'resize-ne': 'resize-sw',
+        'resize-bottom-right': 'resize-top-left',
+        'resize-bottom-left': 'resize-top-right',
+        'resize-top-left': 'resize-bottom-right',
+        'resize-top-right': 'resize-bottom-left',
       };
       nextHandle = oppositeHandleMap[handle];
     } else if (flipWidth) {
       // Only X axis flipped
       const flipXHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-se': 'resize-sw',
-        'resize-sw': 'resize-se',
-        'resize-nw': 'resize-ne',
-        'resize-ne': 'resize-nw',
+        'resize-bottom-right': 'resize-bottom-left',
+        'resize-bottom-left': 'resize-bottom-right',
+        'resize-top-left': 'resize-top-right',
+        'resize-top-right': 'resize-top-left',
       };
       nextHandle = flipXHandleMap[handle];
     } else if (flipHeight) {
       // Only Y axis flipped
       const flipYHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-se': 'resize-ne',
-        'resize-sw': 'resize-nw',
-        'resize-nw': 'resize-sw',
-        'resize-ne': 'resize-se',
+        'resize-bottom-right': 'resize-top-right',
+        'resize-bottom-left': 'resize-top-left',
+        'resize-top-left': 'resize-bottom-left',
+        'resize-top-right': 'resize-bottom-right',
       };
       nextHandle = flipYHandleMap[handle];
     }

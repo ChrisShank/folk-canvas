@@ -293,6 +293,8 @@ export class DOMRectTransform implements DOMRect {
     };
   }
 
+  // TODO: these setters work but surely there's a better way
+
   /**
    * Sets the **top-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly,
    * and keeps the **bottom-right corner** fixed in the **parent space**.
