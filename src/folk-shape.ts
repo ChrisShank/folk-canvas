@@ -372,10 +372,15 @@ export class FolkShape extends HTMLElement {
         };
 
         const currentPos = rect.toParentSpace(HANDLE_TO_CORNER[handle]);
+        let delta = { x: 0, y: 0 };
+        if (event.key === 'ArrowRight') delta.x = MOVEMENT_DELTA;
+        if (event.key === 'ArrowLeft') delta.x = -MOVEMENT_DELTA;
+        if (event.key === 'ArrowDown') delta.y = MOVEMENT_DELTA;
+        if (event.key === 'ArrowUp') delta.y = -MOVEMENT_DELTA;
 
         const syntheticMouse = {
-          x: currentPos.x,
-          y: currentPos.y,
+          x: currentPos.x + delta.x,
+          y: currentPos.y + delta.y,
         };
 
         // Calculate movement based on arrow keys
