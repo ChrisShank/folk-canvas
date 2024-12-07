@@ -145,3 +145,61 @@ describe('TransformDOMRectReadonly', () => {
     expect(rect.height).toBe(50);
   });
 });
+
+describe('Performance Tests', () => {
+  test('matrix operations performance', () => {
+    const rect = new TransformDOMRect({
+      x: 10,
+      y: 20,
+      width: 100,
+      height: 50,
+      rotation: Math.PI / 4,
+    });
+    const point = { x: 25, y: 25 };
+
+    measurePerformance('toLocalSpace()', 1_000_000, () => {
+      rect.toLocalSpace(point);
+    });
+
+    measurePerformance('toParentSpace()', 1_000_000, () => {
+      rect.toParentSpace(point);
+    });
+  });
+
+  test('vertices calculation performance', () => {
+    const rect = new TransformDOMRect({
+      x: 10,
+      y: 20,
+      width: 100,
+      height: 50,
+      rotation: Math.PI / 6,
+    });
+
+    measurePerformance('getBounds()', 1_000_000, () => {
+      rect.getBounds();
+    });
+
+    measurePerformance('vertices()', 1_000_000, () => {
+      rect.vertices();
+    });
+
+    // Note: We might want to add an assertion here if needed
+  });
+});
+
+function measurePerformance(label: string, iterations: number, fn: () => void): void {
+  const start = Bun.nanoseconds();
+
+  for (let i = 0; i < iterations; i++) {
+    fn();
+  }
+
+  const end = Bun.nanoseconds();
+  const timeInNs = end - start;
+  const timeInMs = timeInNs / 1_000_000;
+  const opsPerMs = iterations / timeInMs;
+
+  const formattedSpeed = opsPerMs.toFixed(2);
+
+  console.log('    \x1b[36m%s\x1b[0m \x1b[1m%s\x1b[0m \x1b[33m%s\x1b[0m', `${label}:`, formattedSpeed, 'ops/ms');
+}
