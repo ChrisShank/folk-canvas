@@ -202,6 +202,27 @@ export class TransformDOMRect implements DOMRect {
     this._x = point.x;
     this.#updateMatrices();
   }
+
+  getBounds(): DOMRectInit {
+    // Transform all vertices to parent space
+    const transformedVertices = this.vertices().map((v) => this.toParentSpace(v));
+
+    // Find min and max points
+    const xs = transformedVertices.map((v) => v.x);
+    const ys = transformedVertices.map((v) => v.y);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
+  }
 }
 
 // Read-only version of TransformDOMRect
@@ -210,7 +231,45 @@ export class TransformDOMRectReadonly extends TransformDOMRect {
     super(init);
   }
 
-  // Override setters to prevent modification
+  // Explicit getter overrides
+  get x(): number {
+    return super.x;
+  }
+
+  get y(): number {
+    return super.y;
+  }
+
+  get width(): number {
+    return super.width;
+  }
+
+  get height(): number {
+    return super.height;
+  }
+
+  get rotation(): number {
+    return super.rotation;
+  }
+
+  // DOMRect property getters
+  get left(): number {
+    return super.left;
+  }
+
+  get top(): number {
+    return super.top;
+  }
+
+  get right(): number {
+    return super.right;
+  }
+
+  get bottom(): number {
+    return super.bottom;
+  }
+
+  // Override all setters to prevent modification
   set x(value: number) {
     throw new Error('Cannot modify readonly TransformDOMRect');
   }
@@ -228,6 +287,23 @@ export class TransformDOMRectReadonly extends TransformDOMRect {
   }
 
   set rotation(value: number) {
+    throw new Error('Cannot modify readonly TransformDOMRect');
+  }
+
+  // Override vertex setter methods
+  setTopLeft(point: Point): void {
+    throw new Error('Cannot modify readonly TransformDOMRect');
+  }
+
+  setTopRight(point: Point): void {
+    throw new Error('Cannot modify readonly TransformDOMRect');
+  }
+
+  setBottomRight(point: Point): void {
+    throw new Error('Cannot modify readonly TransformDOMRect');
+  }
+
+  setBottomLeft(point: Point): void {
     throw new Error('Cannot modify readonly TransformDOMRect');
   }
 }
