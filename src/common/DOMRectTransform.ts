@@ -23,15 +23,15 @@ interface DOMRectTransformInit {
  */
 export class DOMRectTransform implements DOMRect {
   // Private properties for position, size, rotation, and origins
-  private _x: number; // X-coordinate of the top-left corner
-  private _y: number; // Y-coordinate of the top-left corner
-  private _width: number; // Width of the rectangle
-  private _height: number; // Height of the rectangle
-  private _rotation: number; // Rotation angle in radians, clockwise
+  #x: number; // X-coordinate of the top-left corner
+  #y: number; // Y-coordinate of the top-left corner
+  #width: number; // Width of the rectangle
+  #height: number; // Height of the rectangle
+  #rotation: number; // Rotation angle in radians, clockwise
 
   // New properties for transform origin and rotation origin
-  private _transformOrigin: Point; // Origin for transformations
-  private _rotateOrigin: Point; // Origin for rotation
+  #transformOrigin: Point; // Origin for transformations
+  #rotateOrigin: Point; // Origin for rotation
 
   // Internal transformation matrices
   #transformMatrix: Matrix; // Transforms from local to parent space
@@ -42,15 +42,15 @@ export class DOMRectTransform implements DOMRect {
    * @param init - Optional initial values.
    */
   constructor(init: DOMRectTransformInit = {}) {
-    this._x = init.x ?? 0;
-    this._y = init.y ?? 0;
-    this._width = init.width ?? 0;
-    this._height = init.height ?? 0;
-    this._rotation = init.rotation ?? 0;
+    this.#x = init.x ?? 0;
+    this.#y = init.y ?? 0;
+    this.#width = init.width ?? 0;
+    this.#height = init.height ?? 0;
+    this.#rotation = init.rotation ?? 0;
 
     // Initialize origins with relative values (0.5, 0.5 is center)
-    this._transformOrigin = init.transformOrigin ?? { x: 0.5, y: 0.5 };
-    this._rotateOrigin = init.rotateOrigin ?? { x: 0.5, y: 0.5 };
+    this.#transformOrigin = init.transformOrigin ?? { x: 0.5, y: 0.5 };
+    this.#rotateOrigin = init.rotateOrigin ?? { x: 0.5, y: 0.5 };
 
     // Initialize transformation matrices
     this.#transformMatrix = Matrix.Identity();
@@ -63,64 +63,64 @@ export class DOMRectTransform implements DOMRect {
 
   /** Gets or sets the **x-coordinate** of the top-left corner. */
   get x(): number {
-    return this._x;
+    return this.#x;
   }
   set x(value: number) {
-    this._x = value;
+    this.#x = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **y-coordinate** of the top-left corner. */
   get y(): number {
-    return this._y;
+    return this.#y;
   }
   set y(value: number) {
-    this._y = value;
+    this.#y = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **width** of the rectangle. */
   get width(): number {
-    return this._width;
+    return this.#width;
   }
   set width(value: number) {
-    this._width = value;
+    this.#width = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **height** of the rectangle. */
   get height(): number {
-    return this._height;
+    return this.#height;
   }
   set height(value: number) {
-    this._height = value;
+    this.#height = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **rotation angle** in radians, **clockwise**. */
   get rotation(): number {
-    return this._rotation;
+    return this.#rotation;
   }
   set rotation(value: number) {
-    this._rotation = value;
+    this.#rotation = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **transform origin** as relative values (0 to 1). */
   get transformOrigin(): Point {
-    return this._transformOrigin;
+    return this.#transformOrigin;
   }
   set transformOrigin(value: Point) {
-    this._transformOrigin = value;
+    this.#transformOrigin = value;
     this.#updateMatrices();
   }
 
   /** Gets or sets the **rotation origin** as relative values (0 to 1). */
   get rotateOrigin(): Point {
-    return this._rotateOrigin;
+    return this.#rotateOrigin;
   }
   set rotateOrigin(value: Point) {
-    this._rotateOrigin = value;
+    this.#rotateOrigin = value;
     this.#updateMatrices();
   }
 
@@ -167,12 +167,12 @@ export class DOMRectTransform implements DOMRect {
     // Apply transformations
     this.#transformMatrix
       // Step 1: Translate to global position
-      .translate(this._x, this._y)
+      .translate(this.#x, this.#y)
       // Step 2: Translate to the transform origin
       .translate(transformOrigin.x, transformOrigin.y)
       // Step 3: Rotate around the rotation origin
       .translate(rotateOrigin.x - transformOrigin.x, rotateOrigin.y - transformOrigin.y)
-      .rotate(this._rotation)
+      .rotate(this.#rotation)
       .translate(-(rotateOrigin.x - transformOrigin.x), -(rotateOrigin.y - transformOrigin.y))
       // Step 4: Translate back from the transform origin
       .translate(-transformOrigin.x, -transformOrigin.y);
@@ -184,15 +184,15 @@ export class DOMRectTransform implements DOMRect {
   // Convert relative origins to absolute points
   #getAbsoluteTransformOrigin(): Point {
     return {
-      x: this._width * this._transformOrigin.x,
-      y: this._height * this._transformOrigin.y,
+      x: this.#width * this.#transformOrigin.x,
+      y: this.#height * this.#transformOrigin.y,
     };
   }
 
   #getAbsoluteRotateOrigin(): Point {
     return {
-      x: this._width * this._rotateOrigin.x,
-      y: this._height * this._rotateOrigin.y,
+      x: this.#width * this.#rotateOrigin.x,
+      y: this.#height * this.#rotateOrigin.y,
     };
   }
 
@@ -305,13 +305,13 @@ export class DOMRectTransform implements DOMRect {
     const bottomRightBefore = this.toParentSpace(this.bottomRight);
 
     // Update x, y, width, and height
-    const deltaWidth = this._width - point.x;
-    const deltaHeight = this._height - point.y;
+    const deltaWidth = this.#width - point.x;
+    const deltaHeight = this.#height - point.y;
 
-    this._x += point.x;
-    this._y += point.y;
-    this._width = deltaWidth;
-    this._height = deltaHeight;
+    this.#x += point.x;
+    this.#y += point.y;
+    this.#width = deltaWidth;
+    this.#height = deltaHeight;
 
     // Update transformation matrices after changing size and position
     this.#updateMatrices();
@@ -324,8 +324,8 @@ export class DOMRectTransform implements DOMRect {
     const deltaY = bottomRightAfter.y - bottomRightBefore.y;
 
     // Adjust x and y to compensate for the movement
-    this._x -= deltaX;
-    this._y -= deltaY;
+    this.#x -= deltaX;
+    this.#y -= deltaY;
 
     // Update matrices again after adjusting position
     this.#updateMatrices();
@@ -342,11 +342,11 @@ export class DOMRectTransform implements DOMRect {
 
     // Update y, width, and height
     const deltaWidth = point.x;
-    const deltaHeight = this._height - point.y;
+    const deltaHeight = this.#height - point.y;
 
-    this._y += point.y;
-    this._width = deltaWidth;
-    this._height = deltaHeight;
+    this.#y += point.y;
+    this.#width = deltaWidth;
+    this.#height = deltaHeight;
 
     // Update transformation matrices after changing size and position
     this.#updateMatrices();
@@ -359,8 +359,8 @@ export class DOMRectTransform implements DOMRect {
     const deltaY = bottomLeftAfter.y - bottomLeftBefore.y;
 
     // Adjust x and y to compensate for the movement
-    this._x -= deltaX;
-    this._y -= deltaY;
+    this.#x -= deltaX;
+    this.#y -= deltaY;
 
     // Update matrices again after adjusting position
     this.#updateMatrices();
@@ -376,8 +376,8 @@ export class DOMRectTransform implements DOMRect {
     const topLeftBefore = this.toParentSpace(this.topLeft);
 
     // Update width and height
-    this._width = point.x;
-    this._height = point.y;
+    this.#width = point.x;
+    this.#height = point.y;
 
     // Update transformation matrices after changing size
     this.#updateMatrices();
@@ -390,8 +390,8 @@ export class DOMRectTransform implements DOMRect {
     const deltaY = topLeftAfter.y - topLeftBefore.y;
 
     // Adjust x and y to compensate for the movement
-    this._x -= deltaX;
-    this._y -= deltaY;
+    this.#x -= deltaX;
+    this.#y -= deltaY;
 
     // Update matrices again after adjusting position
     this.#updateMatrices();
@@ -407,12 +407,12 @@ export class DOMRectTransform implements DOMRect {
     const topRightBefore = this.toParentSpace(this.topRight);
 
     // Update x, width, and height
-    const deltaWidth = this._width - point.x;
+    const deltaWidth = this.#width - point.x;
     const deltaHeight = point.y;
 
-    this._x += point.x;
-    this._width = deltaWidth;
-    this._height = deltaHeight;
+    this.#x += point.x;
+    this.#width = deltaWidth;
+    this.#height = deltaHeight;
 
     // Update transformation matrices after changing size and position
     this.#updateMatrices();
@@ -425,8 +425,8 @@ export class DOMRectTransform implements DOMRect {
     const deltaY = topRightAfter.y - topRightBefore.y;
 
     // Adjust x and y to compensate for the movement
-    this._x -= deltaX;
-    this._y -= deltaY;
+    this.#x -= deltaX;
+    this.#y -= deltaY;
 
     // Update matrices again after adjusting position
     this.#updateMatrices();
