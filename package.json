@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build --base=/folk-canvas",
     "preview": "tsc --noEmit && vite build && vite preview",
-    "types": "tsc --noEmit"
+    "types": "tsc --noEmit",
+    "bench": "bun run src/__tests__/bench.ts"
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",
@@ -20,6 +21,7 @@
     "@types/node": "^22.10.1",
     "@webgpu/types": "^0.1.51",
     "bun-types": "^1.1.38",
+    "mitata": "^1.0.20",
     "typescript": "^5.7.2",
     "vite": "^6.0.0"
   }
