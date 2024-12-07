@@ -85,10 +85,7 @@ const styles = css`
     user-select: none;
   }
 
-  [part='resize-top-left'],
-  [part='resize-top-right'],
-  [part='resize-bottom-right'],
-  [part='resize-bottom-left'] {
+  [part^='resize'] {
     display: block;
     position: absolute;
     box-sizing: border-box;
@@ -122,16 +119,6 @@ const styles = css`
     left: 0;
   }
 
-  [part='resize-top-left'],
-  [part='resize-bottom-right'] {
-    cursor: var(--resize-handle-cursor-nw);
-  }
-
-  [part='resize-top-right'],
-  [part='resize-bottom-left'] {
-    cursor: var(--resize-handle-cursor-ne);
-  }
-
   [part^='rotation'] {
     z-index: calc(infinity);
     display: block;
@@ -142,7 +129,6 @@ const styles = css`
     opacity: 0;
     width: 16px;
     aspect-ratio: 1;
-    cursor: var(--fc-rotate, url('${getRotateCursorUrl(0)}') 16 16, pointer);
   }
 
   [part='rotation-top-left'] {
@@ -171,8 +157,7 @@ const styles = css`
 
   :host(:not(:focus-within)) [part^='resize'],
   :host(:not(:focus-within)) [part^='rotation'] {
-    opacity: 0;
-    cursor: default;
+    display: none;
   }
 `;
 
@@ -298,6 +283,8 @@ export class FolkShape extends HTMLElement {
         el as HTMLElement,
       ])
     ) as Record<ResizeHandle | RotateHandle, HTMLElement>;
+
+    this.#updateCursors();
 
     this.x = Number(this.getAttribute('x')) || 0;
     this.y = Number(this.getAttribute('y')) || 0;
