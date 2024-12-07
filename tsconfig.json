@@ -10,7 +10,7 @@
     "allowImportingTsExtensions": true,
     "useDefineForClassFields": true,
     "skipLibCheck": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "types": ["@webgpu/types", "@types/node", "bun-types"]
   },
