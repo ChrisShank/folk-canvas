@@ -23,6 +23,8 @@ const styles = css`
   :host {
     display: block;
     position: absolute;
+    top: 0;
+    left: 0;
     cursor: move;
     box-sizing: border-box;
     transform-origin: 0 0;
@@ -270,6 +272,7 @@ export class FolkShape extends HTMLElement {
     this.width = Number(this.getAttribute('width')) || 'auto';
     this.height = Number(this.getAttribute('height')) || 'auto';
     this.rotation = (Number(this.getAttribute('rotation')) || 0) * (Math.PI / 180);
+    this.#previousRect = new TransformDOMRect(this.#rect);
   }
 
   #isConnected = false;
