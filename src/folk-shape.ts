@@ -323,186 +323,126 @@ export class FolkShape extends HTMLElement {
   }
 
   handleEvent(event: PointerEvent | KeyboardEvent) {
-    if (event instanceof KeyboardEvent) {
-      const MOVEMENT_DELTA = event.shiftKey ? 20 : 2;
-      const ROTATION_DELTA = event.shiftKey ? Math.PI / 12 : Math.PI / 36; // 15 or 5 degrees
+    const focusedElement = this.#shadow.activeElement as HTMLElement | null;
+    const target = event.composedPath()[0] as HTMLElement;
+    let handle: Handle | null = null;
+    if (target) {
+      handle = target.getAttribute('part') as Handle | null;
+    } else if (focusedElement) {
+      handle = focusedElement.getAttribute('part') as Handle | null;
+    }
 
-      // Get the focused element to check if it's a resize handle
-      const focusedElement = this.#shadow.activeElement;
-      const handle = focusedElement?.getAttribute('part') as Handle | null;
+    // Handle pointer capture setup/cleanup
+    if (event instanceof PointerEvent) {
+      if (event.type === 'pointerdown') {
+        if (target !== this && !handle) return;
 
-      if (handle?.startsWith('resize')) {
-        const anyChange =
-          event.key === 'ArrowUp' ||
-          event.key === 'ArrowDown' ||
-          event.key === 'ArrowLeft' ||
-          event.key === 'ArrowRight';
-        if (!anyChange) return;
+        // Setup rotation initial state if needed
+        if (handle?.startsWith('rotation')) {
+          this.#initialRotation = this.#rect.rotation;
+          const parentRotateOrigin = this.#rect.toParentSpace({
+            x: this.#rect.width * this.#rect.rotateOrigin.x,
+            y: this.#rect.height * this.#rect.rotateOrigin.y,
+          });
+          // Calculate initial angle including current rotation
+          const mousePos = { x: event.clientX, y: event.clientY };
+          this.#startAngle = Vector.angleFromOrigin(mousePos, parentRotateOrigin) - this.#rect.rotation;
+        }
 
-        // Get the corner coordinates of the shape for the corresponding handle
-        const rect = this.#rect;
-
-        // Map handle names to corner points
-        const HANDLE_TO_CORNER: Record<string, Point> = {
-          'resize-top-left': rect.topLeft,
-          'resize-top-right': rect.topRight,
-          'resize-bottom-right': rect.bottomRight,
-          'resize-bottom-left': rect.bottomLeft,
-        };
-
-        const currentPos = rect.toParentSpace(HANDLE_TO_CORNER[handle]);
-        let delta = { x: 0, y: 0 };
-        if (event.key === 'ArrowRight') delta.x = MOVEMENT_DELTA;
-        if (event.key === 'ArrowLeft') delta.x = -MOVEMENT_DELTA;
-        if (event.key === 'ArrowDown') delta.y = MOVEMENT_DELTA;
-        if (event.key === 'ArrowUp') delta.y = -MOVEMENT_DELTA;
-
-        const syntheticMouse = {
-          x: currentPos.x + delta.x,
-          y: currentPos.y + delta.y,
-        };
-
-        // Calculate movement based on arrow keys
-
-        // Process resize using the same logic as mouse events
-        this.#handleResize(handle as ResizeHandle, syntheticMouse, focusedElement as HTMLElement);
-        event.preventDefault();
+        // Setup pointer capture
+        target.addEventListener('pointermove', this);
+        target.addEventListener('lostpointercapture', this);
+        target.setPointerCapture(event.pointerId);
+        this.#internals.states.add(handle || 'move');
+        this.focus();
         return;
       }
 
-      // Handle rotation with Alt key
-      if (event.altKey) {
-        switch (event.key) {
-          case 'ArrowLeft':
-            this.rotation -= ROTATION_DELTA;
-            event.preventDefault();
-            return;
-          case 'ArrowRight':
-            this.rotation += ROTATION_DELTA;
-            event.preventDefault();
-            return;
+      if (event.type === 'lostpointercapture') {
+        this.#internals.states.delete(handle || 'move');
+        target.removeEventListener('pointermove', this);
+        target.removeEventListener('lostpointercapture', this);
+        this.#updateCursors();
+        if (handle?.startsWith('rotation')) {
+          target.style.removeProperty('cursor');
         }
+        return;
       }
+    }
 
-      switch (event.key) {
-        case 'ArrowLeft':
-          this.x -= MOVEMENT_DELTA;
-          event.preventDefault();
-          return;
-        case 'ArrowRight':
-          this.x += MOVEMENT_DELTA;
-          event.preventDefault();
-          return;
-        case 'ArrowUp':
-          this.y -= MOVEMENT_DELTA;
-          event.preventDefault();
-          return;
-        case 'ArrowDown':
-          this.y += MOVEMENT_DELTA;
-          event.preventDefault();
-          return;
+    // Calculate movement delta from either keyboard or pointer
+    let moveDelta: Point | null = null;
+    if (event instanceof KeyboardEvent) {
+      const MOVEMENT_MUL = event.shiftKey ? 20 : 2;
+      const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (!arrowKeys.includes(event.key)) return;
+
+      moveDelta = {
+        x: (event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0) * MOVEMENT_MUL,
+        y: (event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0) * MOVEMENT_MUL,
+      };
+    } else if (event.type === 'pointermove') {
+      if (!target) return;
+      moveDelta = { x: event.movementX, y: event.movementY };
+    }
+
+    if (!moveDelta) return;
+
+    // Handle shape movement and rotation
+    if (target === this || (!handle && event instanceof KeyboardEvent)) {
+      if (event instanceof KeyboardEvent && event.altKey) {
+        const ROTATION_MUL = event.shiftKey ? Math.PI / 12 : Math.PI / 36;
+        const rotationDelta = moveDelta.x !== 0 ? (moveDelta.x > 0 ? ROTATION_MUL : -ROTATION_MUL) : 0;
+        this.rotation += rotationDelta;
+      } else {
+        this.x += moveDelta.x;
+        this.y += moveDelta.y;
       }
+      event.preventDefault();
       return;
     }
 
-    if (event instanceof PointerEvent) {
-      switch (event.type) {
-        case 'pointerdown': {
-          if (event.button !== 0 || event.ctrlKey) return;
+    // Handle resize
+    if (handle?.startsWith('resize') || handle?.startsWith('resize')) {
+      const rect = this.#rect;
+      const corner = {
+        'resize-top-left': rect.topLeft,
+        'resize-top-right': rect.topRight,
+        'resize-bottom-right': rect.bottomRight,
+        'resize-bottom-left': rect.bottomLeft,
+      }[handle as ResizeHandle];
 
-          const target = event.composedPath()[0] as HTMLElement;
+      const currentPos = rect.toParentSpace(corner);
+      const mousePos =
+        event instanceof KeyboardEvent
+          ? { x: currentPos.x + moveDelta.x, y: currentPos.y + moveDelta.y }
+          : { x: event.clientX, y: event.clientY };
 
-          // Store initial angle on rotation start
-          if (target.getAttribute('part')?.startsWith('rotation')) {
-            this.#initialRotation = this.#rect.rotation;
-            // Calculate the absolute rotation origin in parent space
-            const parentRotateOrigin = this.#rect.toParentSpace({
-              x: this.#rect.width * this.#rect.rotateOrigin.x,
-              y: this.#rect.height * this.#rect.rotateOrigin.y,
-            });
-            this.#startAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
-          }
+      this.#handleResize(handle as ResizeHandle, mousePos, target, event instanceof PointerEvent ? event : undefined);
+      event.preventDefault();
+      return;
+    }
 
-          // ignore interactions from slotted elements.
-          if (target !== this && !target.hasAttribute('part')) return;
+    // Handle pointer rotation
+    if (handle?.startsWith('rotation') && event instanceof PointerEvent) {
+      const parentRotateOrigin = this.#rect.toParentSpace({
+        x: this.#rect.width * this.#rect.rotateOrigin.x,
+        y: this.#rect.height * this.#rect.rotateOrigin.y,
+      });
+      const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
+      // Apply rotation relative to start angle
+      this.rotation = currentAngle - this.#startAngle;
 
-          target.addEventListener('pointermove', this);
-          target.addEventListener('lostpointercapture', this);
-          target.setPointerCapture(event.pointerId);
+      const degrees = (this.#rect.rotation * 180) / Math.PI;
+      const cursorRotation = {
+        'rotation-top-left': degrees,
+        'rotation-top-right': (degrees + 90) % 360,
+        'rotation-bottom-right': (degrees + 180) % 360,
+        'rotation-bottom-left': (degrees + 270) % 360,
+      }[handle as RotateHandle];
 
-          const interaction = target.getAttribute('part') || 'move';
-          this.#internals.states.add(interaction);
-
-          this.focus();
-          return;
-        }
-        case 'pointermove': {
-          const target = event.composedPath()[0] as HTMLElement;
-          if (target === null) return;
-
-          if (target === this) {
-            this.x += event.movementX;
-            this.y += event.movementY;
-            return;
-          }
-
-          const handle = target.getAttribute('part') as Handle;
-          if (handle === null) return;
-
-          if (handle.startsWith('resize')) {
-            const mouse = { x: event.clientX, y: event.clientY };
-            this.#handleResize(handle as ResizeHandle, mouse, target, event);
-            return;
-          }
-
-          if (handle.startsWith('rotation')) {
-            // Calculate the absolute rotation origin in parent space
-            const parentRotateOrigin = this.#rect.toParentSpace({
-              x: this.#rect.width * this.#rect.rotateOrigin.x,
-              y: this.#rect.height * this.#rect.rotateOrigin.y,
-            });
-            const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, parentRotateOrigin);
-            const rotation = this.#initialRotation + (currentAngle - this.#startAngle);
-
-            let cursorRotation = (rotation * 180) / Math.PI;
-            switch (handle) {
-              case 'rotation-top-right':
-                cursorRotation = (cursorRotation + 90) % 360;
-                break;
-              case 'rotation-bottom-right':
-                cursorRotation = (cursorRotation + 180) % 360;
-                break;
-              case 'rotation-bottom-left':
-                cursorRotation = (cursorRotation + 270) % 360;
-                break;
-              // top-left handle doesn't need adjustment
-            }
-
-            const target = event.composedPath()[0] as HTMLElement;
-            const rotateCursor = getRotateCursorUrl(cursorRotation);
-            target.style.setProperty('cursor', rotateCursor);
-            this.rotation = rotation;
-            return;
-          }
-
-          return;
-        }
-        case 'lostpointercapture': {
-          const target = event.composedPath()[0] as HTMLElement;
-          const interaction = target.getAttribute('part') || 'move';
-          this.#internals.states.delete(interaction);
-          target.removeEventListener('pointermove', this);
-          target.removeEventListener('lostpointercapture', this);
-
-          if (target.getAttribute('part')?.startsWith('rotation')) {
-            target.style.removeProperty('cursor');
-          }
-
-          this.#updateCursors();
-
-          return;
-        }
-      }
+      target.style.setProperty('cursor', getRotateCursorUrl(cursorRotation));
+      return;
     }
   }
 
