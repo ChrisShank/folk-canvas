@@ -231,9 +231,10 @@ export class FolkShape extends HTMLElement {
   set width(width: Dimension) {
     if (width === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
-      resizeObserver.unobserve(this, this.#onAutoResize);
     } else {
+      if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
+        resizeObserver.unobserve(this, this.#onAutoResize);
+      }
       this.#previousRect.width = this.#rect.width;
       this.#rect.width = width;
     }
@@ -248,9 +249,10 @@ export class FolkShape extends HTMLElement {
   set height(height: Dimension) {
     if (height === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
-    } else if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
-      resizeObserver.unobserve(this, this.#onAutoResize);
     } else {
+      if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
+        resizeObserver.unobserve(this, this.#onAutoResize);
+      }
       this.#previousRect.height = this.#rect.height;
       this.#rect.height = height;
     }
@@ -334,9 +336,6 @@ export class FolkShape extends HTMLElement {
       const focusedElement = this.#shadow.activeElement;
       const handle = focusedElement?.getAttribute('part') as Handle | null;
 
-      // Create synthetic mouse coordinates for keyboard events
-      let syntheticMouse: Point | null = null;
-
       if (handle?.startsWith('resize')) {
         const anyChange =
           event.key === 'ArrowUp' ||
@@ -347,22 +346,6 @@ export class FolkShape extends HTMLElement {
 
         // Get the corner coordinates of the shape for the corresponding handle
         const rect = this.#rect;
-
-        let vector: Point;
-        switch (event.key) {
-          case 'ArrowUp':
-            vector = { x: 0, y: -MOVEMENT_DELTA };
-            break;
-          case 'ArrowDown':
-            vector = { x: 0, y: MOVEMENT_DELTA };
-            break;
-          case 'ArrowLeft':
-            vector = { x: -MOVEMENT_DELTA, y: 0 };
-            break;
-          case 'ArrowRight':
-            vector = { x: MOVEMENT_DELTA, y: 0 };
-            break;
-        }
 
         // Map handle names to corner points
         const HANDLE_TO_CORNER: Record<string, Point> = {
