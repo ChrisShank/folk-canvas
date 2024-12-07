@@ -125,7 +125,7 @@ export class FolkRope extends FolkBaseConnection {
     let target: Point;
 
     if (sourceRect instanceof DOMRectTransform) {
-      source = Vector.lerp(sourceRect.bottomRight, sourceRect.bottomLeft, 0.5);
+      source = sourceRect.toParentSpace({ x: sourceRect.width / 2, y: sourceRect.height });
     } else {
       source = {
         x: sourceRect.x + sourceRect.width / 2,
@@ -134,7 +134,7 @@ export class FolkRope extends FolkBaseConnection {
     }
 
     if (targetRect instanceof DOMRectTransform) {
-      target = Vector.lerp(targetRect.bottomRight, targetRect.bottomLeft, 0.5);
+      target = targetRect.toParentSpace({ x: targetRect.width / 2, y: targetRect.height });
     } else {
       target = {
         x: targetRect.x + targetRect.width / 2,
