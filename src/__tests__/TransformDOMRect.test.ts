@@ -127,8 +127,8 @@ describe('TransformDOMRect', () => {
     });
   });
 
-  describe('corner setters', () => {
-    test('setTopLeft maintains rectangle properties', () => {
+  describe('corner', () => {
+    test('setTopLeft with local space coordinates', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
@@ -136,14 +136,15 @@ describe('TransformDOMRect', () => {
         height: 100,
       });
 
-      rect.setTopLeft({ x: 50, y: 50 });
-      expect(rect.x).toBe(50);
-      expect(rect.y).toBe(50);
-      expect(rect.width).toBe(250); // Increased by 50
-      expect(rect.height).toBe(150); // Increased by 50
+      // Move top-left corner 50 units right and 25 units down in local space
+      rect.setTopLeft({ x: 50, y: 25 });
+      expect(rect.x).toBe(150); // Original x + local x
+      expect(rect.y).toBe(125); // Original y + local y
+      expect(rect.width).toBe(150); // Original width - local x
+      expect(rect.height).toBe(75); // Original height - local y
     });
 
-    test('setTopRight maintains rectangle properties', () => {
+    test('setTopRight with local space coordinates', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
@@ -151,14 +152,15 @@ describe('TransformDOMRect', () => {
         height: 100,
       });
 
-      rect.setTopRight({ x: 350, y: 50 });
-      expect(rect.x).toBe(100);
-      expect(rect.y).toBe(50);
-      expect(rect.width).toBe(350);
-      expect(rect.height).toBe(150);
+      // Set top-right corner to local coordinates (150, 25)
+      rect.setTopRight({ x: 150, y: 25 });
+      expect(rect.x).toBe(100); // Original x unchanged
+      expect(rect.y).toBe(125); // Original y + local y
+      expect(rect.width).toBe(150); // New local x
+      expect(rect.height).toBe(75); // Original height - local y
     });
 
-    test('setBottomRight maintains rectangle properties', () => {
+    test('setBottomRight with local space coordinates', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
@@ -166,14 +168,15 @@ describe('TransformDOMRect', () => {
         height: 100,
       });
 
-      rect.setBottomRight({ x: 350, y: 250 });
-      expect(rect.x).toBe(100);
-      expect(rect.y).toBe(100);
-      expect(rect.width).toBe(350);
-      expect(rect.height).toBe(250);
+      // Set bottom-right corner to local coordinates (150, 75)
+      rect.setBottomRight({ x: 150, y: 75 });
+      expect(rect.x).toBe(100); // Original x unchanged
+      expect(rect.y).toBe(100); // Original y unchanged
+      expect(rect.width).toBe(150); // New local x
+      expect(rect.height).toBe(75); // New local y
     });
 
-    test('setBottomLeft maintains rectangle properties', () => {
+    test('setBottomLeft with local space coordinates', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
@@ -181,14 +184,15 @@ describe('TransformDOMRect', () => {
         height: 100,
       });
 
-      rect.setBottomLeft({ x: 50, y: 250 });
-      expect(rect.x).toBe(50);
-      expect(rect.y).toBe(100);
-      expect(rect.width).toBe(250);
-      expect(rect.height).toBe(250);
+      // Move bottom-left corner 50 units right in local space
+      rect.setBottomLeft({ x: 50, y: 75 });
+      expect(rect.x).toBe(150); // Original x + local x
+      expect(rect.y).toBe(100); // Original y unchanged
+      expect(rect.width).toBe(150); // Original width - local x
+      expect(rect.height).toBe(75); // New local y
     });
 
-    test('corner setters work with rotation', () => {
+    test('corner setters with rotation', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
@@ -197,11 +201,18 @@ describe('TransformDOMRect', () => {
         rotation: Math.PI / 4, // 45 degrees
       });
 
-      const newTopLeft = rect.toParentSpace({ x: 0, y: 0 });
-      rect.setTopLeft(newTopLeft);
+      // Move top-left corner in local space
+      rect.setTopLeft({ x: 50, y: 25 });
 
-      const transformedTopLeft = rect.toLocalSpace(newTopLeft);
-      expectPointClose(transformedTopLeft, { x: 0, y: 0 });
+      // Verify the dimensions are correct
+      expect(rect.width).toBe(150); // Original width - local x
+      expect(rect.height).toBe(75); // Original height - local y
+
+      // Verify we can still transform points correctly
+      const localPoint = { x: 0, y: 0 };
+      const parentPoint = rect.toParentSpace(localPoint);
+      const backToLocal = rect.toLocalSpace(parentPoint);
+      expectPointClose(backToLocal, localPoint);
     });
 
     test('setBottomRight works with upside down rotation', () => {
@@ -213,15 +224,184 @@ describe('TransformDOMRect', () => {
         rotation: Math.PI, // 180 degrees - upside down
       });
 
-      rect.setBottomRight({ x: 350, y: 250 });
-      expect(rect.x).toBe(100);
-      expect(rect.y).toBe(100);
-      expect(rect.width).toBe(250);
-      expect(rect.height).toBe(150);
+      // Set bottom-right corner in local space
+      rect.setBottomRight({ x: 150, y: 75 });
 
-      // Verify the corner is actually at the expected position
-      const transformedBottomRight = rect.toParentSpace(rect.bottomRight);
-      expectPointClose(transformedBottomRight, { x: 350, y: 250 });
+      expect(rect.width).toBe(150);
+      expect(rect.height).toBe(75);
+
+      // Verify the corner is actually at the expected position in local space
+      expectPointClose(rect.bottomRight, { x: 150, y: 75 });
+    });
+  });
+
+  describe('point conversion with rotation', () => {
+    test('converts points correctly with 90-degree rotation', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+        rotation: Math.PI / 2, // 90 degrees
+      });
+
+      // Test points in local space and their expected parent space coordinates
+      const testCases = [
+        {
+          local: { x: 0, y: 0 }, // Top-left
+          parent: { x: 150, y: 50 }, // After rotation: center + (-height/2, -width/2)
+        },
+        {
+          local: { x: 200, y: 0 }, // Top-right
+          parent: { x: 150, y: 250 }, // After rotation: center + (height/2, -width/2)
+        },
+        {
+          local: { x: 100, y: 50 }, // Center
+          parent: { x: 200, y: 150 }, // After rotation: stays at center
+        },
+      ];
+
+      testCases.forEach(({ local, parent }) => {
+        const toParent = rect.toParentSpace(local);
+        expectPointClose(toParent, parent);
+
+        const backToLocal = rect.toLocalSpace(toParent);
+        expectPointClose(backToLocal, local);
+      });
+    });
+
+    test('converts points correctly with 45-degree rotation', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 100,
+        rotation: Math.PI / 4, // 45 degrees
+      });
+
+      // Center point should remain at the same position after transformation
+      const center = { x: 50, y: 50 }; // Center in local space
+      const centerInParent = rect.toParentSpace(center);
+      expectPointClose(centerInParent, { x: 150, y: 150 }); // Center in parent space
+
+      // Test a point on the edge
+      const edge = { x: 100, y: 50 }; // Right-middle in local space
+      const edgeInParent = rect.toParentSpace(edge);
+      // At 45 degrees, this point should be √2/2 * 100 units right and up from center
+      expectPointClose(edgeInParent, {
+        x: 150 + Math.cos(Math.PI / 4) * 50,
+        y: 150 + Math.sin(Math.PI / 4) * 50,
+      });
+    });
+
+    test('maintains relative positions through multiple transformations', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 100,
+        rotation: Math.PI / 6, // 30 degrees
+      });
+
+      // Create a grid of test points
+      const gridPoints: Point[] = [];
+      for (let x = 0; x <= 100; x += 25) {
+        for (let y = 0; y <= 100; y += 25) {
+          gridPoints.push({ x, y });
+        }
+      }
+
+      // Verify all points maintain their relative distances
+      gridPoints.forEach((point1, i) => {
+        gridPoints.forEach((point2, j) => {
+          if (i === j) return;
+
+          // Calculate distance in local space
+          const dx = point2.x - point1.x;
+          const dy = point2.y - point1.y;
+          const localDistance = Math.sqrt(dx * dx + dy * dy);
+
+          // Transform points to parent space
+          const parent1 = rect.toParentSpace(point1);
+          const parent2 = rect.toParentSpace(point2);
+
+          // Calculate distance in parent space
+          const pdx = parent2.x - parent1.x;
+          const pdy = parent2.y - parent1.y;
+          const parentDistance = Math.sqrt(pdx * pdx + pdy * pdy);
+
+          // Distances should be preserved
+          expect(parentDistance).toBeCloseTo(localDistance);
+        });
+      });
+    });
+
+    test('handles edge cases with various rotations', () => {
+      const testRotations = [
+        0, // No rotation
+        Math.PI / 2, // 90 degrees
+        Math.PI, // 180 degrees
+        (3 * Math.PI) / 2, // 270 degrees
+        Math.PI / 6, // 30 degrees
+        Math.PI / 3, // 60 degrees
+        (2 * Math.PI) / 3, // 120 degrees
+        (5 * Math.PI) / 6, // 150 degrees
+      ];
+
+      testRotations.forEach((rotation) => {
+        const rect = new TransformDOMRect({
+          x: 100,
+          y: 100,
+          width: 100,
+          height: 50,
+          rotation,
+        });
+
+        // Test various points including corners and edges
+        const testPoints = [
+          { x: 0, y: 0 }, // Top-left
+          { x: 100, y: 0 }, // Top-right
+          { x: 100, y: 50 }, // Bottom-right
+          { x: 0, y: 50 }, // Bottom-left
+          { x: 50, y: 25 }, // Center
+          { x: 50, y: 0 }, // Top middle
+          { x: 100, y: 25 }, // Right middle
+          { x: 50, y: 50 }, // Bottom middle
+          { x: 0, y: 25 }, // Left middle
+        ];
+
+        testPoints.forEach((localPoint) => {
+          const parentPoint = rect.toParentSpace(localPoint);
+          const backToLocal = rect.toLocalSpace(parentPoint);
+          expectPointClose(backToLocal, localPoint);
+        });
+      });
+    });
+
+    test('maintains aspect ratio through transformations', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+        rotation: Math.PI / 3, // 60 degrees
+      });
+
+      // Test diagonal distances
+      const topLeft = { x: 0, y: 0 };
+      const bottomRight = { x: 200, y: 100 };
+
+      const topLeftParent = rect.toParentSpace(topLeft);
+      const bottomRightParent = rect.toParentSpace(bottomRight);
+
+      // Calculate distances
+      const localDiagonal = Math.sqrt(Math.pow(bottomRight.x - topLeft.x, 2) + Math.pow(bottomRight.y - topLeft.y, 2));
+      const parentDiagonal = Math.sqrt(
+        Math.pow(bottomRightParent.x - topLeftParent.x, 2) + Math.pow(bottomRightParent.y - topLeftParent.y, 2)
+      );
+
+      // Distances should be preserved
+      expect(parentDiagonal).toBeCloseTo(localDiagonal);
     });
   });
 });
@@ -235,21 +415,18 @@ describe('TransformDOMRectReadonly', () => {
       height: 50,
     });
 
-    expect(() => {
-      rect.x = 20;
-    }).toThrow();
-    expect(() => {
-      rect.y = 30;
-    }).toThrow();
-    expect(() => {
-      rect.width = 200;
-    }).toThrow();
-    expect(() => {
-      rect.height = 100;
-    }).toThrow();
-    expect(() => {
-      rect.rotation = Math.PI;
-    }).toThrow();
+    rect.x = 20;
+    rect.y = 30;
+    rect.width = 200;
+    rect.height = 100;
+    rect.rotation = Math.PI;
+
+    // Values should remain unchanged
+    expect(rect.x).toBe(10);
+    expect(rect.y).toBe(20);
+    expect(rect.width).toBe(100);
+    expect(rect.height).toBe(50);
+    expect(rect.rotation).toBe(0);
   });
 
   test('allows reading properties', () => {

@@ -9,18 +9,32 @@ interface TransformDOMRectInit {
   rotation?: number;
 }
 
+/**
+ * Represents a rectangle with position, size, and rotation,
+ * capable of transforming points between local and parent coordinate spaces.
+ *
+ * **Coordinate System:**
+ * - The origin `(0, 0)` is at the **top-left corner**.
+ * - Positive `x` values extend **to the right**.
+ * - Positive `y` values extend **downward**.
+ * - Rotation is **clockwise**, in **radians**, around the rectangle's **center**.
+ */
 export class TransformDOMRect implements DOMRect {
-  // Private properties
-  private _x: number;
-  private _y: number;
-  private _width: number;
-  private _height: number;
-  private _rotation: number;
+  // Private properties for position, size, and rotation
+  private _x: number; // X-coordinate of the top-left corner
+  private _y: number; // Y-coordinate of the top-left corner
+  private _width: number; // Width of the rectangle
+  private _height: number; // Height of the rectangle
+  private _rotation: number; // Rotation angle in radians, clockwise
 
-  // Internal matrices
-  #transformMatrix: Matrix;
-  #inverseMatrix: Matrix;
+  // Internal transformation matrices
+  #transformMatrix: Matrix; // Transforms from local to parent space
+  #inverseMatrix: Matrix; // Transforms from parent to local space
 
+  /**
+   * Constructs a new `TransformDOMRect`.
+   * @param init - Optional initial values.
+   */
   constructor(init: TransformDOMRectInit = {}) {
     this._x = init.x ?? 0;
     this._y = init.y ?? 0;
@@ -28,14 +42,17 @@ export class TransformDOMRect implements DOMRect {
     this._height = init.height ?? 0;
     this._rotation = init.rotation ?? 0;
 
-    // Initialize matrices
+    // Initialize transformation matrices
     this.#transformMatrix = Matrix.Identity();
     this.#inverseMatrix = Matrix.Identity();
 
+    // Update matrices based on current properties
     this.#updateMatrices();
   }
 
   // Getters and setters for properties
+
+  /** Gets or sets the **x-coordinate** of the top-left corner. */
   get x(): number {
     return this._x;
   }
@@ -44,6 +61,7 @@ export class TransformDOMRect implements DOMRect {
     this.#updateMatrices();
   }
 
+  /** Gets or sets the **y-coordinate** of the top-left corner. */
   get y(): number {
     return this._y;
   }
@@ -52,6 +70,7 @@ export class TransformDOMRect implements DOMRect {
     this.#updateMatrices();
   }
 
+  /** Gets or sets the **width** of the rectangle. */
   get width(): number {
     return this._width;
   }
@@ -60,6 +79,7 @@ export class TransformDOMRect implements DOMRect {
     this.#updateMatrices();
   }
 
+  /** Gets or sets the **height** of the rectangle. */
   get height(): number {
     return this._height;
   }
@@ -68,6 +88,7 @@ export class TransformDOMRect implements DOMRect {
     this.#updateMatrices();
   }
 
+  /** Gets or sets the **rotation angle** in radians, **clockwise**. */
   get rotation(): number {
     return this._rotation;
   }
@@ -77,35 +98,53 @@ export class TransformDOMRect implements DOMRect {
   }
 
   // DOMRect read-only properties
+
+  /** The **left** coordinate of the rectangle (same as `x`). */
   get left(): number {
     return this.x;
   }
 
+  /** The **top** coordinate of the rectangle (same as `y`). */
   get top(): number {
     return this.y;
   }
 
+  /** The **right** coordinate of the rectangle (`x + width`). */
   get right(): number {
     return this.x + this.width;
   }
 
+  /** The **bottom** coordinate of the rectangle (`y + height`). */
   get bottom(): number {
     return this.y + this.height;
   }
 
-  // Updates the transformation matrices using instance functions
+  /**
+   * Updates the transformation matrices based on the current position,
+   * size, and rotation of the rectangle.
+   *
+   * The transformation sequence is:
+   * 1. **Translate** to the center of the rectangle.
+   * 2. **Rotate** around the center.
+   * 3. **Translate** back to the top-left corner.
+   */
   #updateMatrices() {
     // Reset the transformMatrix to identity
     this.#transformMatrix.identity();
 
-    // Compute the center point
+    // Compute the center point of the rectangle
     const centerX = this._x + this._width / 2;
     const centerY = this._y + this._height / 2;
 
-    // Apply transformations: translate to center, rotate, translate back
-    this.#transformMatrix.translate(centerX, centerY);
-    this.#transformMatrix.rotate(this._rotation);
-    this.#transformMatrix.translate(-this._width / 2, -this._height / 2);
+    // Apply transformations in this order:
+    // 1. Translate to center
+    // 2. Rotate around center
+    // 3. Translate back to position
+    this.#transformMatrix
+      .translate(centerX, centerY)
+      .rotate(this._rotation)
+      .translate(-centerX, -centerY)
+      .translate(this._x, this._y);
 
     // Update inverseMatrix as the inverse of transformMatrix
     this.#inverseMatrix = this.#transformMatrix.clone().invert();
@@ -120,33 +159,57 @@ export class TransformDOMRect implements DOMRect {
     return this.#inverseMatrix;
   }
 
-  // Converts a point from parent space to local space
+  /**
+   * Converts a point from **parent space** to **local space**.
+   * @param point - The point in parent coordinate space.
+   * @returns The point in local coordinate space.
+   */
   toLocalSpace(point: Point): Point {
     return this.#inverseMatrix.applyToPoint(point);
   }
 
-  // Converts a point from local space to parent space
+  /**
+   * Converts a point from **local space** to **parent space**.
+   * @param point - The point in local coordinate space.
+   * @returns The point in parent coordinate space.
+   */
   toParentSpace(point: Point): Point {
     return this.#transformMatrix.applyToPoint(point);
   }
 
   // Local space corners
+
+  /**
+   * Gets the **top-left** corner of the rectangle in **local space** (before transformation).
+   */
   get topLeft(): Point {
     return { x: 0, y: 0 };
   }
 
+  /**
+   * Gets the **top-right** corner of the rectangle in **local space** (before transformation).
+   */
   get topRight(): Point {
     return { x: this.width, y: 0 };
   }
 
+  /**
+   * Gets the **bottom-right** corner of the rectangle in **local space** (before transformation).
+   */
   get bottomRight(): Point {
     return { x: this.width, y: this.height };
   }
 
+  /**
+   * Gets the **bottom-left** corner of the rectangle in **local space** (before transformation).
+   */
   get bottomLeft(): Point {
     return { x: 0, y: this.height };
   }
 
+  /**
+   * Gets the **center point** of the rectangle in **parent space**.
+   */
   get center(): Point {
     return {
       x: this.x + this.width / 2,
@@ -154,14 +217,26 @@ export class TransformDOMRect implements DOMRect {
     };
   }
 
+  /**
+   * Gets the four corner vertices of the rectangle in **local space**.
+   * @returns An array of points in the order: top-left, top-right, bottom-right, bottom-left.
+   */
   vertices(): Point[] {
     return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft];
   }
 
+  /**
+   * Generates a CSS transform string representing the rectangle's transformation.
+   * @returns A string suitable for use in CSS `transform` properties.
+   */
   toCssString(): string {
     return this.transformMatrix.toCssString();
   }
 
+  /**
+   * Converts the rectangle's properties to a JSON serializable object.
+   * @returns An object containing the rectangle's `x`, `y`, `width`, `height`, and `rotation`.
+   */
   toJSON() {
     return {
       x: this.x,
@@ -172,42 +247,59 @@ export class TransformDOMRect implements DOMRect {
     };
   }
 
+  /**
+   * Sets the **top-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * @param point - The new top-left corner point in local coordinate space.
+   */
   setTopLeft(point: Point) {
-    const oldBottomRight = this.toParentSpace(this.bottomRight);
-    this._x = point.x;
-    this._y = point.y;
-    this._width = oldBottomRight.x - point.x;
-    this._height = oldBottomRight.y - point.y;
+    this._x += point.x;
+    this._y += point.y;
+    this._width -= point.x;
+    this._height -= point.y;
     this.#updateMatrices();
   }
 
+  /**
+   * Sets the **top-right** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * @param point - The new top-right corner point in local coordinate space.
+   */
   setTopRight(point: Point) {
-    const oldBottomLeft = this.toParentSpace(this.bottomLeft);
-    this._y = point.y;
-    this._width = point.x - this._x;
-    this._height = oldBottomLeft.y - point.y;
+    this._y += point.y;
+    this._width = point.x;
+    this._height -= point.y;
     this.#updateMatrices();
   }
 
+  /**
+   * Sets the **bottom-right** corner of the rectangle in **local space**, adjusting the width and height accordingly.
+   * @param point - The new bottom-right corner point in local coordinate space.
+   */
   setBottomRight(point: Point) {
     this._width = point.x;
     this._height = point.y;
     this.#updateMatrices();
   }
 
+  /**
+   * Sets the **bottom-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * @param point - The new bottom-left corner point in local coordinate space.
+   */
   setBottomLeft(point: Point) {
-    const oldTopRight = this.toParentSpace(this.topRight);
-    this._x = point.x;
-    this._width = oldTopRight.x - point.x;
-    this._height = point.y - this._y;
+    this._x += point.x;
+    this._width -= point.x;
+    this._height = point.y;
     this.#updateMatrices();
   }
 
+  /**
+   * Computes the **axis-aligned bounding box** of the transformed rectangle in **parent space**.
+   * @returns An object representing the bounding rectangle with properties: `x`, `y`, `width`, `height`.
+   */
   getBounds(): DOMRectInit {
     // Transform all vertices to parent space
     const transformedVertices = this.vertices().map((v) => this.toParentSpace(v));
 
-    // Find min and max points
+    // Find min and max coordinates
     const xs = transformedVertices.map((v) => v.x);
     const ys = transformedVertices.map((v) => v.y);
 
@@ -225,85 +317,98 @@ export class TransformDOMRect implements DOMRect {
   }
 }
 
-// Read-only version of TransformDOMRect
+/**
+ * A **read-only** version of `TransformDOMRect` that prevents modification of position,
+ * size, and rotation properties.
+ */
 export class TransformDOMRectReadonly extends TransformDOMRect {
   constructor(init: TransformDOMRectInit = {}) {
     super(init);
   }
 
-  // Explicit getter overrides
-  get x(): number {
+  // Explicit overrides for all getters from parent class
+  override get x(): number {
     return super.x;
   }
 
-  get y(): number {
+  override get y(): number {
     return super.y;
   }
 
-  get width(): number {
+  override get width(): number {
     return super.width;
   }
 
-  get height(): number {
+  override get height(): number {
     return super.height;
   }
 
-  get rotation(): number {
+  override get rotation(): number {
     return super.rotation;
   }
 
-  // DOMRect property getters
-  get left(): number {
+  override get left(): number {
     return super.left;
   }
 
-  get top(): number {
+  override get top(): number {
     return super.top;
   }
 
-  get right(): number {
+  override get right(): number {
     return super.right;
   }
 
-  get bottom(): number {
+  override get bottom(): number {
     return super.bottom;
   }
 
-  // Override all setters to prevent modification
-  set x(value: number) {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get transformMatrix(): Matrix {
+    return super.transformMatrix;
   }
 
-  set y(value: number) {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get inverseMatrix(): Matrix {
+    return super.inverseMatrix;
   }
 
-  set width(value: number) {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get topLeft(): Point {
+    return super.topLeft;
   }
 
-  set height(value: number) {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get topRight(): Point {
+    return super.topRight;
   }
 
-  set rotation(value: number) {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get bottomRight(): Point {
+    return super.bottomRight;
   }
 
-  // Override vertex setter methods
-  setTopLeft(point: Point): void {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get bottomLeft(): Point {
+    return super.bottomLeft;
   }
 
-  setTopRight(point: Point): void {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override get center(): Point {
+    return super.center;
   }
 
-  setBottomRight(point: Point): void {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  // Add no-op setters
+  override set x(value: number) {
+    // no-op
   }
 
-  setBottomLeft(point: Point): void {
-    throw new Error('Cannot modify readonly TransformDOMRect');
+  override set y(value: number) {
+    // no-op
+  }
+
+  override set width(value: number) {
+    // no-op
+  }
+
+  override set height(value: number) {
+    // no-op
+  }
+
+  override set rotation(value: number) {
+    // no-op
   }
 }
