@@ -192,13 +192,14 @@ export class FolkShape extends HTMLElement {
 
   #shadow = this.attachShadow({ mode: 'open' });
   #internals = this.attachInternals();
-  #dynamicStyles = css``;
 
   #attrWidth: Dimension = 0;
   #attrHeight: Dimension = 0;
 
   #rect = new DOMRectTransform();
   #previousRect = new DOMRectTransform();
+
+  #handles: Record<ResizeHandle | RotateHandle, HTMLElement>;
 
   // Used for rotation handling, would love a better way to do this that avoids this clutter.
   #initialRotation = 0;
@@ -277,7 +278,7 @@ export class FolkShape extends HTMLElement {
     this.addEventListener('pointerdown', this);
     this.addEventListener('keydown', this);
 
-    this.#shadow.adoptedStyleSheets = [styles, this.#dynamicStyles];
+    this.#shadow.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
@@ -290,6 +291,13 @@ export class FolkShape extends HTMLElement {
       <button part="resize-bottom-right" aria-label="Resize shape from bottom right"></button>
       <button part="resize-bottom-left" aria-label="Resize shape from bottom left"></button>
       <div><slot></slot></div>`;
+
+    this.#handles = Object.fromEntries(
+      Array.from(this.#shadow.querySelectorAll('[part]')).map((el) => [
+        el.getAttribute('part') as ResizeHandle | RotateHandle,
+        el as HTMLElement,
+      ])
+    ) as Record<ResizeHandle | RotateHandle, HTMLElement>;
 
     this.x = Number(this.getAttribute('x')) || 0;
     this.y = Number(this.getAttribute('y')) || 0;
@@ -499,10 +507,11 @@ export class FolkShape extends HTMLElement {
           target.removeEventListener('pointermove', this);
           target.removeEventListener('lostpointercapture', this);
 
-          this.#updateCursors();
           if (target.getAttribute('part')?.startsWith('rotation')) {
             target.style.removeProperty('cursor');
           }
+
+          this.#updateCursors();
 
           return;
         }
@@ -566,41 +575,16 @@ export class FolkShape extends HTMLElement {
 
     const resizeCursor0 = getResizeCursorUrl(degrees);
     const resizeCursor90 = getResizeCursorUrl((degrees + 90) % 360);
-    const rotateCursor0 = getRotateCursorUrl(degrees);
-    const rotateCursor90 = getRotateCursorUrl((degrees + 90) % 360);
-    const rotateCursor180 = getRotateCursorUrl((degrees + 180) % 360);
-    const rotateCursor270 = getRotateCursorUrl((degrees + 270) % 360);
 
-    // TODO use css variables
-    const dynamicStyles = `
-      [part='resize-top-left'],
-      [part='resize-bottom-right'] {
-        cursor: ${resizeCursor0};
-      }
+    this.#handles['resize-top-left'].style.setProperty('cursor', resizeCursor0);
+    this.#handles['resize-bottom-right'].style.setProperty('cursor', resizeCursor0);
+    this.#handles['resize-top-right'].style.setProperty('cursor', resizeCursor90);
+    this.#handles['resize-bottom-left'].style.setProperty('cursor', resizeCursor90);
 
-      [part='resize-top-right'],
-      [part='resize-bottom-left'] {
-        cursor: ${resizeCursor90};
-      }
-
-      [part='rotation-top-left'] {
-        cursor: ${rotateCursor0};
-      }
-
-      [part='rotation-top-right'] {
-        cursor: ${rotateCursor90};
-      }
-
-      [part='rotation-bottom-right'] {
-        cursor: ${rotateCursor180};
-      }
-
-      [part='rotation-bottom-left'] {
-        cursor: ${rotateCursor270};
-      }
-    `;
-
-    this.#dynamicStyles.replaceSync(dynamicStyles);
+    this.#handles['rotation-top-left'].style.setProperty('cursor', getRotateCursorUrl(degrees));
+    this.#handles['rotation-top-right'].style.setProperty('cursor', getRotateCursorUrl((degrees + 90) % 360));
+    this.#handles['rotation-bottom-right'].style.setProperty('cursor', getRotateCursorUrl((degrees + 180) % 360));
+    this.#handles['rotation-bottom-left'].style.setProperty('cursor', getRotateCursorUrl((degrees + 270) % 360));
   }
 
   #handleResize(handle: ResizeHandle, pointerPos: Point, target: HTMLElement, event?: PointerEvent) {
