@@ -6,18 +6,35 @@ import { Vector } from './common/Vector';
 import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
 import { TransformEvent } from './common/TransformEvent';
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'folk-shape': FolkShape;
-  }
-}
-
 const resizeObserver = new ResizeObserverManager();
 
 type ResizeHandle = 'resize-top-left' | 'resize-top-right' | 'resize-bottom-right' | 'resize-bottom-left';
 type RotateHandle = 'rotation-top-left' | 'rotation-top-right' | 'rotation-bottom-right' | 'rotation-bottom-left';
 type Handle = ResizeHandle | RotateHandle | 'move';
 export type Dimension = number | 'auto';
+
+type HandleMap = Record<ResizeHandle, ResizeHandle>;
+
+const oppositeHandleMap: HandleMap = {
+  'resize-bottom-right': 'resize-top-left',
+  'resize-bottom-left': 'resize-top-right',
+  'resize-top-left': 'resize-bottom-right',
+  'resize-top-right': 'resize-bottom-left',
+};
+
+const flipXHandleMap: HandleMap = {
+  'resize-bottom-right': 'resize-bottom-left',
+  'resize-bottom-left': 'resize-bottom-right',
+  'resize-top-left': 'resize-top-right',
+  'resize-top-right': 'resize-top-left',
+};
+
+const flipYHandleMap: HandleMap = {
+  'resize-bottom-right': 'resize-top-right',
+  'resize-bottom-left': 'resize-top-left',
+  'resize-top-left': 'resize-bottom-left',
+  'resize-top-right': 'resize-bottom-right',
+};
 
 const styles = css`
   :host {
@@ -159,7 +176,12 @@ const styles = css`
   }
 `;
 
-// TODO: add z coordinate?
+declare global {
+  interface HTMLElementTagNameMap {
+    'folk-shape': FolkShape;
+  }
+}
+
 export class FolkShape extends HTMLElement {
   static tagName = 'folk-shape';
 
@@ -617,31 +639,10 @@ export class FolkShape extends HTMLElement {
     const flipHeight = this.#rect.height < 0;
 
     if (flipWidth && flipHeight) {
-      // Both axes flipped
-      const oppositeHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-bottom-right': 'resize-top-left',
-        'resize-bottom-left': 'resize-top-right',
-        'resize-top-left': 'resize-bottom-right',
-        'resize-top-right': 'resize-bottom-left',
-      };
       nextHandle = oppositeHandleMap[handle];
     } else if (flipWidth) {
-      // Only X axis flipped
-      const flipXHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-bottom-right': 'resize-bottom-left',
-        'resize-bottom-left': 'resize-bottom-right',
-        'resize-top-left': 'resize-top-right',
-        'resize-top-right': 'resize-top-left',
-      };
       nextHandle = flipXHandleMap[handle];
     } else if (flipHeight) {
-      // Only Y axis flipped
-      const flipYHandleMap: Record<ResizeHandle, ResizeHandle> = {
-        'resize-bottom-right': 'resize-top-right',
-        'resize-bottom-left': 'resize-top-left',
-        'resize-top-left': 'resize-bottom-left',
-        'resize-top-right': 'resize-bottom-right',
-      };
       nextHandle = flipYHandleMap[handle];
     }
 
