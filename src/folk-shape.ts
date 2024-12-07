@@ -37,20 +37,23 @@ const flipYHandleMap: HandleMap = {
 };
 
 const styles = css`
+  * {
+    box-sizing: border-box;
+  }
+
   :host {
     display: block;
     position: absolute;
     top: 0;
     left: 0;
     cursor: move;
-    box-sizing: border-box;
     transform-origin: 0 0;
   }
 
   :host::before {
     content: '';
     position: absolute;
-    inset: -15px -15px -15px -15px;
+    inset: -15px;
     z-index: -1;
   }
 
@@ -85,79 +88,67 @@ const styles = css`
     user-select: none;
   }
 
-  [part^='resize'] {
-    display: block;
-    position: absolute;
-    box-sizing: border-box;
-    padding: 0;
-    background: hsl(210, 20%, 98%);
-    z-index: calc(infinity);
-    width: 9px;
+  [part] {
     aspect-ratio: 1;
+    display: none;
+    position: absolute;
+    z-index: calc(infinity);
+    padding: 0;
+  }
+
+  [part^='resize'] {
+    background: hsl(210, 20%, 98%);
+    width: 9px;
     transform: translate(-50%, -50%);
     border: 1.5px solid hsl(214, 84%, 56%);
     border-radius: 2px;
   }
 
-  [part='resize-top-left'] {
-    top: 0;
-    left: 0;
-  }
-
-  [part='resize-top-right'] {
-    top: 0;
-    left: 100%;
-  }
-
-  [part='resize-bottom-right'] {
-    top: 100%;
-    left: 100%;
-  }
-
-  [part='resize-bottom-left'] {
-    top: 100%;
-    left: 0;
-  }
-
   [part^='rotation'] {
-    z-index: calc(infinity);
-    display: block;
-    position: absolute;
-    box-sizing: border-box;
     border-radius: 0px;
-    padding: 0;
     opacity: 0;
     width: 16px;
     aspect-ratio: 1;
   }
 
-  [part='rotation-top-left'] {
+  [part$='top-left'] {
     top: 0;
     left: 0;
+  }
+
+  [part='rotation-top-left'] {
     translate: -100% -100%;
   }
 
-  [part='rotation-top-right'] {
+  [part$='top-right'] {
     top: 0;
     left: 100%;
+  }
+
+  [part='rotation-top-right'] {
     translate: 0% -100%;
   }
 
-  [part='rotation-bottom-right'] {
+  [part$='bottom-right'] {
     top: 100%;
     left: 100%;
+  }
+
+  [part='rotation-bottom-right'] {
     translate: 0% 0%;
   }
 
-  [part='rotation-bottom-left'] {
+  [part$='bottom-left'] {
     top: 100%;
     left: 0;
+  }
+
+  [part='rotation-bottom-left'] {
     translate: -100% 0%;
   }
 
-  :host(:not(:focus-within)) [part^='resize'],
-  :host(:not(:focus-within)) [part^='rotation'] {
-    display: none;
+  :host(:focus-within) :is([part^='resize'], [part^='rotation']) {
+    display: block;
   }
 `;
 
