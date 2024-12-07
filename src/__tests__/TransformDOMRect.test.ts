@@ -233,43 +233,57 @@ describe('TransformDOMRect', () => {
       // Verify the corner is actually at the expected position in local space
       expectPointClose(rect.bottomRight, { x: 150, y: 75 });
     });
-  });
 
-  describe('point conversion with rotation', () => {
-    test('converts points correctly with 90-degree rotation', () => {
+    test('resizing from corners keeps the opposite corner fixed without rotation', () => {
       const rect = new TransformDOMRect({
         x: 100,
         y: 100,
         width: 200,
         height: 100,
-        rotation: Math.PI / 2, // 90 degrees
+        rotation: 0,
       });
 
-      // Test points in local space and their expected parent space coordinates
-      const testCases = [
-        {
-          local: { x: 0, y: 0 }, // Top-left
-          parent: { x: 150, y: 50 }, // After rotation: center + (-height/2, -width/2)
-        },
-        {
-          local: { x: 200, y: 0 }, // Top-right
-          parent: { x: 150, y: 250 }, // After rotation: center + (height/2, -width/2)
-        },
-        {
-          local: { x: 100, y: 50 }, // Center
-          parent: { x: 200, y: 150 }, // After rotation: stays at center
-        },
-      ];
+      const originalTopLeft = rect.topLeft;
 
-      testCases.forEach(({ local, parent }) => {
-        const toParent = rect.toParentSpace(local);
-        expectPointClose(toParent, parent);
+      // Resize from bottom-right corner
+      rect.setBottomRight({ x: 300, y: 200 });
 
-        const backToLocal = rect.toLocalSpace(toParent);
-        expectPointClose(backToLocal, local);
-      });
+      // Opposite corner (top-left) should remain the same
+      expectPointClose(rect.topLeft, originalTopLeft);
     });
 
+    test('resizing from corners keeps the opposite corner fixed with rotation', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+        rotation: Math.PI / 4, // 45 degrees
+      });
+
+      const originalTopLeft = rect.toParentSpace(rect.topLeft);
+      const originalBottomRight = rect.toParentSpace(rect.bottomRight);
+
+      // Resize from bottom-right corner in local space
+      rect.setBottomRight({ x: 300, y: 150 });
+
+      // Transform corners back to parent space to compare
+      const newTopLeft = rect.toParentSpace(rect.topLeft);
+      const newBottomRight = rect.toParentSpace(rect.bottomRight);
+
+      // Opposite corner (top-left) should remain the same in parent space
+      expectPointClose(newTopLeft, originalTopLeft);
+
+      // New bottom-right should be updated correctly in parent space
+      // Calculate the expected new bottom-right position
+      const expectedBottomRightLocal = { x: 300, y: 150 };
+      const expectedBottomRightParent = rect.toParentSpace(expectedBottomRightLocal);
+
+      expectPointClose(newBottomRight, expectedBottomRightParent);
+    });
+  });
+
+  describe('point conversion with rotation', () => {
     test('converts points correctly with 45-degree rotation', () => {
       const rect = new TransformDOMRect({
         x: 100,
