@@ -294,46 +294,139 @@ export class TransformDOMRect implements DOMRect {
   }
 
   /**
-   * Sets the **top-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * Sets the **top-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly,
+   * and keeps the **bottom-right corner** fixed in the **parent space**.
    * @param point - The new top-left corner point in local coordinate space.
    */
   setTopLeft(point: Point) {
+    // Compute the parent-space position of the bottom-right corner before resizing
+    const bottomRightBefore = this.toParentSpace(this.bottomRight);
+
+    // Update x, y, width, and height
+    const deltaWidth = this._width - point.x;
+    const deltaHeight = this._height - point.y;
+
     this._x += point.x;
     this._y += point.y;
-    this._width -= point.x;
-    this._height -= point.y;
+    this._width = deltaWidth;
+    this._height = deltaHeight;
+
+    // Update transformation matrices after changing size and position
+    this.#updateMatrices();
+
+    // Compute the parent-space position of the bottom-right corner after resizing
+    const bottomRightAfter = this.toParentSpace(this.bottomRight);
+
+    // Compute the difference in position
+    const deltaX = bottomRightAfter.x - bottomRightBefore.x;
+    const deltaY = bottomRightAfter.y - bottomRightBefore.y;
+
+    // Adjust x and y to compensate for the movement
+    this._x -= deltaX;
+    this._y -= deltaY;
+
+    // Update matrices again after adjusting position
     this.#updateMatrices();
   }
 
   /**
-   * Sets the **top-right** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * Sets the **top-right** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly,
+   * and keeps the **bottom-left corner** fixed in the **parent space**.
    * @param point - The new top-right corner point in local coordinate space.
    */
   setTopRight(point: Point) {
+    // Compute the parent-space position of the bottom-left corner before resizing
+    const bottomLeftBefore = this.toParentSpace(this.bottomLeft);
+
+    // Update y, width, and height
+    const deltaWidth = point.x;
+    const deltaHeight = this._height - point.y;
+
     this._y += point.y;
-    this._width = point.x;
-    this._height -= point.y;
+    this._width = deltaWidth;
+    this._height = deltaHeight;
+
+    // Update transformation matrices after changing size and position
+    this.#updateMatrices();
+
+    // Compute the parent-space position of the bottom-left corner after resizing
+    const bottomLeftAfter = this.toParentSpace(this.bottomLeft);
+
+    // Compute the difference in position
+    const deltaX = bottomLeftAfter.x - bottomLeftBefore.x;
+    const deltaY = bottomLeftAfter.y - bottomLeftBefore.y;
+
+    // Adjust x and y to compensate for the movement
+    this._x -= deltaX;
+    this._y -= deltaY;
+
+    // Update matrices again after adjusting position
     this.#updateMatrices();
   }
 
   /**
-   * Sets the **bottom-right** corner of the rectangle in **local space**, adjusting the width and height accordingly.
+   * Sets the **bottom-right** corner of the rectangle in **local space**, adjusting the width and height accordingly,
+   * and keeps the **top-left corner** fixed in the **parent space**.
    * @param point - The new bottom-right corner point in local coordinate space.
    */
   setBottomRight(point: Point) {
+    // Compute the parent-space position of the top-left corner before resizing
+    const topLeftBefore = this.toParentSpace(this.topLeft);
+
+    // Update width and height
     this._width = point.x;
     this._height = point.y;
+
+    // Update transformation matrices after changing size
+    this.#updateMatrices();
+
+    // Compute the parent-space position of the top-left corner after resizing
+    const topLeftAfter = this.toParentSpace(this.topLeft);
+
+    // Compute the difference in position
+    const deltaX = topLeftAfter.x - topLeftBefore.x;
+    const deltaY = topLeftAfter.y - topLeftBefore.y;
+
+    // Adjust x and y to compensate for the movement
+    this._x -= deltaX;
+    this._y -= deltaY;
+
+    // Update matrices again after adjusting position
     this.#updateMatrices();
   }
 
   /**
-   * Sets the **bottom-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly.
+   * Sets the **bottom-left** corner of the rectangle in **local space**, adjusting the position, width, and height accordingly,
+   * and keeps the **top-right corner** fixed in the **parent space**.
    * @param point - The new bottom-left corner point in local coordinate space.
    */
   setBottomLeft(point: Point) {
+    // Compute the parent-space position of the top-right corner before resizing
+    const topRightBefore = this.toParentSpace(this.topRight);
+
+    // Update x, width, and height
+    const deltaWidth = this._width - point.x;
+    const deltaHeight = point.y;
+
     this._x += point.x;
-    this._width -= point.x;
-    this._height = point.y;
+    this._width = deltaWidth;
+    this._height = deltaHeight;
+
+    // Update transformation matrices after changing size and position
+    this.#updateMatrices();
+
+    // Compute the parent-space position of the top-right corner after resizing
+    const topRightAfter = this.toParentSpace(this.topRight);
+
+    // Compute the difference in position
+    const deltaX = topRightAfter.x - topRightBefore.x;
+    const deltaY = topRightAfter.y - topRightBefore.y;
+
+    // Adjust x and y to compensate for the movement
+    this._x -= deltaX;
+    this._y -= deltaY;
+
+    // Update matrices again after adjusting position
     this.#updateMatrices();
   }
 
