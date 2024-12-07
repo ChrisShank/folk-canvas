@@ -25,21 +25,29 @@
     </style>
   </head>
   <body>
-    <folk-shape x="100" y="100" width="50" height="50"> Hello World </folk-shape>
+    <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
     <folk-shape x="200" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="200" y="275" width="50" height="50"></folk-shape>
+    <folk-shape x="200" y="150" width="50" height="50"></folk-shape>
+    <folk-shape x="200" y="100" width="50" height="50"></folk-shape>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import { collisionDetection } from '../src/common/collision.ts';
+      import { aabbHitDetection } from '../src/common/collision.ts';
 
-      const geometryElements = document.querySelectorAll('folk-shape');
+      const shapes = Array.from(document.querySelectorAll('folk-shape'));
 
       function handleCollision(e) {
-        geometryElements.forEach((el) => {
-          if (el !== e.target && collisionDetection(el.getClientRect(), e.target.getClientRect())) {
-            e.preventDefault();
-          }
-        });
+        for (const shape of shapes) {
+          if (shape === e.target) continue;
+
+          const hit = aabbHitDetection(shape.getTransformDOMRect(), e.target.getTransformDOMRect());
+
+          if (hit === null) continue;
+
+          shape.x -= hit.delta.x;
+          shape.y -= hit.delta.y;
+        }
       }
 
       document.addEventListener('transform', handleCollision);

@@ -62,7 +62,7 @@
     <script type="module">
       import '../src/standalone/folk-shape.ts';
       import './src/record-player.ts';
-      import { collisionDetection } from '../src/common/collision.ts';
+      import { aabbIntersection } from '../src/common/collision.ts';
 
       let proximityDistance = 150;
       const proximitySet = new Set();
@@ -82,9 +82,9 @@
       function updateFlowerProximity(flower) {
         const alreadyIntersection = proximitySet.has(flower);
         // TODO: refactor this hack once resizing and the vertices API are figured out
-        const isNowIntersecting = collisionDetection(
-          recordPlayerGeometry.getClientRect(),
-          flower.getClientRect(),
+        const isNowIntersecting = aabbIntersection(
+          recordPlayerGeometry.getTransformDOMRect(),
+          flower.getTransformDOMRect(),
           proximityDistance
         );
 

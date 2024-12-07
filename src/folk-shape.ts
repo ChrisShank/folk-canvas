@@ -182,8 +182,10 @@ export class FolkShape extends HTMLElement {
   }
 
   set x(x) {
+    if (this.#rect.x === x) return;
+    this.#previousRect.x = this.#rect.x;
     this.#rect.x = x;
-    this.#requestUpdate('x');
+    this.#requestUpdate();
   }
 
   get y() {
@@ -191,8 +193,10 @@ export class FolkShape extends HTMLElement {
   }
 
   set y(y) {
+    if (this.#rect.y === y) return;
+    this.#previousRect.y = this.#rect.y;
     this.#rect.y = y;
-    this.#requestUpdate('y');
+    this.#requestUpdate();
   }
 
   get width(): number {
@@ -203,13 +207,14 @@ export class FolkShape extends HTMLElement {
   }
 
   set width(width: Dimension) {
+    if (this.#attrWidth === width) return;
     if (width === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
       resizeObserver.unobserve(this, this.#onAutoResize);
     }
     this.#attrWidth = width;
-    this.#requestUpdate('width');
+    this.#requestUpdate();
   }
 
   get height(): number {
@@ -220,6 +225,7 @@ export class FolkShape extends HTMLElement {
   }
 
   set height(height: Dimension) {
+    if (this.#attrHeight === height) return;
     if (height === 'auto') {
       resizeObserver.observe(this, this.#onAutoResize);
     } else if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
@@ -227,7 +233,7 @@ export class FolkShape extends HTMLElement {
     }
 
     this.#attrHeight = height;
-    this.#requestUpdate('height');
+    this.#requestUpdate();
   }
 
   get rotation(): number {
@@ -235,8 +241,10 @@ export class FolkShape extends HTMLElement {
   }
 
   set rotation(rotation: number) {
+    if (this.#rect.rotation === rotation) return;
+    this.#previousRect.rotation = this.#rect.rotation;
     this.#rect.rotation = rotation;
-    this.#requestUpdate('rotation');
+    this.#requestUpdate();
   }
 
   #rect: TransformDOMRect;
@@ -364,13 +372,11 @@ export class FolkShape extends HTMLElement {
       if (event.altKey) {
         switch (event.key) {
           case 'ArrowLeft':
-            this.#rect.rotation -= ROTATION_DELTA;
-            this.#requestUpdate('rotation');
+            this.rotation -= ROTATION_DELTA;
             event.preventDefault();
             return;
           case 'ArrowRight':
-            this.#rect.rotation += ROTATION_DELTA;
-            this.#requestUpdate('rotation');
+            this.rotation += ROTATION_DELTA;
             event.preventDefault();
             return;
         }
@@ -378,23 +384,19 @@ export class FolkShape extends HTMLElement {
 
       switch (event.key) {
         case 'ArrowLeft':
-          this.#rect.x -= MOVEMENT_DELTA;
-          this.#requestUpdate('x');
+          this.x -= MOVEMENT_DELTA;
           event.preventDefault();
           return;
         case 'ArrowRight':
-          this.#rect.x += MOVEMENT_DELTA;
-          this.#requestUpdate('x');
+          this.x += MOVEMENT_DELTA;
           event.preventDefault();
           return;
         case 'ArrowUp':
-          this.#rect.y -= MOVEMENT_DELTA;
-          this.#requestUpdate('y');
+          this.y -= MOVEMENT_DELTA;
           event.preventDefault();
           return;
         case 'ArrowDown':
-          this.#rect.y += MOVEMENT_DELTA;
-          this.#requestUpdate('y');
+          this.y += MOVEMENT_DELTA;
           event.preventDefault();
           return;
       }
@@ -433,10 +435,8 @@ export class FolkShape extends HTMLElement {
           if (target === null) return;
 
           if (target === this) {
-            this.#rect.x += event.movementX;
-            this.#rect.y += event.movementY;
-            this.#requestUpdate('x');
-            this.#requestUpdate('y');
+            this.x += event.movementX;
+            this.y += event.movementY;
             return;
           }
 
@@ -452,9 +452,9 @@ export class FolkShape extends HTMLElement {
           if (handle.startsWith('rotation')) {
             const center = this.#rect.center;
             const currentAngle = Vector.angleFromOrigin({ x: event.clientX, y: event.clientY }, center);
-            this.#rect.rotation = this.#initialRotation + (currentAngle - this.#startAngle);
+            const rotation = this.#initialRotation + (currentAngle - this.#startAngle);
 
-            let degrees = (this.#rect.rotation * 180) / Math.PI;
+            let degrees = (rotation * 180) / Math.PI;
             switch (handle) {
               case 'rotation-ne':
                 degrees = (degrees + 90) % 360;
@@ -470,8 +470,7 @@ export class FolkShape extends HTMLElement {
             const target = event.composedPath()[0] as HTMLElement;
             const rotateCursor = getRotateCursorUrl(degrees);
             target.style.setProperty('cursor', rotateCursor);
-            this.#requestUpdate('rotation');
-
+            this.rotation = rotation;
             return;
           }
 
@@ -495,13 +494,10 @@ export class FolkShape extends HTMLElement {
     }
   }
 
-  #updatedProperties = new Set<string>();
   #isUpdating = false;
 
-  async #requestUpdate(property: string) {
+  async #requestUpdate() {
     if (!this.#isConnected) return;
-
-    this.#updatedProperties.add(property);
 
     if (this.#isUpdating) return;
 
@@ -509,7 +505,6 @@ export class FolkShape extends HTMLElement {
     await true;
     this.#isUpdating = false;
     this.#update();
-    this.#updatedProperties.clear();
   }
 
   // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
@@ -666,9 +661,6 @@ export class FolkShape extends HTMLElement {
       }
     }
 
-    this.#requestUpdate('x');
-    this.#requestUpdate('y');
-    this.#requestUpdate('width');
-    this.#requestUpdate('height');
+    this.#requestUpdate();
   }
 }
