@@ -103,6 +103,127 @@ describe('TransformDOMRect', () => {
 
     expectPointClose(backToLocal, point);
   });
+
+  test('coordinate transformations with rotation and translation', () => {
+    const rect = new TransformDOMRect({
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 100,
+      rotation: Math.PI / 4, // 45 degrees
+    });
+
+    // Test multiple points
+    const testPoints = [
+      { x: -100, y: 100 }, // Origin point
+      { x: 200, y: 150 }, // Middle point
+      { x: 300, y: 200 }, // Far point
+    ];
+
+    testPoints.forEach((point) => {
+      const localPoint = rect.toLocalSpace(point);
+      const backToParent = rect.toParentSpace(localPoint);
+      expectPointClose(backToParent, point);
+    });
+  });
+
+  describe('corner setters', () => {
+    test('setTopLeft maintains rectangle properties', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      });
+
+      rect.setTopLeft({ x: 50, y: 50 });
+      expect(rect.x).toBe(50);
+      expect(rect.y).toBe(50);
+      expect(rect.width).toBe(250); // Increased by 50
+      expect(rect.height).toBe(150); // Increased by 50
+    });
+
+    test('setTopRight maintains rectangle properties', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      });
+
+      rect.setTopRight({ x: 350, y: 50 });
+      expect(rect.x).toBe(100);
+      expect(rect.y).toBe(50);
+      expect(rect.width).toBe(350);
+      expect(rect.height).toBe(150);
+    });
+
+    test('setBottomRight maintains rectangle properties', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      });
+
+      rect.setBottomRight({ x: 350, y: 250 });
+      expect(rect.x).toBe(100);
+      expect(rect.y).toBe(100);
+      expect(rect.width).toBe(350);
+      expect(rect.height).toBe(250);
+    });
+
+    test('setBottomLeft maintains rectangle properties', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      });
+
+      rect.setBottomLeft({ x: 50, y: 250 });
+      expect(rect.x).toBe(50);
+      expect(rect.y).toBe(100);
+      expect(rect.width).toBe(250);
+      expect(rect.height).toBe(250);
+    });
+
+    test('corner setters work with rotation', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+        rotation: Math.PI / 4, // 45 degrees
+      });
+
+      const newTopLeft = rect.toParentSpace({ x: 0, y: 0 });
+      rect.setTopLeft(newTopLeft);
+
+      const transformedTopLeft = rect.toLocalSpace(newTopLeft);
+      expectPointClose(transformedTopLeft, { x: 0, y: 0 });
+    });
+
+    test('setBottomRight works with upside down rotation', () => {
+      const rect = new TransformDOMRect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+        rotation: Math.PI, // 180 degrees - upside down
+      });
+
+      rect.setBottomRight({ x: 350, y: 250 });
+      expect(rect.x).toBe(100);
+      expect(rect.y).toBe(100);
+      expect(rect.width).toBe(250);
+      expect(rect.height).toBe(150);
+
+      // Verify the corner is actually at the expected position
+      const transformedBottomRight = rect.toParentSpace(rect.bottomRight);
+      expectPointClose(transformedBottomRight, { x: 350, y: 250 });
+    });
+  });
 });
 
 describe('TransformDOMRectReadonly', () => {

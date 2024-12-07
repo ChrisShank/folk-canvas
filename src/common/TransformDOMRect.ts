@@ -173,19 +173,19 @@ export class TransformDOMRect implements DOMRect {
   }
 
   setTopLeft(point: Point) {
-    const oldBottomRight = this.bottomRight;
-    this._width = oldBottomRight.x - point.x;
-    this._height = oldBottomRight.y - point.y;
+    const oldBottomRight = this.toParentSpace(this.bottomRight);
     this._x = point.x;
     this._y = point.y;
+    this._width = oldBottomRight.x - point.x;
+    this._height = oldBottomRight.y - point.y;
     this.#updateMatrices();
   }
 
   setTopRight(point: Point) {
-    const oldBottomLeft = this.bottomLeft;
-    this._width = point.x;
-    this._height = oldBottomLeft.y - point.y;
+    const oldBottomLeft = this.toParentSpace(this.bottomLeft);
     this._y = point.y;
+    this._width = point.x - this._x;
+    this._height = oldBottomLeft.y - point.y;
     this.#updateMatrices();
   }
 
@@ -196,10 +196,10 @@ export class TransformDOMRect implements DOMRect {
   }
 
   setBottomLeft(point: Point) {
-    const oldTopRight = this.topRight;
-    this._width = oldTopRight.x - point.x;
-    this._height = point.y;
+    const oldTopRight = this.toParentSpace(this.topRight);
     this._x = point.x;
+    this._width = oldTopRight.x - point.x;
+    this._height = point.y - this._y;
     this.#updateMatrices();
   }
 
