@@ -14,16 +14,22 @@ export class Hit {
   normal: Point = { x: 0, y: 0 };
 }
 
-/** Test collisions of axis-aligned bounding boxes. */
-export function aabbHitDetection(rect1: DOMRect, rect2: DOMRect, proximity = 0): Hit | null {
-  const dx = rect2.x - rect1.x;
-  const px = rect2.width / 2 + rect1.width / 2 - Math.abs(dx);
+const center = (rect: DOMRectReadOnly) => ({
+  x: rect.x + rect.width / 2,
+  y: rect.y + rect.height / 2,
+});
 
+/** Test collisions of axis-aligned bounding boxes. */
+export function aabbHitDetection(rect1: DOMRectReadOnly, rect2: DOMRectReadOnly): Hit | null {
+  const center1 = center(rect1);
+  const center2 = center(rect2);
+
+  const dx = center1.x - center2.x;
+  const px = (rect2.width + rect1.width) / 2 - Math.abs(dx);
   if (px <= 0) return null;
 
-  const dy = rect2.y - rect1.y;
-  const py = rect2.height / 2 + rect1.height / 2 - Math.abs(dy);
-
+  const dy = center2.y - center1.y;
+  const py = (rect2.height + rect1.height) / 2 - Math.abs(dy);
   if (py <= 0) return null;
 
   const hit = new Hit();
@@ -32,14 +38,14 @@ export function aabbHitDetection(rect1: DOMRect, rect2: DOMRect, proximity = 0):
     const sx = sign(dx);
     hit.delta.x = px * sx;
     hit.normal.x = sx;
-    hit.pos.x = rect1.x + (rect1.width / 2) * sx;
-    hit.pos.y = rect2.y;
+    hit.pos.x = center1.x + (rect1.width / 2) * sx;
+    hit.pos.y = center2.y;
   } else {
     const sy = sign(dy);
     hit.delta.y = py * sy;
     hit.normal.y = sy;
     hit.pos.x = rect2.x;
-    hit.pos.y = rect1.y + (rect1.height / 2) * sy;
+    hit.pos.y = center2.y + (rect1.height / 2) * sy;
   }
 
   return hit;
