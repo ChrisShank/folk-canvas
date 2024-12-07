@@ -418,6 +418,50 @@ describe('TransformDOMRect', () => {
       expect(parentDiagonal).toBeCloseTo(localDiagonal);
     });
   });
+
+  describe('transform and rotate origins', () => {
+    test('constructor initializes with default origins at center', () => {
+      const rect = new DOMRectTransform();
+      expectPointClose(rect.transformOrigin, { x: 0.5, y: 0.5 });
+      expectPointClose(rect.rotateOrigin, { x: 0.5, y: 0.5 });
+    });
+
+    test('constructor accepts custom origins', () => {
+      const rect = new DOMRectTransform({
+        transformOrigin: { x: 0, y: 0 },
+        rotateOrigin: { x: 1, y: 1 },
+      });
+      expectPointClose(rect.transformOrigin, { x: 0, y: 0 });
+      expectPointClose(rect.rotateOrigin, { x: 1, y: 1 });
+    });
+
+    test('maintains point relationships with custom origins', () => {
+      const rect = new DOMRectTransform({
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 100,
+        rotation: Math.PI / 3, // 60 degrees
+        transformOrigin: { x: 0.25, y: 0.75 },
+        rotateOrigin: { x: 0.75, y: 0.25 },
+      });
+
+      // Test multiple points
+      const points = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+
+      // Transform all points to parent space and back
+      points.forEach((point) => {
+        const transformed = rect.toParentSpace(point);
+        const backToLocal = rect.toLocalSpace(transformed);
+        expectPointClose(backToLocal, point);
+      });
+    });
+  });
 });
 
 describe('TransformDOMRectReadonly', () => {
