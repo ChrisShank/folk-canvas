@@ -347,22 +347,6 @@ export class FolkShape extends HTMLElement {
         // Get the corner coordinates of the shape for the corresponding handle
         const rect = this.#rect;
 
-        let vector: Point;
-        switch (event.key) {
-          case 'ArrowUp':
-            vector = { x: 0, y: -MOVEMENT_DELTA };
-            break;
-          case 'ArrowDown':
-            vector = { x: 0, y: MOVEMENT_DELTA };
-            break;
-          case 'ArrowLeft':
-            vector = { x: -MOVEMENT_DELTA, y: 0 };
-            break;
-          case 'ArrowRight':
-            vector = { x: MOVEMENT_DELTA, y: 0 };
-            break;
-        }
-
         // Map handle names to corner points
         const HANDLE_TO_CORNER: Record<string, Point> = {
           'resize-top-left': rect.topLeft,
