@@ -91,17 +91,11 @@
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import { FolkMap } from '../src/folk-map.ts';
-      import { FolkWeather } from '../src/folk-weather.ts';
+      import { FolkMap } from '../src/standalone/folk-map.ts';
+      import { FolkWeather } from '../src/standalone/folk-weather.ts';
       import { GeoWiki } from './src/geo-wiki.ts';
-      import { FolkCluster, FolkProximity } from '../src/folk-proximity.ts';
-      import { FolkEventPropagator } from '../src/folk-event-propagator.ts';
-
-      FolkMap.define();
-      FolkCluster.define();
-      FolkProximity.define();
-      FolkWeather.define();
-      FolkEventPropagator.define();
+      import { FolkCluster } from '../src/standalone/folk-proximity.ts';
+      import '../src/standalone/folk-event-propagator.ts';
 
       FolkCluster.registerElement({
         constructor: FolkMap,
