@@ -1,6 +1,6 @@
 import { css } from './common/tags.ts';
 import { FolkRope } from './folk-rope.ts';
-import * as parser from '@babel/parser';
+// import * as parser from '@babel/parser';
 import type { Node } from '@babel/types';
 
 const styles = css`
@@ -199,7 +199,7 @@ to.${key} = ${value};`);
   };
 }
 
-function parseAst(functionBody: string) {
+/* function parseAst(functionBody: string) {
   const ast = parser.parse(functionBody, {
     sourceType: 'script',
   });
@@ -238,4 +238,4 @@ function parseAst(functionBody: string) {
 
   console.log('Properties accessed on to:', Array.from(toProps));
   console.log('Properties accessed on from:', Array.from(fromProps));
-}
+} */
