@@ -25,17 +25,24 @@ export class FolkBaseSet extends HTMLElement {
   }
 
   #sourcesMap = new Map<Element, DOMRectReadOnly>();
-  get sourcesMap() {
+  get sourcesMap(): ReadonlyMap<Element, DOMRectReadOnly> {
     return this.#sourcesMap;
   }
 
-  get sourceElements() {
-    return Array.from(this.#sourcesMap.keys());
+  get sourceRects() {
+    return Array.from(this.#sourcesMap.values());
+  }
+
+  #sourceElements = new Set<Element>();
+  get sourceElements(): ReadonlySet<Element> {
+    return this.#sourceElements;
   }
 
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
     this.#sourcesMap.set(entry.target, entry.contentRect);
-    this.update();
+    if (this.#sourceElements.size === this.#sourcesMap.size) {
+      this.update();
+    }
   };
 
   connectedCallback() {
@@ -48,14 +55,12 @@ export class FolkBaseSet extends HTMLElement {
 
   observeSources() {
     const elements = this.sources ? document.querySelectorAll(this.sources) : [];
-    const childElements = new Set(this.querySelectorAll('*'));
+    const childElements = new Set(this.children);
     const sourceElements = new Set(elements).union(childElements);
 
-    const currentElements = new Set(this.#sourcesMap.keys());
+    const elementsToObserve = sourceElements.difference(this.#sourceElements);
 
-    const elementsToObserve = sourceElements.difference(currentElements);
-
-    const elementsToUnobserve = currentElements.difference(sourceElements);
+    const elementsToUnobserve = this.#sourceElements.difference(sourceElements);
 
     this.unobserveSources(elementsToUnobserve);
 
@@ -63,13 +68,14 @@ export class FolkBaseSet extends HTMLElement {
       folkObserver.observe(el, this.#sourcesCallback);
     }
 
-    this.update();
+    this.#sourceElements = sourceElements;
   }
 
-  unobserveSources(elements: Iterable<Element> = this.#sourcesMap.keys()) {
+  unobserveSources(elements: Set<Element> = this.#sourceElements) {
     for (const el of elements) {
       folkObserver.unobserve(el, this.#sourcesCallback);
       this.#sourcesMap.delete(el);
+      this.#sourceElements.delete(el);
     }
   }
 

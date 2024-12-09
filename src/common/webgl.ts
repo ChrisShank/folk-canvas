@@ -34,8 +34,7 @@ export class WebGLUtils {
 
   static createWebGLCanvas(
     width: number,
-    height: number,
-    parent: HTMLElement
+    height: number
   ): { gl: WebGL2RenderingContext | undefined; canvas: HTMLCanvasElement } {
     const canvas = document.createElement('canvas');
 
@@ -52,8 +51,6 @@ export class WebGLUtils {
       console.error('WebGL2 is not available.');
       return { gl: undefined, canvas };
     }
-
-    parent.appendChild(canvas);
     return { gl, canvas };
   }
 

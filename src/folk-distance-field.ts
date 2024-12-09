@@ -1,5 +1,8 @@
+import { DOMRectTransform } from './common/DOMRectTransform.ts';
 import { frag, vert } from './common/tags.ts';
+import { Point } from './common/types.ts';
 import { WebGLUtils } from './common/webgl.ts';
+import { FolkBaseSet } from './folk-base-set.ts';
 import { FolkShape } from './folk-shape.ts';
 
 /**
@@ -7,12 +10,18 @@ import { FolkShape } from './folk-shape.ts';
  * It renders shapes as seed points and computes the distance from each pixel to the nearest seed point.
  * Previous CPU-based implementation: github.com/folk-canvas/folk-canvas/commit/fdd7fb9d84d93ad665875cad25783c232fd17bcc
  */
-export class FolkDistanceField extends HTMLElement {
+export class FolkDistanceField extends FolkBaseSet {
   static tagName = 'folk-distance-field';
+
+  static override define() {
+    FolkShape.define();
+    super.define();
+  }
+
+  #shadow = this.attachShadow({ mode: 'open' });
 
   private textures: WebGLTexture[] = [];
 
-  private shapes!: NodeListOf<FolkShape>;
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
@@ -29,52 +38,48 @@ export class FolkDistanceField extends HTMLElement {
 
   private isPingTexture: boolean = true;
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    FolkShape.define();
-    customElements.define(this.tagName, this);
+  constructor() {
+    super();
+
+    this.#shadow.appendChild(document.createElement('slot'));
   }
 
   connectedCallback() {
-    this.shapes = document.querySelectorAll('folk-shape');
     this.initWebGL();
     this.initShaders();
     this.initPingPongTextures();
-    this.populateSeedPoints();
-    this.runJumpFloodingAlgorithm();
 
     window.addEventListener('resize', this.handleResize);
-    this.shapes.forEach((geometry) => {
-      geometry.addEventListener('transform', this.handleGeometryUpdate);
-    });
+
+    super.connectedCallback();
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
+
     window.removeEventListener('resize', this.handleResize);
-    this.shapes.forEach((geometry) => {
-      geometry.removeEventListener('transform', this.handleGeometryUpdate);
-    });
     this.cleanupWebGLResources();
   }
 
   private initWebGL() {
-    const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight, this);
+    const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight);
 
     if (!gl || !canvas) {
       throw new Error('Failed to initialize WebGL context.');
     }
 
     this.canvas = canvas;
+    this.#shadow.prepend(canvas);
     this.glContext = gl;
   }
 
   /**
    * Handles updates to geometry elements by re-initializing seed points and rerunning the JFA.
    */
-  private handleGeometryUpdate = () => {
+  override update() {
     this.populateSeedPoints();
     this.runJumpFloodingAlgorithm();
-  };
+  }
 
   /**
    * Initializes all shader programs used in rendering.
@@ -149,12 +154,23 @@ export class FolkDistanceField extends HTMLElement {
     const containerHeight = this.clientHeight;
 
     // Collect positions and assign unique IDs to all shapes
-    this.shapes.forEach((geometry, index) => {
-      const rect = geometry.getTransformDOMRect();
-      const topLeftParent = rect.toParentSpace(rect.topLeft);
-      const topRightParent = rect.toParentSpace(rect.topRight);
-      const bottomLeftParent = rect.toParentSpace(rect.bottomLeft);
-      const bottomRightParent = rect.toParentSpace(rect.bottomRight);
+    this.sourceRects.forEach((rect, index) => {
+      let topLeftParent: Point;
+      let topRightParent: Point;
+      let bottomLeftParent: Point;
+      let bottomRightParent: Point;
+
+      if (rect instanceof DOMRectTransform) {
+        topLeftParent = rect.toParentSpace(rect.topLeft);
+        topRightParent = rect.toParentSpace(rect.topRight);
+        bottomLeftParent = rect.toParentSpace(rect.bottomLeft);
+        bottomRightParent = rect.toParentSpace(rect.bottomRight);
+      } else {
+        topLeftParent = { x: rect.left, y: rect.top };
+        topRightParent = { x: rect.right, y: rect.top };
+        bottomLeftParent = { x: rect.left, y: rect.bottom };
+        bottomRightParent = { x: rect.right, y: rect.bottom };
+      }
 
       // Convert rotated coordinates to NDC using container dimensions
       const x1 = (topLeftParent.x / containerWidth) * 2 - 1;
@@ -238,7 +254,7 @@ export class FolkDistanceField extends HTMLElement {
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(this.shapeVAO);
-    gl.drawArrays(gl.TRIANGLES, 0, this.shapes.length * 6);
+    gl.drawArrays(gl.TRIANGLES, 0, this.sourcesMap.size * 6);
 
     // Unbind VAO and framebuffer
     gl.bindVertexArray(null);
@@ -443,9 +459,6 @@ export class FolkDistanceField extends HTMLElement {
     if (this.seedProgram) {
       gl.deleteProgram(this.seedProgram);
     }
-
-    // Clear other references
-    this.shapes = null!;
   }
 }
 
