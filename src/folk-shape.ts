@@ -102,13 +102,19 @@ const styles = css`
     transform: translate(-50%, -50%);
     border: 1.5px solid hsl(214, 84%, 56%);
     border-radius: 2px;
+
+    @media (any-pointer: coarse) {
+      width: 13px;
+    }
   }
 
   [part^='rotation'] {
-    border-radius: 0px;
     opacity: 0;
     width: 16px;
-    aspect-ratio: 1;
+
+    @media (any-pointer: coarse) {
+      width: 20px;
+    }
   }
 
   [part$='top-left'] {
@@ -177,8 +183,6 @@ export class FolkShape extends HTMLElement {
 
   #handles: Record<ResizeHandle | RotateHandle, HTMLElement>;
 
-  // Used for rotation handling, would love a better way to do this that avoids this clutter.
-  #initialRotation = 0;
   #startAngle = 0;
 
   get x() {
@@ -330,7 +334,6 @@ export class FolkShape extends HTMLElement {
 
         // Setup rotation initial state if needed
         if (handle?.startsWith('rotation')) {
-          this.#initialRotation = this.#rect.rotation;
           const parentRotateOrigin = this.#rect.toParentSpace({
             x: this.#rect.width * this.#rect.rotateOrigin.x,
             y: this.#rect.height * this.#rect.rotateOrigin.y,
