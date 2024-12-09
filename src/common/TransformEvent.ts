@@ -1,5 +1,11 @@
 import type { DOMRectTransformReadonly } from './DOMRectTransform';
 
+declare global {
+  interface HTMLElementEventMap {
+    transform: TransformEvent;
+  }
+}
+
 // TODO: expose previous and current rects
 export class TransformEvent extends Event {
   readonly #current: DOMRectTransformReadonly;

@@ -1,7 +1,6 @@
 export interface ClientRectObserverEntry {
   target: Element;
   contentRect: DOMRectReadOnly;
-  isAppearing: boolean;
 }
 
 export interface ClientRectObserverCallback {
@@ -112,7 +111,6 @@ export class ClientRectObserver {
       return {
         target,
         contentRect,
-        isAppearing: false,
       };
     }
 
@@ -147,7 +145,6 @@ export class ClientRectObserver {
         width,
         height,
       }),
-      isAppearing: true,
     };
   }
 
@@ -233,7 +230,7 @@ export class ClientRectObserverManager {
       this.#vo.observe(target);
       this.#elementMap.set(target, (callbacks = new Set()));
     } else {
-      callback({ target, contentRect: target.getBoundingClientRect(), isAppearing: true });
+      callback({ target, contentRect: target.getBoundingClientRect() });
     }
 
     callbacks.add(callback);

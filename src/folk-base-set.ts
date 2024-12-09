@@ -1,6 +1,7 @@
-import { ClientRectObserverEntry, ClientRectObserverManager } from './common/client-rect-observer.ts';
+import { ClientRectObserverEntry } from './common/client-rect-observer.ts';
+import { FolkObserver } from './common/folk-observer.ts';
 
-const clientRectObserver = new ClientRectObserverManager();
+const folkObserver = new FolkObserver();
 
 const defaultRect = DOMRectReadOnly.fromRect();
 
@@ -57,8 +58,7 @@ export class FolkBaseSet extends HTMLElement {
     this.unobserveSources(elementsToUnobserve);
 
     for (const el of elementsToObserve) {
-      this.#sourcesMap.set(el, defaultRect);
-      clientRectObserver.observe(el, this.#sourcesCallback);
+      folkObserver.observe(el, this.#sourcesCallback);
     }
 
     this.update();
@@ -66,7 +66,7 @@ export class FolkBaseSet extends HTMLElement {
 
   unobserveSources(elements: Iterable<Element> = this.#sourcesMap.keys()) {
     for (const el of elements) {
-      clientRectObserver.unobserve(el, this.#sourcesCallback);
+      folkObserver.unobserve(el, this.#sourcesCallback);
       this.#sourcesMap.delete(el);
     }
   }
