@@ -1,11 +1,26 @@
 import { FolkBaseSet } from './folk-base-set';
 import { verticesToPolygon } from './common/utils';
 import type { Point } from './common/types';
+import { css, html } from './common/tags';
+
 declare global {
   interface HTMLElementTagNameMap {
     'folk-hull': FolkHull;
   }
 }
+
+const styles = css`
+  :host {
+    z-index: -1;
+  }
+
+  #hull {
+    background-color: var(--folk-hull-bg, #b4d8f644);
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+  }
+`;
 
 export class FolkHull extends FolkBaseSet {
   static tagName = 'folk-hull';
@@ -16,6 +31,26 @@ export class FolkHull extends FolkBaseSet {
     return this.#hull;
   }
 
+  #shadow = this.attachShadow({ mode: 'open' });
+
+  #slot = document.createElement('slot');
+  #hullEl = document.createElement('div');
+
+  constructor() {
+    super();
+
+    this.#hullEl.id = 'hull';
+
+    this.#shadow.adoptedStyleSheets.push(styles);
+
+    this.#shadow.append(this.#hullEl, this.#slot);
+
+    this.#slot.addEventListener('slotchange', this.#onSlotchange);
+  }
+
+  // we might not need to react to the first slot change
+  #onSlotchange = () => this.observeSources();
+
   update() {
     if (this.sourcesMap.size === 0) {
       this.style.clipPath = '';
@@ -24,7 +59,7 @@ export class FolkHull extends FolkBaseSet {
 
     const rects = Array.from(this.sourcesMap.values());
     this.#hull = makeHull(rects);
-    this.style.clipPath = verticesToPolygon(this.#hull);
+    this.#hullEl.style.clipPath = verticesToPolygon(this.#hull);
   }
 }
 
