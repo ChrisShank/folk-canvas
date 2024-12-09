@@ -18,6 +18,10 @@
 
       folk-shape {
         background: rgb(187, 178, 178);
+
+        &:hover {
+          z-index: 2;
+        }
       }
 
       folk-hull {
@@ -38,14 +42,13 @@
     <folk-shape x="50" y="100" width="50" height="50"></folk-shape>
     <folk-shape x="200" y="200" width="50" height="50"></folk-shape>
     <folk-shape x="100" y="300" width="50" height="50"></folk-shape>
-
     <folk-hull sources="h1, body > folk-shape"></folk-hull>
 
-    <folk-hull sources="h1">
+    <!-- <folk-hull sources="h1">
       <folk-shape x="350" y="100" width="50" height="50"></folk-shape>
       <folk-shape x="500" y="200" width="50" height="50"></folk-shape>
       <folk-shape x="400" y="300" width="50" height="50"></folk-shape>
-    </folk-hull>
+    </folk-hull> -->
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';

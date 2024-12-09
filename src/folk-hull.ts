@@ -11,14 +11,17 @@ declare global {
 
 const styles = css`
   :host {
-    z-index: -1;
+    pointer-events: none;
   }
 
   #hull {
     background-color: var(--folk-hull-bg, #b4d8f644);
     height: 100%;
     width: 100%;
-    pointer-events: none;
+  }
+
+  ::slotted(*) {
+    pointer-events: auto;
   }
 `;
 
