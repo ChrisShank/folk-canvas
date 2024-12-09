@@ -38,6 +38,8 @@ export class FolkDistanceField extends FolkBaseSet {
 
   private isPingTexture: boolean = true;
 
+  private vertexCount = 0; // to track actual vertex count
+
   constructor() {
     super();
 
@@ -153,6 +155,11 @@ export class FolkDistanceField extends FolkBaseSet {
     const containerWidth = this.clientWidth;
     const containerHeight = this.clientHeight;
 
+    // Reset vertex count
+    this.vertexCount = 0;
+
+    console.log(this.sourceRects);
+
     // Collect positions and assign unique IDs to all shapes
     this.sourceRects.forEach((rect, index) => {
       let topLeftParent: Point;
@@ -182,6 +189,8 @@ export class FolkDistanceField extends FolkBaseSet {
       const x4 = (bottomRightParent.x / containerWidth) * 2 - 1;
       const y4 = -((bottomRightParent.y / containerHeight) * 2 - 1);
 
+      console.log('rect', { x1, y1, x2, y2, x3, y3, x4, y4 });
+
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
       // Represent each rectangle as two triangles, including shapeID as the z component
@@ -206,6 +215,9 @@ export class FolkDistanceField extends FolkBaseSet {
         y4,
         shapeID
       );
+
+      // Each rect adds 6 vertices (2 triangles)
+      this.vertexCount += 6;
     });
 
     if (!this.shapeVAO) {
@@ -254,7 +266,7 @@ export class FolkDistanceField extends FolkBaseSet {
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(this.shapeVAO);
-    gl.drawArrays(gl.TRIANGLES, 0, this.sourcesMap.size * 6);
+    gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
 
     // Unbind VAO and framebuffer
     gl.bindVertexArray(null);

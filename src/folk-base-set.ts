@@ -24,13 +24,13 @@ export class FolkBaseSet extends HTMLElement {
     this.observeSources();
   }
 
-  #sourcesMap = new Map<Element, DOMRectReadOnly>();
-  get sourcesMap(): ReadonlyMap<Element, DOMRectReadOnly> {
+  #sourcesMap = new Map<Element, DOMRectReadOnly[]>();
+  get sourcesMap(): ReadonlyMap<Element, DOMRectReadOnly[]> {
     return this.#sourcesMap;
   }
 
   get sourceRects() {
-    return Array.from(this.#sourcesMap.values());
+    return Array.from(this.#sourcesMap.values()).flat();
   }
 
   #sourceElements = new Set<Element>();
@@ -39,11 +39,32 @@ export class FolkBaseSet extends HTMLElement {
   }
 
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
-    this.#sourcesMap.set(entry.target, entry.contentRect);
+    if (entry.target.textContent?.trim()) {
+      const wordRects = this.getWordRects(entry.target);
+      this.#sourcesMap.set(entry.target, wordRects);
+    } else {
+      this.#sourcesMap.set(entry.target, [entry.contentRect]);
+    }
+
     if (this.#sourceElements.size === this.#sourcesMap.size) {
       this.update();
     }
   };
+
+  private getWordRects(element: Element): DOMRectReadOnly[] {
+    const textNode = element.firstChild;
+    if (textNode?.nodeType !== Node.TEXT_NODE) return [];
+
+    const text = textNode.textContent || '';
+    const wordMatches = text.matchAll(/\S+/g);
+
+    return Array.from(wordMatches).map((match) => {
+      const range = document.createRange();
+      range.setStart(textNode, match.index!);
+      range.setEnd(textNode, match.index! + match[0].length);
+      return DOMRectReadOnly.fromRect(range.getBoundingClientRect());
+    });
+  }
 
   connectedCallback() {
     this.observeSources();
