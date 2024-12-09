@@ -36,18 +36,19 @@ export class FolkCluster extends FolkHull {
   #data = new Map();
 
   isElementInCluster(element: FolkShape) {
-    return this.sourceElements.includes(element);
+    return this.sourceElements.has(element);
   }
 
   isElementInProximity(element: FolkShape) {
-    for (const el of this.sourceElements as FolkShape[]) {
-      if (aabbIntersection(el.getTransformDOMRect(), element.getTransformDOMRect(), PROXIMITY)) return true;
+    for (const el of this.sourceElements) {
+      if (aabbIntersection((el as FolkShape).getTransformDOMRect(), element.getTransformDOMRect(), PROXIMITY))
+        return true;
     }
     return false;
   }
 
   addElements(...elements: FolkShape[]) {
-    this.sources = this.sourceElements
+    this.sources = Array.from(this.sourceElements)
       .concat(elements)
       .map((el) => `#${el.id}`)
       .join(', ');
@@ -102,7 +103,7 @@ export class FolkCluster extends FolkHull {
   }
 
   removeElement(geometry: FolkShape) {
-    this.sources = this.sourceElements
+    this.sources = Array.from(this.sourceElements)
       .filter((el) => el !== geometry)
       .map((el) => `#${el.id}`)
       .join(', ');
@@ -173,9 +174,11 @@ export class FolkProximity extends HTMLElement {
         }
       }
     } else {
-      const isInCluster = (cluster.sourceElements as FolkShape[])
+      const isInCluster = Array.from(cluster.sourceElements)
         .filter((element) => el !== element)
-        .some((element) => aabbIntersection(el.getTransformDOMRect(), element.getTransformDOMRect(), PROXIMITY));
+        .some((element) =>
+          aabbIntersection(el.getTransformDOMRect(), (element as FolkShape).getTransformDOMRect(), PROXIMITY)
+        );
 
       if (!isInCluster) {
         cluster.removeElement(el);
