@@ -13,7 +13,7 @@ export class FolkBaseSet extends HTMLElement {
     customElements.define(this.tagName, this);
   }
 
-  #sources = '';
+  #sources = this.getAttribute('sources') || '';
   /** A CSS selector for the sources of the arrow. */
   get sources() {
     return this.#sources;
@@ -39,7 +39,7 @@ export class FolkBaseSet extends HTMLElement {
   };
 
   connectedCallback() {
-    this.sources = this.getAttribute('sources') || this.#sources;
+    this.observeSources();
   }
 
   disconnectedCallback() {
@@ -47,7 +47,9 @@ export class FolkBaseSet extends HTMLElement {
   }
 
   observeSources() {
-    const sourceElements = new Set(document.querySelectorAll(this.sources));
+    const elements = this.sources ? document.querySelectorAll(this.sources) : [];
+    const childElements = new Set(this.querySelectorAll('*'));
+    const sourceElements = new Set(elements).union(childElements);
 
     const currentElements = new Set(this.#sourcesMap.keys());
 
