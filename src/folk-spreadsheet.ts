@@ -1,4 +1,4 @@
-import { css } from './common/tags';
+import { css, html } from './common/tags';
 
 // hardcoded column and row numbers
 const styles = css`
@@ -214,14 +214,14 @@ export class FolkSpreadsheet extends HTMLElement {
         .join('\n')}
     </style>`;
 
-    this.#shadow.innerHTML = `
+    this.#shadow.setHTMLUnsafe(html`
       <s-header empty></s-header>
       <s-columns>${columnHeaders}</s-columns>
       <s-rows>${rowHeaders}</s-rows>
       <s-body><slot></slot></s-body>
       <textarea hidden></textarea>
       ${style}
-    `;
+    `);
 
     this.#textarea = this.#shadow.querySelector('textarea')!;
   }

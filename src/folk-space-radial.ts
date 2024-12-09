@@ -46,7 +46,7 @@ export class FolkSpaceRadial extends HTMLElement {
     this.#centerPoint = document.createElement('div');
     this.#centerPoint.className = 'center-point';
 
-    this.#shadow.innerHTML = html` <slot></slot> `;
+    this.#shadow.setHTMLUnsafe(html`<slot></slot> `);
     this.#shadow.appendChild(this.#centerPoint);
 
     // Listen for changes in the slot to layout children when they change

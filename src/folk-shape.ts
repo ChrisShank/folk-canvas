@@ -258,7 +258,7 @@ export class FolkShape extends HTMLElement {
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    this.#shadow.innerHTML = html` <button part="rotation-top-left" tabindex="-1"></button>
+    this.#shadow.setHTMLUnsafe(html` <button part="rotation-top-left" tabindex="-1"></button>
       <button part="rotation-top-right" tabindex="-1"></button>
       <button part="rotation-bottom-right" tabindex="-1"></button>
       <button part="rotation-bottom-left" tabindex="-1"></button>
@@ -266,7 +266,7 @@ export class FolkShape extends HTMLElement {
       <button part="resize-top-right" aria-label="Resize shape from top right"></button>
       <button part="resize-bottom-right" aria-label="Resize shape from bottom right"></button>
       <button part="resize-bottom-left" aria-label="Resize shape from bottom left"></button>
-      <div><slot></slot></div>`;
+      <div><slot></slot></div>`);
 
     this.#handles = Object.fromEntries(
       Array.from(this.#shadow.querySelectorAll('[part]')).map((el) => [

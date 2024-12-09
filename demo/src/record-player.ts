@@ -1,5 +1,5 @@
 // Ported from https://github.com/bitu467/record-player
-import { css } from '../../src/common/tags';
+import { css, html } from '../../src/common/tags';
 
 const styles = css`
   ::slotted(*) {
@@ -236,18 +236,17 @@ export class RecordPlayer extends HTMLElement {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.adoptedStyleSheets.push(styles);
 
-    shadow.innerHTML = `
-<div class="player">
-  <div class="record">
-      <div class="label"></div>
-  </div>
-  <div class="tone-arm">
-      <div class="control"></div>
-  </div>
-  <button class="btn"></button>
-  <input type="range" class="slider" min="0" max="1" step="0.05" value="0.5">
-</div>
-<slot></slot>`;
+    shadow.setHTMLUnsafe(html` <div class="player">
+        <div class="record">
+          <div class="label"></div>
+        </div>
+        <div class="tone-arm">
+          <div class="control"></div>
+        </div>
+        <button class="btn"></button>
+        <input type="range" class="slider" min="0" max="1" step="0.05" value="0.5" />
+      </div>
+      <slot></slot>`);
 
     this.#volumeInput = shadow.querySelector('input[type="range"]')!;
     this.#volumeInput.addEventListener('input', this);

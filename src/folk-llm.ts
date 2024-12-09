@@ -91,7 +91,7 @@ export class FolkLLM extends HTMLElement {
     const stream = await this.#session.promptStreaming(this.prompt);
 
     for await (const chunk of stream) {
-      this.#shadow.innerHTML = chunk;
+      this.#shadow.setHTMLUnsafe(chunk);
     }
 
     this.dispatchEvent(new Event('finished'));

@@ -129,7 +129,7 @@ async function openFile(showPicker = true) {
   try {
     const text = await fileSaver.open(showPicker);
     const json = JSON.parse(text || '{ "thoughts": [], "connections": [] }');
-    main.innerHTML = renderChainOfThought(json);
+    main.setHTMLUnsafe(renderChainOfThought(json));
   } catch (e) {
     // No file handler was persisted or the file is invalid JSON.
     console.error(e);

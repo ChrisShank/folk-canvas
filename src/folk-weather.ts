@@ -1,3 +1,5 @@
+import { html } from './common/tags';
+
 interface Weather {
   temperature: string;
   windSpeed: string;
@@ -60,12 +62,12 @@ export class FolkWeather extends HTMLElement {
 
   #renderResults() {
     if (this.#results === null) {
-      this.innerHTML = '';
+      this.setHTMLUnsafe('');
       return;
     }
-    this.innerHTML = `
+    this.setHTMLUnsafe(html`
       <p>Temperature: ${this.#results.temperature}</p>
       <p>Wind Speed: ${this.#results.windSpeed}</p>
-    `;
+    `);
   }
 }
