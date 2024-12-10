@@ -34,7 +34,6 @@ export class FolkHull extends FolkBaseSet {
     return this.#hull;
   }
 
-  #slot = document.createElement('slot');
   #hullEl = document.createElement('div');
 
   override firstUpdated(changedProperties: PropertyValues<this>): void {
@@ -42,21 +41,19 @@ export class FolkHull extends FolkBaseSet {
 
     this.#hullEl.id = 'hull';
 
-    this.renderRoot.append(this.#hullEl, this.#slot);
-
-    this.#slot.addEventListener('slotchange', this.#onSlotchange);
+    this.renderRoot.prepend(this.#hullEl);
   }
-
-  // we might not need to react to the first slot change
-  #onSlotchange = () => this.observeSources();
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);
 
     if (this.sourcesMap.size !== this.sourceElements.size) {
       this.style.clipPath = '';
+      this.style.display = 'none';
       return;
     }
+
+    this.style.display = 'block';
 
     this.#hull = makeHull(this.sourceRects);
     this.#hullEl.style.clipPath = verticesToPolygon(this.#hull);

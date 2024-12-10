@@ -6,6 +6,7 @@ import { PropertyValues } from '@lit/reactive-element';
 
 const folkObserver = new FolkObserver();
 
+// TODO: use mutation observer to track the addition an removal of elements
 export class FolkBaseSet extends FolkElement {
   @property({ type: String, reflect: true }) sources = '';
 
@@ -20,25 +21,33 @@ export class FolkBaseSet extends FolkElement {
 
   @state() sourceElements = new Set<Element>();
 
-  #sourcesCallback = (entry: ClientRectObserverEntry) => {
-    this.#sourcesMap.set(entry.target, entry.contentRect);
-    this.requestUpdate();
-  };
+  #slot = document.createElement('slot');
 
-  disconnectedCallback() {
+  override firstUpdated(changedProperties: PropertyValues<this>) {
+    super.firstUpdated(changedProperties);
+
+    this.renderRoot.append(this.#slot);
+
+    this.#slot.addEventListener('slotchange', this.#onSlotchange);
+  }
+
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    super.willUpdate(changedProperties);
+
+    if (changedProperties.has('sources')) {
+      this.#observeSources();
+    }
+  }
+
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this.unobserveSources();
   }
 
-  override update(changedProperties: PropertyValues<this>) {
-    super.update(changedProperties);
+  // we might not need to react to the first slot change
+  #onSlotchange = () => this.#observeSources();
 
-    if (changedProperties.has('sources')) {
-      this.observeSources();
-    }
-  }
-
-  observeSources() {
+  #observeSources() {
     const childElements = new Set(this.children);
     const elements = this.sources ? document.querySelectorAll(this.sources) : [];
     const sourceElements = new Set(elements).union(childElements);
@@ -52,7 +61,13 @@ export class FolkBaseSet extends FolkElement {
     }
 
     this.sourceElements = sourceElements;
+    console.log(this.sourceElements);
   }
+
+  #sourcesCallback = (entry: ClientRectObserverEntry) => {
+    this.#sourcesMap.set(entry.target, entry.contentRect);
+    this.requestUpdate();
+  };
 
   unobserveSources(elements: Set<Element> = this.sourceElements) {
     for (const el of elements) {

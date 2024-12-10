@@ -22,19 +22,47 @@ export class FolkBaseConnection extends FolkElement {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    this.unobserveSource();
-    this.unobserveTarget();
+    this.#unobserveSource();
+    this.#unobserveTarget();
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties);
 
     if (changedProperties.has('source')) {
-      this.observeSource();
+      this.#unobserveSource();
+
+      const vertex = parseVertex(this.source);
+
+      if (vertex) {
+        this.sourceRect = DOMRectReadOnly.fromRect(vertex);
+      } else {
+        this.sourceElement = document.querySelector(this.source);
+
+        if (this.sourceElement === null) {
+          this.sourceRect = null;
+        } else {
+          folkObserver.observe(this.sourceElement, this.#sourceCallback);
+        }
+      }
     }
 
     if (changedProperties.has('target')) {
-      this.observeTarget();
+      this.#unobserveTarget();
+
+      const vertex = parseVertex(this.target);
+
+      if (vertex) {
+        this.targetRect = DOMRectReadOnly.fromRect(vertex);
+      } else {
+        this.targetElement = document.querySelector(this.target);
+
+        if (this.targetElement === null) {
+          this.targetRect = null;
+        } else {
+          folkObserver.observe(this.targetElement, this.#targetCallback);
+        }
+      }
     }
   }
 
@@ -42,25 +70,7 @@ export class FolkBaseConnection extends FolkElement {
     this.sourceRect = entry.contentRect;
   };
 
-  observeSource() {
-    this.unobserveSource();
-
-    const vertex = parseVertex(this.source);
-
-    if (vertex) {
-      this.sourceRect = DOMRectReadOnly.fromRect(vertex);
-    } else {
-      this.sourceElement = document.querySelector(this.source);
-
-      if (this.sourceElement === null) {
-        this.sourceRect = null;
-      } else {
-        folkObserver.observe(this.sourceElement, this.#sourceCallback);
-      }
-    }
-  }
-
-  unobserveSource() {
+  #unobserveSource() {
     if (this.sourceElement === null) return;
 
     folkObserver.unobserve(this.sourceElement, this.#sourceCallback);
@@ -70,25 +80,7 @@ export class FolkBaseConnection extends FolkElement {
     this.targetRect = entry.contentRect;
   };
 
-  observeTarget() {
-    this.unobserveTarget();
-
-    const vertex = parseVertex(this.target);
-
-    if (vertex) {
-      this.targetRect = DOMRectReadOnly.fromRect(vertex);
-    } else {
-      this.targetElement = document.querySelector(this.target);
-
-      if (this.targetElement === null) {
-        this.targetRect = null;
-      } else {
-        folkObserver.observe(this.targetElement, this.#targetCallback);
-      }
-    }
-  }
-
-  unobserveTarget() {
+  #unobserveTarget() {
     if (this.targetElement === null) return;
     folkObserver.unobserve(this.targetElement, this.#targetCallback);
   }
