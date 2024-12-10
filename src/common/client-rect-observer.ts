@@ -21,7 +21,7 @@ export class ClientRectObserver {
   #rootRect = this.#root.getBoundingClientRect();
 
   #entries: ClientRectObserverEntry[] = [];
-  #rafId = 0;
+  #rafId = -1;
 
   #callback: ClientRectObserverCallback;
 
@@ -48,19 +48,18 @@ export class ClientRectObserver {
     }
   });
 
-  #appendEntry(entry: ClientRectObserverEntry) {
+  async #appendEntry(entry: ClientRectObserverEntry) {
+    if (this.#entries.length === 0) {
+      Promise.resolve().then(this.#flush);
+    }
+
     // deduplicate the same target
     this.#entries.push(entry);
-
-    if (this.#rafId === 0) {
-      this.#rafId = requestAnimationFrame(this.#flush);
-    }
   }
 
   #flush = () => {
     const entries = this.#entries;
     this.#entries = [];
-    this.#rafId = 0;
     this.#callback(entries, this);
   };
 

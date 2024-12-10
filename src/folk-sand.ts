@@ -9,6 +9,7 @@ import {
   vertexShader,
 } from './folk-sand.glsl.ts';
 import { FolkShape } from './folk-shape.ts';
+import { requestAnimationFrame } from './common/rAF.ts';
 
 export class FolkSand extends HTMLElement {
   static tagName = 'folk-sand';
@@ -88,7 +89,7 @@ export class FolkSand extends HTMLElement {
     this.updateCollisionTexture();
 
     this.attachEventListeners();
-    requestAnimationFrame(this.render.bind(this));
+    this.render();
   }
 
   disconnectedCallback() {
@@ -365,7 +366,7 @@ export class FolkSand extends HTMLElement {
     return false;
   }
 
-  private render(time: number) {
+  private render = (time: number = performance.now()) => {
     if (this.resizeCanvas()) {
       this.processResize();
     }
@@ -378,8 +379,8 @@ export class FolkSand extends HTMLElement {
     this.pointer.prevX = this.pointer.x;
     this.pointer.prevY = this.pointer.y;
 
-    requestAnimationFrame(this.render.bind(this));
-  }
+    requestAnimationFrame(this.render);
+  };
 
   private renderPass(time: number) {
     const gl = this.gl;
