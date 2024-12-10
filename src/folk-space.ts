@@ -9,7 +9,7 @@ declare global {
 }
 
 export class FolkSpace extends FolkElement {
-  static tagName = 'folk-space';
+  static override tagName = 'folk-space';
 
   static styles = css`
     :host {

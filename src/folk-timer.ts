@@ -7,7 +7,7 @@ declare global {
 }
 
 export class FolkTimer extends FolkElement {
-  static tagName = 'folk-timer';
+  static override tagName = 'folk-timer';
 
   #timeMs = 0;
   #timeoutId = -1;

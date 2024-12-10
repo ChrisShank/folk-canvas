@@ -26,7 +26,7 @@ declare global {
 }
 
 export class FolkCluster extends FolkHull {
-  static tagName = 'folk-cluster';
+  static override tagName = 'folk-cluster';
 
   static #config = new Map<ElementConstructor, ElementConfig>();
 

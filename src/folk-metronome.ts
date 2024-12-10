@@ -1,16 +1,13 @@
+import { FolkElement } from './common/folk-element';
+
 declare global {
   interface HTMLElementTagNameMap {
     'folk-metronome': FolkMetronome;
   }
 }
 
-export class FolkMetronome extends HTMLElement {
-  static tagName = 'folk-metronome';
-
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    customElements.define(this.tagName, this);
-  }
+export class FolkMetronome extends FolkElement {
+  static override tagName = 'folk-metronome';
 
   constructor() {
     super();

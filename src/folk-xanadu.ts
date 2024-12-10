@@ -3,7 +3,7 @@ import { verticesToPolygon } from './common/utils.js';
 import type { Point } from './common/types.js';
 import { PropertyValues } from '@lit/reactive-element';
 export class FolkXanadu extends FolkBaseConnection {
-  static tagName = 'folk-xanadu';
+  static override tagName = 'folk-xanadu';
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);

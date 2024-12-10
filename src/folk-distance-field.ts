@@ -11,7 +11,7 @@ import { PropertyValues } from '@lit/reactive-element';
  * Previous CPU-based implementation: github.com/folk-canvas/folk-canvas/commit/fdd7fb9d84d93ad665875cad25783c232fd17bcc
  */
 export class FolkDistanceField extends FolkBaseSet {
-  static tagName = 'folk-distance-field';
+  static override tagName = 'folk-distance-field';
 
   private textures: WebGLTexture[] = [];
 
