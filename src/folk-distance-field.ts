@@ -4,6 +4,7 @@ import { glsl } from './common/tags.ts';
 import { WebGLUtils } from './common/webgl.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { FolkShape } from './folk-shape.ts';
+import { PropertyValues } from '@lit/reactive-element';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.
@@ -76,7 +77,11 @@ export class FolkDistanceField extends FolkBaseSet {
   /**
    * Handles updates to geometry elements by re-initializing seed points and rerunning the JFA.
    */
-  override update() {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    if (this.sourcesMap.size !== this.sourceElements.size) return;
+
     this.populateSeedPoints();
     this.runJumpFloodingAlgorithm();
   }

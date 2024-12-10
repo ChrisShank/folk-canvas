@@ -1,7 +1,7 @@
 import { FolkBaseSet } from './folk-base-set';
 import { verticesToPolygon } from './common/utils';
 import type { Point } from './common/types';
-import { css, html } from './common/tags';
+import { PropertyValues, css } from '@lit/reactive-element';
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -9,24 +9,24 @@ declare global {
   }
 }
 
-const styles = css`
-  :host {
-    pointer-events: none;
-  }
-
-  #hull {
-    background-color: var(--folk-hull-bg, #b4d8f644);
-    height: 100%;
-    width: 100%;
-  }
-
-  ::slotted(*) {
-    pointer-events: auto;
-  }
-`;
-
 export class FolkHull extends FolkBaseSet {
   static tagName = 'folk-hull';
+
+  static styles = css`
+    :host {
+      pointer-events: none;
+    }
+
+    #hull {
+      background-color: var(--folk-hull-bg, #b4d8f644);
+      height: 100%;
+      width: 100%;
+    }
+
+    ::slotted(*) {
+      pointer-events: auto;
+    }
+  `;
 
   #hull: Point[] = [];
 
@@ -34,19 +34,15 @@ export class FolkHull extends FolkBaseSet {
     return this.#hull;
   }
 
-  #shadow = this.attachShadow({ mode: 'open' });
-
   #slot = document.createElement('slot');
   #hullEl = document.createElement('div');
 
-  constructor() {
-    super();
+  override firstUpdated(changedProperties: PropertyValues<this>): void {
+    super.firstUpdated(changedProperties);
 
     this.#hullEl.id = 'hull';
 
-    this.#shadow.adoptedStyleSheets.push(styles);
-
-    this.#shadow.append(this.#hullEl, this.#slot);
+    this.renderRoot.append(this.#hullEl, this.#slot);
 
     this.#slot.addEventListener('slotchange', this.#onSlotchange);
   }
@@ -54,14 +50,15 @@ export class FolkHull extends FolkBaseSet {
   // we might not need to react to the first slot change
   #onSlotchange = () => this.observeSources();
 
-  update() {
-    if (this.sourcesMap.size === 0) {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    if (this.sourcesMap.size !== this.sourceElements.size) {
       this.style.clipPath = '';
       return;
     }
 
-    const rects = Array.from(this.sourcesMap.values());
-    this.#hull = makeHull(rects);
+    this.#hull = makeHull(this.sourceRects);
     this.#hullEl.style.clipPath = verticesToPolygon(this.#hull);
   }
 }
