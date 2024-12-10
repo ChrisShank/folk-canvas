@@ -82,8 +82,8 @@ export class FolkEventPropagator extends FolkRope {
     this.sourceElement?.removeEventListener(this.trigger, this.#evaluateExpression);
   }
 
-  override draw() {
-    super.draw();
+  override render() {
+    super.render();
 
     const triggerPoint = this.points[Math.floor(this.points.length / 5)];
 

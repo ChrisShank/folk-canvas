@@ -5,6 +5,7 @@ import type { Point } from './common/types.ts';
 import { DOMRectTransform } from './common/DOMRectTransform.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 import { PropertyValues } from '@lit/reactive-element';
+import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 
@@ -27,15 +28,15 @@ declare global {
   }
 }
 
-export class FolkRope extends FolkBaseConnection {
+export class FolkRope extends FolkBaseConnection implements AnimationFrameControllerHost {
   static override tagName = 'folk-rope';
+
+  #rAF = new AnimationFrameController(this);
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-  #rAFId = -1;
-  #lastTime = 0;
   #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
@@ -86,40 +87,18 @@ export class FolkRope extends FolkBaseConnection {
     this.stroke = this.getAttribute('stroke') || 'black';
   }
 
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-
-    cancelAnimationFrame(this.#rAFId);
-  }
-
-  #dtAccumulator = 0;
-  #fixedTimestep = 1 / 60;
-
-  #tick = (timestamp: number = performance.now()) => {
-    this.#rAFId = requestAnimationFrame(this.#tick);
-
-    const actualDelta = (timestamp - this.#lastTime) * 0.001;
-    this.#lastTime = timestamp;
-
-    // Accumulate delta time, but clamp to avoid spiral of death
-    this.#dtAccumulator = Math.min(this.#dtAccumulator + actualDelta, 0.2);
-    while (this.#dtAccumulator >= this.#fixedTimestep) {
-      for (const point of this.#points) {
-        this.#integratePoint(point, this.#gravity);
-      }
-
-      // 3 constraint iterations is enough for fixed timestep
-      for (let iteration = 0; iteration < 3; iteration++) {
-        for (const point of this.#points) {
-          this.#constrainPoint(point);
-        }
-      }
-
-      this.#dtAccumulator -= this.#fixedTimestep;
+  tick() {
+    for (const point of this.#points) {
+      this.#integratePoint(point, this.#gravity);
     }
 
-    this.draw();
-  };
+    // 3 constraint iterations is enough for fixed timestep
+    for (let iteration = 0; iteration < 3; iteration++) {
+      for (const point of this.#points) {
+        this.#constrainPoint(point);
+      }
+    }
+  }
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);
@@ -127,7 +106,7 @@ export class FolkRope extends FolkBaseConnection {
     const { sourceRect, targetRect } = this;
 
     if (sourceRect === null || targetRect === null) {
-      cancelAnimationFrame(this.#rAFId);
+      this.#rAF.stop();
       this.#points = [];
       this.#path.removeAttribute('d');
       this.#path2.removeAttribute('d');
@@ -157,10 +136,7 @@ export class FolkRope extends FolkBaseConnection {
 
     if (this.#points.length === 0) {
       this.#points = this.#generatePoints(source, target);
-
-      this.#lastTime = 0;
-
-      this.#tick();
+      this.#rAF.start();
     }
 
     const startingPoint = this.#points.at(0);
@@ -172,7 +148,7 @@ export class FolkRope extends FolkBaseConnection {
     endingPoint.pos = target;
   }
 
-  draw() {
+  render() {
     if (this.#points.length < 2) return;
 
     let pathData = `M ${this.#points[0].pos.x} ${this.#points[0].pos.y}`;
@@ -248,7 +224,7 @@ export class FolkRope extends FolkBaseConnection {
       point.oldPos = { ...point.pos };
 
       const accel = Vector.add(gravity, { x: 0, y: point.mass });
-      const tsSq = this.#fixedTimestep * this.#fixedTimestep;
+      const tsSq = this.#rAF.fixedTimestep ** 2;
 
       point.pos.x += point.velocity.x * point.damping + accel.x * tsSq;
       point.pos.y += point.velocity.y * point.damping + accel.y * tsSq;
