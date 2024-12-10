@@ -1,4 +1,3 @@
-import { FolkEventPropagator } from './folk-event-propagator.ts';
 import { css } from './common/tags.ts';
 
 const styles = css`

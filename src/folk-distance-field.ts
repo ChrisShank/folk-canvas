@@ -13,6 +13,8 @@ import { PropertyValues } from '@lit/reactive-element';
 export class FolkDistanceField extends FolkBaseSet {
   static override tagName = 'folk-distance-field';
 
+  static readonly MAX_DISTANCE = 99999.0;
+
   private textures: WebGLTexture[] = [];
 
   private canvas!: HTMLCanvasElement;
@@ -25,17 +27,9 @@ export class FolkDistanceField extends FolkBaseSet {
   private renderProgram!: WebGLProgram; // Shader program for final rendering
   private seedProgram!: WebGLProgram; // Shader program for rendering seed points
 
-  private static readonly MAX_DISTANCE = 99999.0;
-
   private positionBuffer: WebGLBuffer | null = null;
 
   private isPingTexture: boolean = true;
-
-  firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
-
-    this.renderRoot.appendChild(document.createElement('slot'));
-  }
 
   connectedCallback() {
     super.connectedCallback();
