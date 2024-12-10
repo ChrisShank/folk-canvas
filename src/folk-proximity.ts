@@ -1,4 +1,5 @@
 import { aabbIntersection } from './common/collision.ts';
+import { TransformEvent } from './common/TransformEvent.ts';
 import { FolkHull } from './folk-hull';
 import { FolkShape } from './folk-shape.ts';
 
@@ -148,7 +149,7 @@ export class FolkProximity extends HTMLElement {
     this.addEventListener('transform', this.#handleProximity);
   }
 
-  #handleProximity = (e: Event) => {
+  #handleProximity = (e: TransformEvent) => {
     const el = e.target as FolkShape;
 
     const cluster = this.#findCluster(el);

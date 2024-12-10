@@ -1,5 +1,6 @@
 import { FolkShape } from '../folk-shape.ts';
 import { ClientRectObserverManager, ClientRectObserverEntry } from './client-rect-observer.ts';
+import { TransformEvent } from './TransformEvent.ts';
 
 const clientRectObserver = new ClientRectObserverManager();
 
@@ -61,11 +62,11 @@ if (window.parent !== window) {
     });
   }
 
-  function onGeometryChange(event: any) {
+  function onGeometryChange(event: TransformEvent) {
     window.parent.postMessage({
       type: 'folk-element-change',
       selector: observedSelectors.get(event.target),
-      boundingBox: event.target?.getTransformDOMRect(),
+      boundingBox: (event.target as FolkShape)?.getTransformDOMRect(),
     });
   }
 
