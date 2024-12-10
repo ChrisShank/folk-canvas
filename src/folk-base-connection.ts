@@ -10,11 +10,7 @@ const folkObserver = new FolkObserver();
 export class FolkBaseConnection extends FolkElement {
   @property({ type: String, reflect: true }) source = '';
 
-  #sourceElement: Element | null = null;
-
-  get sourceElement() {
-    return this.#sourceElement;
-  }
+  @state() sourceElement: Element | null = null;
 
   @state() sourceRect: DOMRectReadOnly | null = null;
 
@@ -22,11 +18,7 @@ export class FolkBaseConnection extends FolkElement {
 
   @state() targetRect: DOMRectReadOnly | null = null;
 
-  #targetElement: Element | null = null;
-
-  get targetElement() {
-    return this.#targetElement;
-  }
+  @state() targetElement: Element | null = null;
 
   override disconnectedCallback() {
     super.disconnectedCallback();
@@ -58,20 +50,20 @@ export class FolkBaseConnection extends FolkElement {
     if (vertex) {
       this.sourceRect = DOMRectReadOnly.fromRect(vertex);
     } else {
-      this.#sourceElement = document.querySelector(this.source);
+      this.sourceElement = document.querySelector(this.source);
 
-      if (this.#sourceElement === null) {
+      if (this.sourceElement === null) {
         this.sourceRect = null;
       } else {
-        folkObserver.observe(this.#sourceElement, this.#sourceCallback);
+        folkObserver.observe(this.sourceElement, this.#sourceCallback);
       }
     }
   }
 
   unobserveSource() {
-    if (this.#sourceElement === null) return;
+    if (this.sourceElement === null) return;
 
-    folkObserver.unobserve(this.#sourceElement, this.#sourceCallback);
+    folkObserver.unobserve(this.sourceElement, this.#sourceCallback);
   }
 
   #targetCallback = (entry: ClientRectObserverEntry) => {
@@ -86,18 +78,18 @@ export class FolkBaseConnection extends FolkElement {
     if (vertex) {
       this.targetRect = DOMRectReadOnly.fromRect(vertex);
     } else {
-      this.#targetElement = document.querySelector(this.target);
+      this.targetElement = document.querySelector(this.target);
 
-      if (this.#targetElement === null) {
+      if (this.targetElement === null) {
         this.targetRect = null;
       } else {
-        folkObserver.observe(this.#targetElement, this.#targetCallback);
+        folkObserver.observe(this.targetElement, this.#targetCallback);
       }
     }
   }
 
   unobserveTarget() {
-    if (this.#targetElement === null) return;
-    folkObserver.unobserve(this.#targetElement, this.#targetCallback);
+    if (this.targetElement === null) return;
+    folkObserver.unobserve(this.targetElement, this.#targetCallback);
   }
 }

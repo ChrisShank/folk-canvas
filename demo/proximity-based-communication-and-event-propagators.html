@@ -76,14 +76,14 @@
     <folk-event-propagator
       source="input[type='range']"
       target="folk-map"
-      triggers="input"
+      trigger="input"
       expression="lat: from.value"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="folk-map"
       target="input[type='range']"
-      triggers="recenter"
+      trigger="recenter"
       expression="value: from.lat"
     ></folk-event-propagator>
 

@@ -143,21 +143,21 @@
     <folk-event-propagator
       source="#map1"
       target="folk-cell[column='A'][row='1']"
-      triggers="recenter"
+      trigger="recenter"
       expression="expression: from.coordinates.lat"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="#map1"
       target="folk-cell[column='A'][row='2']"
-      triggers="recenter"
+      trigger="recenter"
       expression="expression: from.coordinates.lng"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="folk-cell[column='A'][row='3']"
       target="#map2"
-      triggers="propagate"
+      trigger="propagate"
       expression="coordinates: from.value"
     ></folk-event-propagator>
 

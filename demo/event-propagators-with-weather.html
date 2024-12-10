@@ -39,7 +39,7 @@
     <folk-event-propagator
       source="#box1"
       target="#box2"
-      triggers="click"
+      trigger="click"
       expression="textContent: to.textContent + 'r'"
     ></folk-event-propagator>
 
@@ -48,13 +48,12 @@
     <folk-event-propagator
       source="#box3"
       target="#box4"
-      triggers="transform"
+      trigger="transform"
       expression="y: from.x, 
 rotation: from.x"
     ></folk-event-propagator>
 
     <script type="module">
-      import 'https://cdn.jsdelivr.net/npm/@zachleat/snow-fall';
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-event-propagator.ts';
 
@@ -80,6 +79,8 @@ rotation: from.x"
         }
         isBlowing = !isBlowing;
       });
+
+      requestIdleCallback(() => import('https://cdn.jsdelivr.net/npm/@zachleat/snow-fall'));
     </script>
   </body>
 </html>

@@ -90,14 +90,14 @@
     <folk-event-propagator
       source="#recipe"
       target="folk-llm"
-      triggers="click"
+      trigger="click"
       expression="prompt: `double this list of ingredients '${from.innerHTML}'`"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="folk-llm"
       target="folk-timer"
-      triggers="started"
+      trigger="started"
       expression="reset(): true
 start(): true"
     >
@@ -106,7 +106,7 @@ start(): true"
     <folk-event-propagator
       source="folk-llm"
       target="folk-timer"
-      triggers="finished"
+      trigger="finished"
       expression="stop(): true"
     ></folk-event-propagator>
 

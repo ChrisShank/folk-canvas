@@ -1,5 +1,6 @@
 import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkRope } from './folk-rope.ts';
+import { property } from '@lit/reactive-element/decorators.js';
 // import * as parser from '@babel/parser';
 
 export class FolkEventPropagator extends FolkRope {
@@ -30,30 +31,77 @@ export class FolkEventPropagator extends FolkRope {
     }
   `;
 
-  #triggers: string[] = [];
-  get triggers() {
-    return this.#triggers;
-  }
-  set triggers(triggers: string | string[]) {
-    if (typeof triggers === 'string') {
-      triggers = triggers.split(',');
-    }
-    this.#removeEventListenersToSource();
+  @property({ type: String, reflect: true }) trigger = '';
 
-    this.#triggers = triggers;
+  @property({ type: String, reflect: true }) expression = '';
 
-    this.#addEventListenersToSource();
-  }
-
-  #expression = '';
   #function: Function | null = null;
-  get expression() {
-    return this.#expression;
+  #triggerTextarea = document.createElement('textarea');
+  #expressionTextarea = document.createElement('textarea');
+
+  override firstUpdated(changedProperties: PropertyValues<this>): void {
+    super.firstUpdated(changedProperties);
+
+    this.#triggerTextarea.addEventListener('change', () => {
+      this.trigger = this.#triggerTextarea.value;
+    });
+
+    this.#expressionTextarea.addEventListener('input', () => {
+      this.expression = this.#expressionTextarea.value;
+    });
+
+    this.#triggerTextarea.value = this.trigger;
+
+    this.#expressionTextarea.value = this.expression;
+
+    this.renderRoot.append(this.#triggerTextarea, this.#expressionTextarea);
   }
-  set expression(expression) {
-    this.mend();
-    this.#expression = expression;
-    const processedExp = expression.trim();
+
+  override updated(changedProperties: PropertyValues<this>): void {
+    super.update(changedProperties);
+
+    if (changedProperties.has('trigger')) {
+      this.sourceElement?.removeEventListener(this.trigger, this.#evaluateExpression);
+      this.sourceElement?.addEventListener(this.trigger, this.#evaluateExpression);
+    }
+
+    if (changedProperties.has('expression')) {
+      this.#parseExpression();
+    }
+
+    const previousSourceElement = changedProperties.get('sourceElement');
+    if (previousSourceElement) {
+      const trigger = changedProperties.get('trigger') || this.trigger;
+      previousSourceElement.removeEventListener(trigger, this.#evaluateExpression);
+      this.sourceElement?.addEventListener(this.trigger, this.#evaluateExpression);
+    }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.sourceElement?.removeEventListener(this.trigger, this.#evaluateExpression);
+  }
+
+  override draw() {
+    super.draw();
+
+    const triggerPoint = this.points[Math.floor(this.points.length / 5)];
+
+    if (triggerPoint) {
+      this.#triggerTextarea.style.left = `${triggerPoint.pos.x}px`;
+      this.#triggerTextarea.style.top = `${triggerPoint.pos.y}px`;
+    }
+
+    const expressionPoint = this.points[Math.floor(this.points.length / 2)];
+
+    if (expressionPoint) {
+      this.#expressionTextarea.style.left = `${expressionPoint.pos.x}px`;
+      this.#expressionTextarea.style.top = `${expressionPoint.pos.y}px`;
+    }
+  }
+
+  #parseExpression() {
+    const processedExp = this.expression.trim();
 
     const codeLines: string[] = [];
 
@@ -103,6 +151,7 @@ to.${key} = ${value};`);
     try {
       // parseAst(functionBody);
       this.#function = new Function('from', 'to', 'event', functionBody);
+      this.mend();
     } catch (error) {
       console.warn('Failed to parse expression:', error, functionBody);
       this.cut();
@@ -110,80 +159,8 @@ to.${key} = ${value};`);
     }
   }
 
-  #triggerTextarea = document.createElement('textarea');
-  #expressionTextarea = document.createElement('textarea');
-
-  override firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
-
-    this.#triggerTextarea.addEventListener('change', () => {
-      this.triggers = this.#triggerTextarea.value;
-    });
-
-    this.triggers = this.#triggerTextarea.value = this.getAttribute('triggers') || '';
-
-    this.renderRoot.appendChild(this.#triggerTextarea);
-
-    this.#expressionTextarea.addEventListener('input', () => {
-      this.expression = this.#expressionTextarea.value;
-    });
-
-    this.renderRoot.appendChild(this.#expressionTextarea);
-
-    this.expression = this.#expressionTextarea.value = this.getAttribute('expression') || '';
-  }
-
-  override draw() {
-    super.draw();
-
-    const triggerPoint = this.points[Math.floor(this.points.length / 5)];
-
-    if (triggerPoint) {
-      this.#triggerTextarea.style.left = `${triggerPoint.pos.x}px`;
-      this.#triggerTextarea.style.top = `${triggerPoint.pos.y}px`;
-    }
-
-    const expressionPoint = this.points[Math.floor(this.points.length / 2)];
-
-    if (expressionPoint) {
-      this.#expressionTextarea.style.left = `${expressionPoint.pos.x}px`;
-      this.#expressionTextarea.style.top = `${expressionPoint.pos.y}px`;
-    }
-  }
-
-  override observeSource() {
-    super.observeSource();
-
-    this.#addEventListenersToSource();
-  }
-
-  #addEventListenersToSource() {
-    for (const trigger of this.#triggers) {
-      // TODO: add special triggers for intersection, rAF, etc.
-      this.sourceElement?.addEventListener(trigger, this.evaluateExpression);
-    }
-  }
-
-  override unobserveSource() {
-    super.unobserveSource();
-    this.#removeEventListenersToSource();
-  }
-
-  #removeEventListenersToSource() {
-    for (const trigger of this.#triggers) {
-      this.sourceElement?.removeEventListener(trigger, this.evaluateExpression);
-    }
-  }
-
-  override observeTarget() {
-    super.observeTarget();
-  }
-
-  override unobserveTarget() {
-    super.unobserveTarget();
-  }
-
-  evaluateExpression = (event?: Event) => {
+  #evaluateExpression = (event?: Event) => {
+    console.log('eval');
     if (this.sourceElement === null || this.targetElement === null) return;
     this.stroke = 'black';
     if (!this.#function) return;

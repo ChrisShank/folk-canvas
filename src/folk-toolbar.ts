@@ -106,7 +106,7 @@ export class FolkToolbar extends HTMLElement {
       <folk-event-propagator 
         source="#${sourceId}"
         target="#${targetId}"
-        triggers="click"
+        trigger="click"
         expression="rotation: Math.random() * 360"
       ></folk-event-propagator>
     `,
