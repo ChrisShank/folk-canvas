@@ -26,8 +26,8 @@ export class FolkBaseConnection extends FolkElement {
     this.unobserveTarget();
   }
 
-  override update(changedProperties: PropertyValues<this>) {
-    super.update(changedProperties);
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    super.willUpdate(changedProperties);
 
     if (changedProperties.has('source')) {
       this.observeSource();

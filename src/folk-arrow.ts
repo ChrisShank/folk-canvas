@@ -61,8 +61,11 @@ export class FolkArrow extends FolkBaseConnection {
 
     if (sourceRect === null || targetRect === null) {
       this.style.clipPath = '';
+      this.style.display = 'none';
       return;
     }
+
+    this.style.display = 'block';
 
     const [sx, sy, cx, cy, ex, ey] = getBoxToBoxArrow(
       sourceRect.x,

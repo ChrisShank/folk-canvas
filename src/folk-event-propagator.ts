@@ -160,9 +160,10 @@ to.${key} = ${value};`);
   }
 
   #evaluateExpression = (event?: Event) => {
-    console.log('eval');
     if (this.sourceElement === null || this.targetElement === null) return;
+
     this.stroke = 'black';
+
     if (!this.#function) return;
 
     try {
