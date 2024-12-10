@@ -23,8 +23,12 @@
       folk-rope {
         display: block;
         position: absolute;
-        inset: 0 0 0 0;
+        inset: 0;
         pointer-events: none;
+
+        &[target='#box2'] {
+          --folk-rope-color: rebeccapurple;
+        }
       }
 
       button {
@@ -40,6 +44,7 @@
     <folk-shape id="box2" x="300" y="105" width="30" height="30"></folk-shape>
     <folk-shape id="box3" x="200" y="150" width="30" height="30"></folk-shape>
     <folk-shape id="box4" x="400" y="100" width="30" height="30"></folk-shape>
+
     <folk-rope source="#box1" target="#box2"></folk-rope>
     <folk-rope source="#box1" target="#box3"></folk-rope>
     <folk-rope source="#box1" target="#box4"></folk-rope>

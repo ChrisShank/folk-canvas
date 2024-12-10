@@ -4,8 +4,9 @@ import { Vector } from './common/Vector.ts';
 import type { Point } from './common/types.ts';
 import { DOMRectTransform } from './common/DOMRectTransform.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
-import { PropertyValues } from '@lit/reactive-element';
+import { css, PropertyValues } from '@lit/reactive-element';
 import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
+import { property } from '@lit/reactive-element/decorators.js';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 
@@ -31,65 +32,47 @@ declare global {
 export class FolkRope extends FolkBaseConnection implements AnimationFrameControllerHost {
   static override tagName = 'folk-rope';
 
+  static styles = css`
+    svg {
+      height: 100%;
+      pointer-events: none;
+      width: 100%;
+    }
+
+    path {
+      fill: none;
+      pointer-events: auto;
+      stroke: var(--folk-rope-color, black);
+      stroke-width: var(--folk-rope-width, 3);
+      stroke-linecap: var(--folk-rope-linecap, round);
+    }
+  `;
+
   #rAF = new AnimationFrameController(this);
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-  #gravity = { x: 0, y: 3000 };
   #points: RopePoint[] = [];
 
   get points() {
     return this.#points;
   }
 
-  get gravity() {
-    return this.#gravity;
-  }
-
-  set gravity(gravity) {
-    this.#gravity = gravity;
-  }
-
-  #stroke = '';
-  get stroke() {
-    return this.#stroke;
-  }
-  set stroke(stroke) {
-    this.#stroke = stroke;
-    this.#path.setAttribute('stroke', this.#stroke);
-    this.#path2.setAttribute('stroke', this.#stroke);
-  }
+  @property({ type: Object }) gravity = { x: 0, y: 3000 };
 
   override firstUpdated(changedProperties: PropertyValues<this>): void {
     super.firstUpdated(changedProperties);
 
-    this.#path.setAttribute('stroke-width', '3');
-    this.#path.setAttribute('stroke-linecap', 'round');
-
-    this.#path.setAttribute('fill', 'none');
-    this.#path.style.pointerEvents = 'auto';
-
-    this.#path2.setAttribute('stroke-width', '3');
-    this.#path2.setAttribute('stroke-linecap', 'round');
-    this.#path2.setAttribute('fill', 'none');
-    this.#path2.style.pointerEvents = 'auto';
-
-    this.#svg.style.height = '100%';
-    this.#svg.style.width = '100%';
-    this.#svg.style.pointerEvents = 'none';
-    this.#svg.appendChild(this.#path);
-    this.#svg.appendChild(this.#path2);
+    this.#svg.append(this.#path, this.#path2);
 
     this.renderRoot.appendChild(this.#svg);
-
-    this.stroke = this.getAttribute('stroke') || 'black';
   }
 
   tick() {
     for (const point of this.#points) {
-      this.#integratePoint(point, this.#gravity);
+      this.#integratePoint(point, this.gravity);
     }
 
     // 3 constraint iterations is enough for fixed timestep
