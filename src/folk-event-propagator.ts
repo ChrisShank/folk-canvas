@@ -1,35 +1,34 @@
-import { css } from './common/tags.ts';
+import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkRope } from './folk-rope.ts';
 // import * as parser from '@babel/parser';
-import type { Node } from '@babel/types';
-
-const styles = css`
-  :host {
-    display: block;
-    position: absolute;
-    inset: 0 0 0 0;
-    pointer-events: none;
-  }
-
-  textarea {
-    position: absolute;
-    width: auto;
-    min-width: 3ch;
-    height: auto;
-    resize: none;
-    background: rgba(256, 256, 256, 0.8);
-    border: 1px solid #ccc;
-    padding: 4px;
-    pointer-events: auto;
-    overflow: hidden;
-    field-sizing: content;
-    translate: -50% -50%;
-    border-radius: 5px;
-  }
-`;
 
 export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: absolute;
+      inset: 0 0 0 0;
+      pointer-events: none;
+    }
+
+    textarea {
+      position: absolute;
+      width: auto;
+      min-width: 3ch;
+      height: auto;
+      resize: none;
+      background: rgba(256, 256, 256, 0.8);
+      border: 1px solid #ccc;
+      padding: 4px;
+      pointer-events: auto;
+      overflow: hidden;
+      field-sizing: content;
+      translate: -50% -50%;
+      border-radius: 5px;
+    }
+  `;
 
   #triggers: string[] = [];
   get triggers() {
@@ -114,23 +113,22 @@ to.${key} = ${value};`);
   #triggerTextarea = document.createElement('textarea');
   #expressionTextarea = document.createElement('textarea');
 
-  constructor() {
-    super();
-
-    this.shadowRoot?.adoptedStyleSheets.push(styles);
+  override firstUpdated(changedProperties: PropertyValues<this>): void {
+    super.firstUpdated(changedProperties);
 
     this.#triggerTextarea.addEventListener('change', () => {
       this.triggers = this.#triggerTextarea.value;
     });
+
     this.triggers = this.#triggerTextarea.value = this.getAttribute('triggers') || '';
 
-    this.shadowRoot?.appendChild(this.#triggerTextarea);
+    this.renderRoot.appendChild(this.#triggerTextarea);
 
     this.#expressionTextarea.addEventListener('input', () => {
       this.expression = this.#expressionTextarea.value;
     });
 
-    this.shadowRoot?.appendChild(this.#expressionTextarea);
+    this.renderRoot.appendChild(this.#expressionTextarea);
 
     this.expression = this.#expressionTextarea.value = this.getAttribute('expression') || '';
   }

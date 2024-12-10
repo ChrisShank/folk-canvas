@@ -33,7 +33,6 @@ export class FolkRope extends FolkBaseConnection {
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  #shadow = this.attachShadow({ mode: 'open' });
 
   #rAFId = -1;
   #lastTime = 0;
@@ -62,15 +61,8 @@ export class FolkRope extends FolkBaseConnection {
     this.#path2.setAttribute('stroke', this.#stroke);
   }
 
-  constructor() {
-    super();
-    this.#svg.style.height = '100%';
-    this.#svg.style.width = '100%';
-    this.#svg.style.pointerEvents = 'none';
-    this.#svg.appendChild(this.#path);
-    this.#svg.appendChild(this.#path2);
-
-    this.#shadow.appendChild(this.#svg);
+  override firstUpdated(changedProperties: PropertyValues<this>): void {
+    super.firstUpdated(changedProperties);
 
     this.#path.setAttribute('stroke-width', '3');
     this.#path.setAttribute('stroke-linecap', 'round');
@@ -82,6 +74,14 @@ export class FolkRope extends FolkBaseConnection {
     this.#path2.setAttribute('stroke-linecap', 'round');
     this.#path2.setAttribute('fill', 'none');
     this.#path2.style.pointerEvents = 'auto';
+
+    this.#svg.style.height = '100%';
+    this.#svg.style.width = '100%';
+    this.#svg.style.pointerEvents = 'none';
+    this.#svg.appendChild(this.#path);
+    this.#svg.appendChild(this.#path2);
+
+    this.renderRoot.appendChild(this.#svg);
 
     this.stroke = this.getAttribute('stroke') || 'black';
   }

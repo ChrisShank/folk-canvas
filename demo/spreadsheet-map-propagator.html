@@ -144,14 +144,14 @@
       source="#map1"
       target="folk-cell[column='A'][row='1']"
       triggers="recenter"
-      expression="expression: round(from.coordinates.lat, 3)"
+      expression="expression: from.coordinates.lat"
     ></folk-event-propagator>
 
     <folk-event-propagator
       source="#map1"
       target="folk-cell[column='A'][row='2']"
       triggers="recenter"
-      expression="expression: round(from.coordinates.lng, 3)"
+      expression="expression: from.coordinates.lng"
     ></folk-event-propagator>
 
     <folk-event-propagator
@@ -166,11 +166,6 @@
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-event-propagator.ts';
       import '../src/standalone/folk-spreadsheet.ts';
-
-      window.round = (number, digits = 0) => {
-        const base = Number('1'.padEnd(digits + 1, '0'));
-        return Math.round(number * base) / base;
-      };
     </script>
   </body>
 </html>

@@ -12,6 +12,10 @@ export class FolkBaseConnection extends FolkElement {
 
   #sourceElement: Element | null = null;
 
+  get sourceElement() {
+    return this.#sourceElement;
+  }
+
   @state() sourceRect: DOMRectReadOnly | null = null;
 
   @property({ type: String, reflect: true }) target = '';
@@ -19,6 +23,10 @@ export class FolkBaseConnection extends FolkElement {
   @state() targetRect: DOMRectReadOnly | null = null;
 
   #targetElement: Element | null = null;
+
+  get targetElement() {
+    return this.#targetElement;
+  }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
