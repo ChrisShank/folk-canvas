@@ -61,7 +61,6 @@ export class FolkBaseSet extends FolkElement {
     }
 
     this.sourceElements = sourceElements;
-    console.log(this.sourceElements);
   }
 
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
