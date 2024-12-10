@@ -1,5 +1,9 @@
 import { getStroke, StrokeOptions } from 'perfect-freehand';
 import { css } from './common/tags';
+import { FolkElement } from './common/folk-element';
+import { property } from '@lit/reactive-element/decorators.js';
+import { PropertyValues } from '@lit/reactive-element';
+import { getSvgPathFromStroke } from './common/utils';
 
 export type Point = [x: number, y: number, pressure: number];
 
@@ -7,22 +11,6 @@ export type Stroke = number[][];
 
 // TODO: look into any-pointer media queries to tell if the user has a mouse or touch screen
 // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/any-pointer
-const styles = css`
-  :host,
-  svg {
-    display: block;
-    height: 100%;
-    width: 100%;
-    touch-action: none;
-    pointer-events: none;
-  }
-
-  :host(:state(drawing)) {
-    position: fixed;
-    inset: 0 0 0 0;
-    cursor: var(--tracing-cursor, crosshair);
-  }
-`;
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -30,104 +18,53 @@ declare global {
   }
 }
 
-export class FolkInk extends HTMLElement {
-  static tagName = 'folk-ink';
+export class FolkInk extends FolkElement {
+  static override tagName = 'folk-ink';
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    customElements.define(this.tagName, this);
-  }
+  static override styles = css`
+    :host,
+    svg {
+      display: block;
+      height: 100%;
+      width: 100%;
+      touch-action: none;
+      pointer-events: none;
+    }
+
+    :host(:state(drawing)) {
+      position: fixed;
+      inset: 0 0 0 0;
+      cursor: var(--tracing-cursor, crosshair);
+    }
+  `;
+
+  @property({ type: Number, reflect: true }) size = 16;
+
+  @property({ type: Number, reflect: true }) thinning = 0.5;
+
+  @property({ type: Number, reflect: true }) smoothing = 0.5;
+
+  @property({ type: Number, reflect: true }) streamline = 0.5;
+
+  @property({ type: Boolean, reflect: true }) simulatePressure = true;
+
+  @property({ type: Array }) points: Point[] = [];
 
   #internals = this.attachInternals();
-
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  #tracingPromise: PromiseWithResolvers<void> | null = null;
 
-  #size = Number(this.getAttribute('size') || 16);
+  override firstUpdated(changedProperties: PropertyValues): void {
+    super.firstUpdated(changedProperties);
 
-  get size() {
-    return this.#size;
-  }
-  set size(size) {
-    this.#size = size;
-    this.#update();
-  }
-
-  #thinning = Number(this.getAttribute('thinning') || 0.5);
-
-  get thinning() {
-    return this.#thinning;
-  }
-  set thinning(thinning) {
-    this.#thinning = thinning;
-    this.#update();
-  }
-
-  #smoothing = Number(this.getAttribute('smoothing') || 0.5);
-
-  get smoothing() {
-    return this.#smoothing;
-  }
-  set smoothing(smoothing) {
-    this.#smoothing = smoothing;
-    this.#update();
-  }
-
-  #streamline = Number(this.getAttribute('streamline') || 0.5);
-
-  get streamline() {
-    return this.#streamline;
-  }
-  set streamline(streamline) {
-    this.#streamline = streamline;
-    this.#update();
-  }
-
-  #simulatePressure = this.getAttribute('streamline') === 'false' ? false : true;
-
-  get simulatePressure() {
-    return this.#simulatePressure;
-  }
-  set simulatePressure(simulatePressure) {
-    this.#simulatePressure = simulatePressure;
-    this.#update();
-  }
-
-  #points: Point[] = JSON.parse(this.getAttribute('points') || '[]');
-
-  get points() {
-    return this.#points;
-  }
-  set points(points) {
-    this.#points = points;
-    this.#update();
-  }
-
-  constructor() {
-    super();
-
-    const shadowRoot = this.attachShadow({
-      mode: 'open',
-      delegatesFocus: true,
-    });
-    shadowRoot.adoptedStyleSheets.push(styles);
     this.#svg.appendChild(this.#path);
-    shadowRoot.appendChild(this.#svg);
-  }
-
-  connectedCallback() {
-    this.#update();
+    this.renderRoot.appendChild(this.#svg);
   }
 
   getPathBox() {
     return this.#path.getBBox();
   }
-
-  setViewBox() {
-    this.#svg.viewBox;
-  }
-
-  #tracingPromise: PromiseWithResolvers<void> | null = null;
 
   // TODO: cancel trace?
   draw(event?: PointerEvent) {
@@ -141,8 +78,8 @@ export class FolkInk extends HTMLElement {
   }
 
   addPoint(point: Point) {
-    this.#points.push(point);
-    this.#update();
+    this.points.push(point);
+    this.requestUpdate();
   }
 
   handleEvent(event: PointerEvent) {
@@ -174,13 +111,15 @@ export class FolkInk extends HTMLElement {
     }
   }
 
-  #update() {
+  update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
     const options: StrokeOptions = {
-      size: this.#size,
-      thinning: this.#thinning,
-      smoothing: this.#smoothing,
-      streamline: this.#streamline,
-      simulatePressure: this.#simulatePressure,
+      size: this.size,
+      thinning: this.thinning,
+      smoothing: this.smoothing,
+      streamline: this.streamline,
+      simulatePressure: this.simulatePressure,
       // TODO: figure out how to expose these as attributes
       easing: (t) => t,
       start: {
@@ -194,22 +133,6 @@ export class FolkInk extends HTMLElement {
         cap: true,
       },
     };
-    this.#path.setAttribute('d', this.#getSvgPathFromStroke(getStroke(this.#points, options)));
-  }
-
-  #getSvgPathFromStroke(stroke: Stroke): string {
-    if (stroke.length === 0) return '';
-
-    const d = stroke.reduce(
-      (acc, [x0, y0], i, arr) => {
-        const [x1, y1] = arr[(i + 1) % arr.length];
-        acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-        return acc;
-      },
-      ['M', ...stroke[0], 'Q']
-    );
-
-    d.push('Z');
-    return d.join(' ');
+    this.#path.setAttribute('d', getSvgPathFromStroke(getStroke(this.points, options)));
   }
 }
