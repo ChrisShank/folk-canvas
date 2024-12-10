@@ -1,4 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from '@lit/reactive-element';
+import { requestAnimationFrame, cancelAnimationFrame } from './rAF';
 
 export interface AnimationFrameControllerHost extends ReactiveControllerHost {
   tick(): void;
@@ -7,7 +8,6 @@ export interface AnimationFrameControllerHost extends ReactiveControllerHost {
 
 export class AnimationFrameController implements ReactiveController {
   #host;
-  #rAFId = -1;
   #lastTime = 0;
   #dtAccumulator = 0;
   #fixedTimestep = 1 / 60;
@@ -16,8 +16,9 @@ export class AnimationFrameController implements ReactiveController {
     return this.#fixedTimestep;
   }
 
+  #isRunning = false;
   get isRunning() {
-    return this.#rAFId !== -1;
+    return this.#isRunning;
   }
 
   constructor(host: AnimationFrameControllerHost) {
@@ -36,7 +37,7 @@ export class AnimationFrameController implements ReactiveController {
   }
 
   #tick = (timestamp: DOMHighResTimeStamp = performance.now()) => {
-    this.#rAFId = requestAnimationFrame(this.#tick);
+    requestAnimationFrame(this.#tick);
 
     const actualDelta = (timestamp - this.#lastTime) * 0.001;
     this.#lastTime = timestamp;
@@ -56,10 +57,12 @@ export class AnimationFrameController implements ReactiveController {
     if (this.isRunning) return;
 
     this.#lastTime = 0;
-    requestAnimationFrame(this.#tick);
+    this.#isRunning = true;
+    this.#tick();
   }
 
   stop() {
-    cancelAnimationFrame(this.#rAFId);
+    cancelAnimationFrame(this.#tick);
+    this.#isRunning = false;
   }
 }
