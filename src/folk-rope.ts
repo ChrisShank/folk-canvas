@@ -4,6 +4,7 @@ import { Vector } from './common/Vector.ts';
 import type { Point } from './common/types.ts';
 import { DOMRectTransform } from './common/DOMRectTransform.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
+import { PropertyValues } from '@lit/reactive-element';
 
 const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
 
@@ -120,7 +121,19 @@ export class FolkRope extends FolkBaseConnection {
     this.draw();
   };
 
-  override render(sourceRect: DOMRectTransform | DOMRectReadOnly, targetRect: DOMRectTransform | DOMRectReadOnly) {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    const { sourceRect, targetRect } = this;
+
+    if (sourceRect === null || targetRect === null) {
+      cancelAnimationFrame(this.#rAFId);
+      this.#points = [];
+      this.#path.removeAttribute('d');
+      this.#path2.removeAttribute('d');
+      return;
+    }
+
     let source: Point;
     let target: Point;
 

@@ -2,6 +2,7 @@ import { getBoxToBoxArrow } from 'perfect-arrows';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 import { getSvgPathFromStroke, pointsOnBezierCurves } from './common/utils.ts';
 import { getStroke, StrokeOptions } from 'perfect-freehand';
+import { PropertyValues } from '@lit/reactive-element';
 
 export type Arrow = [
   /** The x position of the (padded) starting point. */
@@ -53,10 +54,12 @@ export class FolkArrow extends FolkBaseConnection {
     },
   };
 
-  override render() {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
     const { sourceRect, targetRect } = this;
 
-    if (sourceRect === undefined || targetRect === undefined) {
+    if (sourceRect === null || targetRect === null) {
       this.style.clipPath = '';
       return;
     }

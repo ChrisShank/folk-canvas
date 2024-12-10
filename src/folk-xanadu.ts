@@ -1,11 +1,16 @@
 import { FolkBaseConnection } from './folk-base-connection.js';
 import { verticesToPolygon } from './common/utils.js';
 import type { Point } from './common/types.js';
+import { PropertyValues } from '@lit/reactive-element';
 export class FolkXanadu extends FolkBaseConnection {
   static tagName = 'folk-xanadu';
 
-  render(sourceRect: DOMRectReadOnly, targetRect: DOMRectReadOnly): void {
-    if (this.sourceElement === null || this.targetElement === null) {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    let { sourceRect, targetRect } = this;
+
+    if (sourceRect === null || targetRect === null) {
       this.style.clipPath = '';
       return;
     }

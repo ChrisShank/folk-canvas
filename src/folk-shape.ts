@@ -180,6 +180,7 @@ export class FolkShape extends HTMLElement {
 
   #rect = new DOMRectTransform();
   #previousRect = new DOMRectTransform();
+  #readonlyRect = new DOMRectTransformReadonly();
 
   #handles: Record<ResizeHandle | RotateHandle, HTMLElement>;
 
@@ -294,17 +295,15 @@ export class FolkShape extends HTMLElement {
   }
 
   #isConnected = false;
+
   connectedCallback() {
     this.setAttribute('tabindex', '0');
     this.#isConnected = true;
     this.#update();
   }
 
-  getTransformDOMRectReadonly() {
-    return new DOMRectTransformReadonly(this.#rect);
-  }
   getTransformDOMRect() {
-    return this.#rect;
+    return this.#readonlyRect;
   }
 
   // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
@@ -459,7 +458,9 @@ export class FolkShape extends HTMLElement {
   }
 
   #dispatchTransformEvent() {
-    const event = new TransformEvent(this.#rect, this.#previousRect);
+    this.#readonlyRect = new DOMRectTransformReadonly(this.#rect);
+
+    const event = new TransformEvent(this.#readonlyRect, this.#previousRect);
     this.dispatchEvent(event);
 
     if (event.xPrevented) {
