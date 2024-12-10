@@ -3,11 +3,19 @@ import { ClientRectObserverEntry } from './common/client-rect-observer.ts';
 import { FolkObserver } from './common/folk-observer.ts';
 import { FolkElement } from './common/folk-element.ts';
 import { property, state } from '@lit/reactive-element/decorators.js';
-import { PropertyValues } from '@lit/reactive-element';
+import { css, CSSResultGroup, PropertyValues } from '@lit/reactive-element';
 
 const folkObserver = new FolkObserver();
 
 export class FolkBaseConnection extends FolkElement {
+  static styles: CSSResultGroup = css`
+    :host {
+      display: block;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+  `;
   @property({ type: String, reflect: true }) source = '';
 
   @state() sourceElement: Element | null = null;

@@ -65,7 +65,7 @@ export class FolkArrow extends FolkBaseConnection {
       return;
     }
 
-    this.style.display = 'block';
+    this.style.display = '';
 
     const [sx, sy, cx, cy, ex, ey] = getBoxToBoxArrow(
       sourceRect.x,

@@ -53,7 +53,7 @@ export class FolkHull extends FolkBaseSet {
       return;
     }
 
-    this.style.display = 'block';
+    this.style.display = '';
 
     this.#hull = makeHull(this.sourceRects);
     this.#hullEl.style.clipPath = verticesToPolygon(this.#hull);

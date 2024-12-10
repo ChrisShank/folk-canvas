@@ -16,7 +16,7 @@ export class FolkXanadu extends FolkBaseConnection {
       return;
     }
 
-    this.style.display = 'block';
+    this.style.display = '';
 
     // If the right side of the target is to the left of the right side of the source then swap them
     if (sourceRect.x + sourceRect.width > targetRect.x + targetRect.width) {

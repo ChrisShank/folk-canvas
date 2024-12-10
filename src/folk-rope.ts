@@ -32,21 +32,24 @@ declare global {
 export class FolkRope extends FolkBaseConnection implements AnimationFrameControllerHost {
   static override tagName = 'folk-rope';
 
-  static styles = css`
-    svg {
-      height: 100%;
-      pointer-events: none;
-      width: 100%;
-    }
+  static styles = [
+    FolkBaseConnection.styles,
+    css`
+      svg {
+        height: 100%;
+        pointer-events: none;
+        width: 100%;
+      }
 
-    path {
-      fill: none;
-      pointer-events: auto;
-      stroke: var(--folk-rope-color, black);
-      stroke-width: var(--folk-rope-width, 3);
-      stroke-linecap: var(--folk-rope-linecap, round);
-    }
-  `;
+      path {
+        fill: none;
+        pointer-events: auto;
+        stroke: var(--folk-rope-color, black);
+        stroke-width: var(--folk-rope-width, 3);
+        stroke-linecap: var(--folk-rope-linecap, round);
+      }
+    `,
+  ];
 
   #rAF = new AnimationFrameController(this);
 

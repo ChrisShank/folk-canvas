@@ -6,31 +6,26 @@ import { property } from '@lit/reactive-element/decorators.js';
 export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';
 
-  static styles = css`
-    ${FolkRope.styles}
-    :host {
-      display: block;
-      position: absolute;
-      inset: 0 0 0 0;
-      pointer-events: none;
-    }
-
-    textarea {
-      position: absolute;
-      width: auto;
-      min-width: 3ch;
-      height: auto;
-      resize: none;
-      background: rgba(256, 256, 256, 0.8);
-      border: 1px solid #ccc;
-      padding: 4px;
-      pointer-events: auto;
-      overflow: hidden;
-      field-sizing: content;
-      translate: -50% -50%;
-      border-radius: 5px;
-    }
-  `;
+  static styles = [
+    ...FolkRope.styles,
+    css`
+      textarea {
+        position: absolute;
+        width: auto;
+        min-width: 3ch;
+        height: auto;
+        resize: none;
+        background: rgba(256, 256, 256, 0.8);
+        border: 1px solid #ccc;
+        padding: 4px;
+        pointer-events: auto;
+        overflow: hidden;
+        field-sizing: content;
+        translate: -50% -50%;
+        border-radius: 5px;
+      }
+    `,
+  ];
 
   @property({ type: String, reflect: true }) trigger = '';
 
