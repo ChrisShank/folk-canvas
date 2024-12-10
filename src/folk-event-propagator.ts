@@ -162,15 +162,14 @@ to.${key} = ${value};`);
   #evaluateExpression = (event?: Event) => {
     if (this.sourceElement === null || this.targetElement === null) return;
 
-    this.stroke = 'black';
-
     if (!this.#function) return;
 
     try {
       this.#function(this.sourceElement, this.targetElement, event);
+      this.style.setProperty('--folk-rope-color', '');
     } catch (error) {
       console.warn('Failed to evaluate expression:', error);
-      this.stroke = 'red';
+      this.style.setProperty('--folk-rope-color', 'red');
     }
   };
 }
