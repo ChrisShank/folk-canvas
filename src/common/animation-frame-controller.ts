@@ -11,6 +11,8 @@ export class AnimationFrameController implements ReactiveController {
   #lastTime = 0;
   #dtAccumulator = 0;
   #fixedTimestep = 1 / 60;
+  #timeoutMs;
+  #timeoutId = -1;
 
   get fixedTimestep() {
     return this.#fixedTimestep;
@@ -21,8 +23,9 @@ export class AnimationFrameController implements ReactiveController {
     return this.#isRunning;
   }
 
-  constructor(host: AnimationFrameControllerHost) {
+  constructor(host: AnimationFrameControllerHost, timeoutMs = 5000) {
     this.#host = host;
+    this.#timeoutMs = timeoutMs;
     host.addController(this);
   }
 
@@ -30,7 +33,11 @@ export class AnimationFrameController implements ReactiveController {
     this.start();
   }
 
-  hostUpdate() {}
+  hostUpdated() {
+    window.clearTimeout(this.#timeoutId);
+    this.#timeoutId = window.setTimeout(this.stop, this.#timeoutMs);
+    this.start();
+  }
 
   hostDisconnected() {
     this.stop();
@@ -61,8 +68,9 @@ export class AnimationFrameController implements ReactiveController {
     this.#tick();
   }
 
-  stop() {
+  stop = () => {
     cancelAnimationFrame(this.#tick);
+    window.clearTimeout(this.#timeoutId);
     this.#isRunning = false;
-  }
+  };
 }
