@@ -7,6 +7,7 @@ export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';
 
   static styles = css`
+    ${FolkRope.styles}
     :host {
       display: block;
       position: absolute;
