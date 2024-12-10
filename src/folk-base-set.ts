@@ -2,12 +2,25 @@ import { property, state } from '@lit/reactive-element/decorators.js';
 import { ClientRectObserverEntry } from './common/client-rect-observer.ts';
 import { FolkElement } from './common/folk-element.ts';
 import { FolkObserver } from './common/folk-observer.ts';
-import { PropertyValues } from '@lit/reactive-element';
+import { css, CSSResultGroup, PropertyValues } from '@lit/reactive-element';
 
 const folkObserver = new FolkObserver();
 
 // TODO: use mutation observer to track the addition an removal of elements
 export class FolkBaseSet extends FolkElement {
+  static styles: CSSResultGroup = css`
+    :host {
+      display: block;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    ::slotted(*) {
+      pointer-events: auto;
+    }
+  `;
+
   @property({ type: String, reflect: true }) sources = '';
 
   #sourcesMap = new Map<Element, DOMRectReadOnly>();

@@ -24,12 +24,6 @@
         }
       }
 
-      folk-hull {
-        display: block;
-        position: absolute;
-        inset: 0 0 0 0;
-      }
-
       h1 {
         margin: 0;
         width: fit-content;
@@ -39,9 +33,9 @@
   <body>
     <h1>This is a Convex Hull</h1>
 
-    <folk-hull sources="h1, body > folk-shape"></folk-hull>
     <folk-shape x="50" y="100" width="50" height="50"></folk-shape>
     <folk-shape x="200" y="200" width="50" height="50"></folk-shape>
+    <folk-hull sources="h1, body > folk-shape"></folk-hull>
     <folk-shape x="100" y="300" width="50" height="50"></folk-shape>
 
     <folk-hull sources="h1">

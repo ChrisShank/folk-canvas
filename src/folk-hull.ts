@@ -12,21 +12,16 @@ declare global {
 export class FolkHull extends FolkBaseSet {
   static tagName = 'folk-hull';
 
-  static styles = css`
-    :host {
-      pointer-events: none;
-    }
-
-    #hull {
-      background-color: var(--folk-hull-bg, #b4d8f644);
-      height: 100%;
-      width: 100%;
-    }
-
-    ::slotted(*) {
-      pointer-events: auto;
-    }
-  `;
+  static styles = [
+    FolkBaseSet.styles,
+    css`
+      #hull {
+        background-color: var(--folk-hull-bg, #b4d8f644);
+        height: 100%;
+        width: 100%;
+      }
+    `,
+  ];
 
   #hull: Point[] = [];
 

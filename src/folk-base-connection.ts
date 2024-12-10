@@ -16,6 +16,7 @@ export class FolkBaseConnection extends FolkElement {
       pointer-events: none;
     }
   `;
+
   @property({ type: String, reflect: true }) source = '';
 
   @state() sourceElement: Element | null = null;

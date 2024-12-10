@@ -18,15 +18,11 @@
       folk-shape {
         border: 2px solid black;
       }
-
-      folk-distance-field {
-        position: absolute;
-        inset: 0;
-      }
     </style>
   </head>
   <body>
     <script type="module">
+      import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-distance-field.ts';
 
       const d = document.createElement('folk-distance-field');

@@ -3,7 +3,6 @@ import { Point } from './common/types.ts';
 import { glsl } from './common/tags.ts';
 import { WebGLUtils } from './common/webgl.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
-import { FolkShape } from './folk-shape.ts';
 import { PropertyValues } from '@lit/reactive-element';
 
 /**
@@ -13,13 +12,6 @@ import { PropertyValues } from '@lit/reactive-element';
  */
 export class FolkDistanceField extends FolkBaseSet {
   static tagName = 'folk-distance-field';
-
-  static override define() {
-    FolkShape.define();
-    super.define();
-  }
-
-  #shadow = this.attachShadow({ mode: 'open' });
 
   private textures: WebGLTexture[] = [];
 
@@ -39,26 +31,27 @@ export class FolkDistanceField extends FolkBaseSet {
 
   private isPingTexture: boolean = true;
 
-  constructor() {
-    super();
+  firstUpdated(changedProperties: PropertyValues<this>): void {
+    super.firstUpdated(changedProperties);
 
-    this.#shadow.appendChild(document.createElement('slot'));
+    this.renderRoot.appendChild(document.createElement('slot'));
   }
 
   connectedCallback() {
+    super.connectedCallback();
+
     this.initWebGL();
     this.initShaders();
     this.initPingPongTextures();
 
     window.addEventListener('resize', this.handleResize);
-
-    super.connectedCallback();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
 
     window.removeEventListener('resize', this.handleResize);
+
     this.cleanupWebGLResources();
   }
 
@@ -70,7 +63,7 @@ export class FolkDistanceField extends FolkBaseSet {
     }
 
     this.canvas = canvas;
-    this.#shadow.prepend(canvas);
+    this.renderRoot.prepend(canvas);
     this.glContext = gl;
   }
 
