@@ -14,5 +14,5 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "types": ["@webgpu/types", "@types/node", "bun-types"]
   },
-  "include": ["src/**/*.ts", "demo/**/*.ts", "vite.config.ts"]
+  "include": ["src/**/*.ts", "demo/**/*.ts", "vite.config.ts", "globals.d.ts"]
 }

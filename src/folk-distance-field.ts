@@ -1,6 +1,6 @@
 import { DOMRectTransform } from './common/DOMRectTransform.ts';
-import { frag, vert } from './common/tags.ts';
 import { Point } from './common/types.ts';
+import { glsl } from './common/tags.ts';
 import { WebGLUtils } from './common/webgl.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { FolkShape } from './folk-shape.ts';
@@ -466,7 +466,7 @@ export class FolkDistanceField extends FolkBaseSet {
  * Vertex shader shared by multiple programs.
  * Transforms vertices to normalized device coordinates and passes texture coordinates to the fragment shader.
  */
-const commonVertShader = vert`#version 300 es
+const commonVertShader = glsl`#version 300 es
 precision mediump float;
 in vec2 a_position;
 out vec2 v_texCoord;
@@ -480,7 +480,7 @@ void main() {
  * Fragment shader for the Jump Flooding Algorithm.
  * Updates the nearest seed point and distance for each pixel by examining neighboring pixels.
  */
-const jfaFragShader = frag`#version 300 es
+const jfaFragShader = glsl`#version 300 es
 precision mediump float;
 precision mediump int;
 
@@ -524,7 +524,7 @@ void main() {
  * Fragment shader for rendering the final distance field.
  * Converts distances to colors for visualization.
  */
-const renderFragShader = frag`#version 300 es
+const renderFragShader = glsl`#version 300 es
 precision mediump float;
 
 in vec2 v_texCoord;
@@ -559,7 +559,7 @@ void main() {
  * Vertex shader for rendering seed points.
  * Outputs the shape ID to the fragment shader.
  */
-const seedVertShader = vert`#version 300 es
+const seedVertShader = glsl`#version 300 es
 precision mediump float;
 
 in vec3 a_position; // x, y position and shapeID as z
@@ -574,7 +574,7 @@ void main() {
  * Fragment shader for rendering seed points.
  * Initializes the texture with seed point positions and shape IDs.
  */
-const seedFragShader = frag`#version 300 es
+const seedFragShader = glsl`#version 300 es
 precision mediump float;
 
 flat in float v_shapeID;
