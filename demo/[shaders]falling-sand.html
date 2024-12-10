@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Distance Field Demo</title>
+    <title>Falling Sand Demo</title>
     <style>
       html {
         height: 100%;
@@ -27,9 +27,42 @@
         position: absolute;
         inset: 0;
       }
+
+      .key-helper {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .key-number {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 2px 8px;
+        border-radius: 3px;
+        margin-right: 10px;
+      }
     </style>
   </head>
   <body>
+    <div class="key-helper">
+      <div><span class="key-number">1</span> Smoke</div>
+      <div><span class="key-number">2</span> Water</div>
+      <div><span class="key-number">3</span> Lava</div>
+      <div><span class="key-number">4</span> Sand</div>
+      <div><span class="key-number">5</span> Plant</div>
+      <div><span class="key-number">6</span> Stone</div>
+      <div><span class="key-number">7</span> Wall</div>
+    </div>
+
     <folk-sand>
       <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
       <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
