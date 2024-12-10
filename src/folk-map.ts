@@ -3,18 +3,8 @@ import { LatLng, LatLngExpression, LeafletEvent, map, Map, tileLayer } from 'lea
 // @ts-ignore
 // Vite specific import :(
 import leafletCSS from 'leaflet/dist/leaflet.css?inline';
-import { css } from './common/tags';
-const styles = css`
-  ${leafletCSS}
-  :host {
-    display: block;
-  }
-
-  :host > div {
-    height: 100%;
-    width: 100%;
-  }
-`;
+import { FolkElement } from './common/folk-element';
+import { css, PropertyValues, unsafeCSS } from '@lit/reactive-element';
 
 export class RecenterEvent extends Event {
   constructor() {
@@ -22,23 +12,54 @@ export class RecenterEvent extends Event {
   }
 }
 
-export class FolkMap extends HTMLElement {
-  static tagName = 'folk-map';
+export class FolkMap extends FolkElement {
+  static override tagName = 'folk-map';
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    customElements.define(this.tagName, this);
-  }
+  static override styles = css`
+    ${unsafeCSS(leafletCSS)}
+    :host {
+      display: block;
+    }
+
+    :host > div {
+      height: 100%;
+      width: 100%;
+    }
+  `;
 
   #container = document.createElement('div');
-  #map!: Map;
+  #map = map(this.#container);
 
-  constructor() {
-    super();
+  override firstUpdated(changedProperties: PropertyValues): void {
+    super.firstUpdated(changedProperties);
 
-    const shadow = this.attachShadow({ mode: 'open' });
-    shadow.adoptedStyleSheets.push(styles);
-    shadow.appendChild(this.#container);
+    this.renderRoot.appendChild(this.#container);
+
+    this.#map.addLayer(
+      tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      })
+    );
+
+    this.#map.setView(
+      (this.getAttribute('coordinates') || '0, 0').split(',').map(Number) as LatLngExpression,
+      Number(this.getAttribute('zoom') || 13)
+    );
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    // Move end includes changes to zoom
+    this.#map.on('moveend', this.handleEvent);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    // Move end includes changes to zoom
+    this.#map.off('moveend', this.handleEvent);
   }
 
   get lat() {
@@ -67,24 +88,6 @@ export class FolkMap extends HTMLElement {
   }
   set zoom(zoom) {
     this.#map.setZoom(zoom);
-  }
-
-  connectedCallback() {
-    this.#map = map(this.#container);
-    this.#map.addLayer(
-      tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      })
-    );
-
-    // Move end includes changes to zoom
-    this.#map.on('moveend', this.handleEvent);
-
-    this.#map.setView(
-      (this.getAttribute('coordinates') || '0, 0').split(',').map(Number) as LatLngExpression,
-      Number(this.getAttribute('zoom') || 13)
-    );
   }
 
   handleEvent = (event: LeafletEvent) => {
