@@ -1,32 +1,30 @@
+import { FolkElement } from './common/folk-element';
+
 declare global {
   interface HTMLElementTagNameMap {
     'folk-timer': FolkTimer;
   }
 }
 
-export class FolkTimer extends HTMLElement {
+export class FolkTimer extends FolkElement {
   static tagName = 'folk-timer';
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    customElements.define(this.tagName, this);
-  }
-
   #timeMs = 0;
-  #timeoutId: NodeJS.Timeout | -1 = -1;
+  #timeoutId = -1;
 
   #intervalMs = 100;
 
   connectedCallback() {
+    super.connectedCallback();
     this.#updateTime(0);
   }
 
   start() {
-    this.#timeoutId = setInterval(this.#updateTime, this.#intervalMs);
+    this.#timeoutId = window.setInterval(this.#updateTime, this.#intervalMs);
   }
 
   stop() {
-    clearInterval(this.#timeoutId);
+    window.clearInterval(this.#timeoutId);
     this.#timeoutId = -1;
   }
 
