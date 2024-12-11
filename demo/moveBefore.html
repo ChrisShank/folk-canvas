@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>moveBefore</title>
+    <style>
+      html {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        overflow: hidden;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        display: flex;
+      }
+
+      .container {
+        width: 50%;
+        height: 100vh;
+        border: 2px dashed #ccc;
+        transition: background-color 0.3s;
+      }
+
+      .container:has(folk-shape) {
+        background-color: rgba(0, 255, 0, 0.1);
+      }
+
+      folk-shape {
+        background: rgb(187, 178, 178);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="left"></div>
+    <div class="container" id="right"></div>
+
+    <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="100" y="300" width="50" height="50" rotation="45"></folk-shape>
+
+    <script type="module">
+      import '../src/standalone/folk-shape.ts';
+
+      // Check for moveBefore support
+      if (!Element.prototype.moveBefore) {
+        console.warn('Note: moveBefore() API requires Chrome Canary with chrome://flags/#atomic-move enabled');
+      }
+
+      let isMoving = false; // Flag to prevent recursive moves
+
+      document.addEventListener('transform', (e) => {
+        if (isMoving) return; // Prevent recursive calls
+
+        const shape = e.target;
+        if (!shape.moveBefore) {
+          return; // Exit if moveBefore is not supported
+        }
+
+        const rect = shape.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+
+        const containers = document.querySelectorAll('.container');
+        try {
+          isMoving = true;
+          for (const container of containers) {
+            const containerRect = container.getBoundingClientRect();
+            if (centerX >= containerRect.left && centerX <= containerRect.right) {
+              container.moveBefore(shape, container.firstChild);
+              return;
+            }
+          }
+
+          // If not in any container, move to body
+          if (shape.parentElement !== document.body) {
+            document.body.moveBefore(shape, document.body.firstChild);
+          }
+        } finally {
+          isMoving = false; // Ensure flag is reset even if there's an error
+        }
+      });
+    </script>
+  </body>
+</html>
