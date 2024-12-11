@@ -89,7 +89,8 @@
       });
 
       document.addEventListener('click', (event) => {
-        if (event.target === document.body) {
+        console.log(event.target);
+        if (event.target === document.body || event.target === projector) {
           projector.project();
         }
       });
