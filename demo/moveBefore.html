@@ -70,14 +70,15 @@
         console.warn('Note: moveBefore() API requires Chrome Canary with chrome://flags/#atomic-move enabled');
       }
 
-      let isMoving = false; // Flag to prevent recursive moves
+      // TODO: investigate / figure out how to avoid the need for this
+      let isMoving = false;
 
       document.addEventListener('transform', (e) => {
         if (isMoving) return; // Prevent recursive calls
 
         const shape = e.target;
         if (!shape.moveBefore) {
-          return; // Exit if moveBefore is not supported
+          return;
         }
 
         const rect = shape.getBoundingClientRect();
@@ -94,12 +95,11 @@
             }
           }
 
-          // If not in any container, move to body
           if (shape.parentElement !== document.body) {
             document.body.moveBefore(shape, document.body.firstChild);
           }
         } finally {
-          isMoving = false; // Ensure flag is reset even if there's an error
+          isMoving = false;
         }
       });
     </script>
