@@ -16,7 +16,7 @@ interface PropagatorOptions {
  * A propagator takes a source and target element and listens for events on both.
  * When an event is detected on one, it will execute a handler and update the other element.
  */
-export class SymmetricPropagator {
+export class BiPropagator {
   #source: Element | null = null;
   #target: Element | null = null;
   #sourceEventName: string | null = null;
