@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bidirectional Event Propagator</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        padding: 20px;
+      }
+
+      input {
+        padding: 8px;
+        margin: 10px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="text" id="input1" placeholder="Type here..." />
+    <input type="text" id="input2" placeholder="Or type here..." />
+
+    <folk-event-propagator
+      source="#input1"
+      target="#input2"
+      trigger="input"
+      expression="value: from.value"
+      bidirectional
+    ></folk-event-propagator>
+
+    <script type="module">
+      import '../src/standalone/folk-event-propagator.ts';
+    </script>
+  </body>
+</html>
