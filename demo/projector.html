@@ -59,12 +59,13 @@
 
       const projector = document.querySelector('folk-projector');
 
-      function createSpreadsheetEditor(shape) {
+      function XYCell(shape) {
         const editor = document.createElement('div');
         const xInput = document.createElement('input');
         const yInput = document.createElement('input');
+        xInput.type = 'number';
+        yInput.type = 'number';
 
-        [xInput, yInput].forEach((input) => (input.type = 'number'));
         xInput.value = shape.x;
         yInput.value = shape.y;
 
@@ -78,12 +79,17 @@
 
       const shapes = document.querySelectorAll('folk-shape');
       shapes.forEach((shape) => {
-        projector.mapping(shape, createSpreadsheetEditor);
-        console.log(shape);
+        projector.mapping(shape, XYCell);
       });
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'v') {
+          projector.project();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (event.target === document.body) {
           projector.project();
         }
       });

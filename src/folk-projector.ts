@@ -34,15 +34,44 @@ export class FolkProjector extends HTMLElement {
         display: flex;
         flex-wrap: wrap;
         position: absolute;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      div input:first-of-type {
+        border-right: 2px solid lightgray;
       }
       div input {
+        background-color: #36454f;
+        color: white;
         width: 50%;
         min-width: 0;
         font-size: 12px;
         box-sizing: border-box;
+        border: none;
+        text-align: center;
       }
     `;
     this.appendChild(style);
+  }
+
+  // TODO: avoid this kind of hack
+  #maintainProjectedPositions() {
+    if (!this.#isProjecting) return;
+
+    const shapes = Array.from(this.children).filter((el): el is FolkShape => el instanceof FolkShape);
+    const mappedElements = shapes
+      .map((shape) => this.#mappedElements.get(shape))
+      .filter((el): el is HTMLElement => el !== null);
+
+    shapes.forEach((shape, i) => {
+      const mappedEl = mappedElements[i];
+      // Restore the projected position before paint
+      shape.style.transform = mappedEl.style.transform;
+      shape.style.width = mappedEl.style.width;
+      shape.style.height = mappedEl.style.height;
+    });
+
+    requestAnimationFrame(() => this.#maintainProjectedPositions());
   }
 
   mapping(shape: FolkShape, mappingFn: (element: FolkShape) => HTMLElement) {
@@ -55,7 +84,7 @@ export class FolkProjector extends HTMLElement {
     mappedEl.style.transform = shape.style.transform;
     mappedEl.style.transformOrigin = '0 0';
     mappedEl.style.opacity = '0';
-    mappedEl.style.pointerEvents = 'all';
+    mappedEl.style.pointerEvents = 'none';
 
     this.appendChild(mappedEl);
     this.#mappedElements.set(shape, mappedEl);
@@ -63,6 +92,7 @@ export class FolkProjector extends HTMLElement {
 
   async project(spacing = 20) {
     if (this.#isTransitioning) return;
+
     this.#isTransitioning = true;
 
     const shapes = Array.from(this.children).filter((el): el is FolkShape => el instanceof FolkShape);
@@ -70,9 +100,6 @@ export class FolkProjector extends HTMLElement {
     const mappedElements = shapes
       .map((shape) => this.#mappedElements.get(shape))
       .filter((el): el is HTMLElement => el !== null);
-
-    // Ensure elements are painted before transition
-    await new Promise(requestAnimationFrame);
 
     const CELL_WIDTH = 100;
     const CELL_HEIGHT = 50;
@@ -127,6 +154,10 @@ export class FolkProjector extends HTMLElement {
           shape.style.transform = newTransform;
           shape.style.width = `${newRect.width}px`;
           shape.style.height = `${newRect.height}px`;
+          if (this.#isProjecting) {
+            shape.blur();
+            shape.style.zIndex = '0';
+          }
           const mappedEl = mappedElements[i];
           if (mappedEl) {
             mappedEl.style.transform = newTransform;
@@ -141,11 +172,16 @@ export class FolkProjector extends HTMLElement {
         this.#isTransitioning = false;
         shapes.forEach((shape, i) => {
           shape.style.viewTransitionName = '';
+          shape.style.pointerEvents = this.#isProjecting ? 'none' : 'all';
           mappedElements[i].style.viewTransitionName = '';
+          mappedElements[i].style.pointerEvents = this.#isProjecting ? 'all' : 'none';
         });
       });
     }
-
     this.#isProjecting = !this.#isProjecting;
+
+    if (this.#isProjecting) {
+      this.#maintainProjectedPositions();
+    }
   }
 }
