@@ -8,13 +8,26 @@ import {
   visualizationShader,
   vertexShader,
 } from './folk-sand.glsl.ts';
-import { FolkShape } from './folk-shape.ts';
 import { requestAnimationFrame } from './common/rAF.ts';
+import { FolkBaseSet } from './folk-base-set.ts';
+import { css, PropertyValues } from '@lit/reactive-element';
+import { DOMRectTransformReadonly } from './common/DOMRectTransform.ts';
 
-export class FolkSand extends HTMLElement {
-  static tagName = 'folk-sand';
+export class FolkSand extends FolkBaseSet {
+  static override tagName = 'folk-sand';
 
-  private canvas!: HTMLCanvasElement;
+  static styles = [
+    FolkBaseSet.styles,
+    css`
+      canvas {
+        height: 100%;
+        width: 100%;
+        pointer-events: auto;
+      }
+    `,
+  ];
+
+  private canvas = document.createElement('canvas');
   private gl!: WebGL2RenderingContext;
 
   private program!: WebGLProgram;
@@ -47,8 +60,6 @@ export class FolkSand extends HTMLElement {
   private materialType = 4;
   private brushRadius = 5;
 
-  private shapes: NodeListOf<FolkShape> = document.querySelectorAll('folk-shape');
-
   private frames = 0;
   private swap = 0;
   private shadowSwap = 0;
@@ -64,53 +75,21 @@ export class FolkSand extends HTMLElement {
   private shapeIndexBuffer!: WebGLBuffer;
   private shapeIndexCount = 0;
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    FolkShape.define();
-    customElements.define(this.tagName, this);
-  }
+  connectedCallback(): void {
+    super.connectedCallback();
 
-  connectedCallback() {
-    this.setupCanvas();
+    this.renderRoot.appendChild(this.canvas);
     this.initializeWebGL();
     this.initializeSimulation();
     this.initializeCollisionDetection();
-
-    // Collect all FolkShape elements
-    this.shapes = document.querySelectorAll('folk-shape');
-
-    // Attach event listeners to shapes
-    this.shapes.forEach((shape) => {
-      shape.addEventListener('transform', this.handleShapeTransform);
-    });
-
-    // Initialize collision texture with current shapes
-    this.collectShapeData();
-    this.updateCollisionTexture();
-
     this.attachEventListeners();
+    this.handleShapeTransform();
     this.render();
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
     this.detachEventListeners();
-
-    // Remove event listeners from shapes
-    this.shapes.forEach((shape) => {
-      shape.removeEventListener('transform', this.handleShapeTransform);
-    });
-  }
-
-  private setupCanvas() {
-    this.canvas = document.createElement('canvas');
-    this.canvas.id = 'main-canvas';
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.display = 'block';
-    this.style.display = 'block';
-    this.style.width = '100%';
-    this.style.height = '100%';
-    this.appendChild(this.canvas);
   }
 
   private initializeWebGL() {
@@ -206,10 +185,6 @@ export class FolkSand extends HTMLElement {
     gl.vertexAttribPointer(posAttribLoc, 2, gl.FLOAT, false, 0, 0);
 
     gl.bindVertexArray(null);
-
-    // Initial collection and render of shape data
-    this.collectShapeData();
-    this.updateCollisionTexture();
   }
 
   private setupBuffers() {
@@ -295,11 +270,6 @@ export class FolkSand extends HTMLElement {
   }
 
   private attachEventListeners() {
-    this.handlePointerDown = this.handlePointerDown.bind(this);
-    this.handlePointerMove = this.handlePointerMove.bind(this);
-    this.handlePointerUp = this.handlePointerUp.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-
     this.canvas.addEventListener('pointerdown', this.handlePointerDown);
     this.canvas.addEventListener('pointermove', this.handlePointerMove);
     this.canvas.addEventListener('pointerup', this.handlePointerUp);
@@ -313,7 +283,7 @@ export class FolkSand extends HTMLElement {
     document.removeEventListener('keydown', this.handleKeyDown);
   }
 
-  private handlePointerMove(event: PointerEvent) {
+  private handlePointerMove = (event: PointerEvent) => {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -325,9 +295,9 @@ export class FolkSand extends HTMLElement {
     // Scale coordinates relative to canvas size
     this.pointer.x = (x / rect.width) * this.canvas.width;
     this.pointer.y = (y / rect.height) * this.canvas.height;
-  }
+  };
 
-  private handlePointerDown(event: PointerEvent) {
+  private handlePointerDown = (event: PointerEvent) => {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -338,18 +308,18 @@ export class FolkSand extends HTMLElement {
     this.pointer.prevX = this.pointer.x;
     this.pointer.prevY = this.pointer.y;
     this.pointer.down = true;
-  }
+  };
 
-  private handlePointerUp() {
+  private handlePointerUp = () => {
     this.pointer.down = false;
-  }
+  };
 
-  private handleKeyDown(event: KeyboardEvent) {
+  private handleKeyDown = (event: KeyboardEvent) => {
     const key = parseInt(event.key);
     if (!isNaN(key)) {
       this.setMaterialType(key);
     }
-  }
+  };
 
   private setMaterialType(type: number) {
     this.materialType = Math.min(Math.max(type, 0), 9);
@@ -636,12 +606,20 @@ export class FolkSand extends HTMLElement {
     const indices: number[] = [];
     let vertexOffset = 0;
 
-    this.shapes.forEach((shape) => {
-      const rect = shape.getTransformDOMRect();
-      if (!rect) return;
-
+    this.sourceRects.forEach((rect) => {
       // Get the transformed vertices in parent space
-      const transformedPoints = rect.vertices().map((point) => rect.toParentSpace(point));
+      let transformedPoints;
+
+      if (rect instanceof DOMRectTransformReadonly) {
+        transformedPoints = rect.vertices().map((point) => rect.toParentSpace(point));
+      } else {
+        transformedPoints = [
+          { x: rect.left, y: rect.top },
+          { x: rect.right, y: rect.top },
+          { x: rect.left, y: rect.bottom },
+          { x: rect.right, y: rect.bottom },
+        ];
+      }
 
       // Convert the transformed points to buffer coordinates
       const bufferPoints = transformedPoints.map((point) => this.convertToBufferCoordinates(point.x, point.y));
@@ -704,10 +682,18 @@ export class FolkSand extends HTMLElement {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  private handleShapeTransform = () => {
+  override update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    if (this.sourcesMap.size !== this.sourceElements.size) return;
+
+    this.handleShapeTransform();
+  }
+
+  private handleShapeTransform() {
     // Recollect and update all shape data when any shape changes
     // TODO: do this more piecemeal
     this.collectShapeData();
     this.updateCollisionTexture();
-  };
+  }
 }

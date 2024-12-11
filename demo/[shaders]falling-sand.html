@@ -23,11 +23,6 @@
         border-radius: 2px;
       }
 
-      folk-sand {
-        position: absolute;
-        inset: 0;
-      }
-
       .key-helper {
         position: fixed;
         top: 20px;
@@ -50,6 +45,15 @@
         border-radius: 3px;
         margin-right: 10px;
       }
+
+      p {
+        box-sizing: border-box;
+        color: white;
+        position: absolute;
+        top: 150px;
+        left: 25px;
+        border: 1px solid white;
+      }
     </style>
   </head>
   <body>
@@ -64,6 +68,7 @@
     </div>
 
     <folk-sand>
+      <p>Sanding</p>
       <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
       <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
       <folk-shape x="100" y="300" width="50" height="50"></folk-shape>
