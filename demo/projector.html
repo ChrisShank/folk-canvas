@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projector</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        overscroll-behavior: none;
+      }
+
+      folk-shape {
+        box-sizing: border-box;
+        background-color: rgb(187, 178, 178);
+        border-radius: 2px;
+        border: 2px solid rgba(0, 0, 0, 0.5);
+      }
+
+      folk-projector {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      ::view-transition-group(*) {
+        overflow: clip;
+      }
+
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        height: 100%;
+        width: auto;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-projector>
+      <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+      <folk-shape x="100" y="200" width="50" height="50"></folk-shape>
+      <folk-shape x="100" y="300" width="50" height="50" rotation="45"></folk-shape>
+      <folk-shape x="300" y="150" width="80" height="40" rotation="45"></folk-shape>
+      <folk-shape x="400" y="250" width="60" height="90" rotation="45"></folk-shape>
+    </folk-projector>
+    <folk-shape x="500" y="290" width="80" height="40" rotation="45"></folk-shape>
+    <folk-shape x="300" y="350" width="60" height="90" rotation="45"></folk-shape>
+
+    <script type="module">
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-projector.ts';
+
+      const projector = document.querySelector('folk-projector');
+
+      function createSpreadsheetEditor(shape) {
+        const editor = document.createElement('div');
+        const xInput = document.createElement('input');
+        const yInput = document.createElement('input');
+
+        [xInput, yInput].forEach((input) => (input.type = 'number'));
+        xInput.value = shape.x;
+        yInput.value = shape.y;
+
+        xInput.addEventListener('input', (e) => (shape.x = Number(e.target.value)));
+        yInput.addEventListener('input', (e) => (shape.y = Number(e.target.value)));
+
+        editor.appendChild(xInput);
+        editor.appendChild(yInput);
+        return editor;
+      }
+
+      const shapes = document.querySelectorAll('folk-shape');
+      shapes.forEach((shape) => {
+        projector.mapping(shape, createSpreadsheetEditor);
+        console.log(shape);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'v') {
+          projector.project();
+        }
+      });
+    </script>
+  </body>
+</html>
