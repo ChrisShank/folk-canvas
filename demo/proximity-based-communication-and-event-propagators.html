@@ -74,17 +74,12 @@
     </folk-proximity>
 
     <folk-event-propagator
+      sourceTrigger="input"
+      sourceExpression="lat: from.value"
+      targetTrigger="recenter"
+      targetExpression="value: from.lat"
       source="input[type='range']"
       target="folk-map"
-      trigger="input"
-      expression="lat: from.value"
-    ></folk-event-propagator>
-
-    <folk-event-propagator
-      source="folk-map"
-      target="input[type='range']"
-      trigger="recenter"
-      expression="value: from.lat"
     ></folk-event-propagator>
 
     <script type="module">
