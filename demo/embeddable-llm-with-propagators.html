@@ -35,6 +35,7 @@
         font-style: italic;
         font-size: 1rem;
         text-align: center;
+        margin: 0;
       }
     </style>
   </head>
@@ -80,7 +81,7 @@
     </folk-shape>
 
     <folk-shape x="400" y="100" width="250">
-      <folk-llm system-prompt="Output text as HTML, no backticks"></folk-llm>
+      <folk-llm system-prompt="Output text as HTML"></folk-llm>
     </folk-shape>
 
     <folk-shape x="700" y="200">
@@ -94,13 +95,7 @@
       expression="prompt: `double this list of ingredients '${from.innerHTML}'`"
     ></folk-event-propagator>
 
-    <folk-event-propagator
-      source="folk-llm"
-      target="folk-timer"
-      trigger="started"
-      expression="reset(): true
-start(): true"
-    >
+    <folk-event-propagator source="folk-llm" target="folk-timer" trigger="started" expression="restart(): true">
     </folk-event-propagator>
 
     <folk-event-propagator

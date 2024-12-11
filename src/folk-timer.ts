@@ -16,7 +16,7 @@ export class FolkTimer extends FolkElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.#updateTime(0);
+    this.reset();
   }
 
   start() {
@@ -33,8 +33,13 @@ export class FolkTimer extends FolkElement {
     this.#updateTime(0);
   }
 
+  restart() {
+    this.reset();
+    this.start();
+  }
+
   #updateTime = (time = this.#timeMs + this.#intervalMs) => {
     this.#timeMs = time;
-    this.textContent = (time / 1000).toFixed(1);
+    this.renderRoot.textContent = (time / 1000).toFixed(1);
   };
 }
