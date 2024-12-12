@@ -3,8 +3,6 @@ import { css, html } from './common/tags';
 // hardcoded column and row numbers
 const styles = css`
   :host {
-    --column-number: 10;
-    --row-number: 10;
     --cell-height: 1.75rem;
     --cell-width: 100px;
     --border-color: #e1e1e1;
@@ -12,8 +10,8 @@ const styles = css`
     box-sizing: border-box;
     display: grid;
     font-family: monospace;
-    grid-template-columns: 50px repeat(var(--column-number), var(--cell-width));
-    grid-template-rows: repeat(calc(var(--row-number) + 1), var(--cell-height));
+    grid-template-columns: 50px repeat(var(--column-count), var(--cell-width));
+    grid-template-rows: repeat(calc(var(--row-count) + 1), var(--cell-height));
     position: relative;
     overflow: scroll;
     scroll-snap-type: both mandatory;
@@ -116,20 +114,20 @@ const styles = css`
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-function getColumnName(index: number) {
+export function getColumnName(index: number) {
   return alphabet[index % alphabet.length];
 }
 
-function getColumnIndex(name: string) {
+export function getColumnIndex(name: string) {
   return alphabet.indexOf(name);
 }
 
-function relativeColumnName(name: string, num: number) {
+export function relativeColumnName(name: string, num: number) {
   const index = alphabet.indexOf(name);
   return alphabet[index + num];
 }
 
-export function templateCells(numberOfRows: number, numberOfColumns: number, expressions: Record<string, string>) {
+export function templateCells(numberOfRows: number, numberOfColumns: number, expressions: Record<string, string> = {}) {
   const cells: string[] = [];
   for (let i = 0; i < numberOfRows; i += 1) {
     for (let j = 0; j < numberOfColumns; j += 1) {
@@ -213,6 +211,9 @@ export class FolkSpreadsheet extends HTMLElement {
         .map((row) => `s-header[row="${row}"], ::slotted(folk-cell[row="${row}"]) { grid-row: ${row}; }`)
         .join('\n')}
     </style>`;
+
+    this.style.setProperty('--column-count', columns.length.toString());
+    this.style.setProperty('--row-count', rows.length.toString());
 
     this.#shadow.setHTMLUnsafe(html`
       <s-header empty></s-header>
@@ -435,7 +436,7 @@ export class FolkSpreadSheetCell extends HTMLElement {
   get expression() {
     return this.#expression;
   }
-  set expression(expression) {
+  set expression(expression: any) {
     expression = String(expression).trim();
     this.#expression = expression;
 
@@ -499,7 +500,7 @@ export class FolkSpreadSheetCell extends HTMLElement {
 
       this.#value = value;
       this.textContent = value.toString();
-      this.dispatchEvent(new Event('propagate'));
+      this.dispatchEvent(new Event('propagate', { bubbles: true }));
       this.setAttribute('type', typeof value);
     } catch (error) {
       console.log(error);
