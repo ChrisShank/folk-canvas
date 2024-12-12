@@ -13,13 +13,15 @@ export class FolkSpaceProjector extends FolkBaseSet {
   static override styles = [
     FolkBaseSet.styles,
     css`
-      folk-shape {
+      folk-spreadsheet {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
         pointer-events: auto;
       }
     `,
   ];
 
-  #shape = document.createElement('folk-shape');
   #spreadsheet = document.createElement('folk-spreadsheet');
 
   override firstUpdated(changedProperties: PropertyValues<this>): void {
@@ -27,9 +29,7 @@ export class FolkSpaceProjector extends FolkBaseSet {
 
     this.#spreadsheet.style.setProperty('--cell-width', '50px');
 
-    this.#shape.appendChild(this.#spreadsheet);
-
-    this.renderRoot.append(this.#shape);
+    this.renderRoot.append(this.#spreadsheet);
   }
 
   connectedCallback(): void {
