@@ -75,7 +75,8 @@ const styles = css`
     outline: solid 1px hsl(214, 84%, 56%);
   }
 
-  :host(:hover) {
+  :host(:hover),
+  :host(:state(highlighted)) {
     outline: solid 2px hsl(214, 84%, 56%);
   }
 
@@ -251,6 +252,18 @@ export class FolkShape extends HTMLElement {
     this.#previousRect.rotation = this.#rect.rotation;
     this.#rect.rotation = rotation;
     this.#requestUpdate();
+  }
+
+  #highlighted = false;
+  get highlighted() {
+    return this.#highlighted;
+  }
+  set highlighted(highlighted) {
+    if (this.#highlighted === highlighted) return;
+
+    this.#highlighted = highlighted;
+
+    highlighted ? this.#internals.states.add('highlighted') : this.#internals.states.delete('highlighted');
   }
 
   constructor() {

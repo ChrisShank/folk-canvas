@@ -18,6 +18,7 @@ export class FolkSpaceProjector extends FolkBaseSet {
         bottom: 5px;
         right: 5px;
         pointer-events: auto;
+        box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.6);
       }
     `,
   ];
@@ -35,11 +36,15 @@ export class FolkSpaceProjector extends FolkBaseSet {
   connectedCallback(): void {
     super.connectedCallback();
     this.#spreadsheet.addEventListener('propagate', this.#onPropagate);
+    this.#spreadsheet.addEventListener('focusin', this.#onFocusin);
+    this.#spreadsheet.addEventListener('focusout', this.#onFocusout);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#spreadsheet.removeEventListener('propagate', this.#onPropagate);
+    this.#spreadsheet.removeEventListener('focusin', this.#onFocusin);
+    this.#spreadsheet.removeEventListener('focusout', this.#onFocusout);
   }
 
   #lock = false;
@@ -79,6 +84,36 @@ export class FolkSpaceProjector extends FolkBaseSet {
         return;
       }
     }
+  };
+
+  #onFocusin = (event: Event) => {
+    const cell = event.target;
+
+    if (!(cell instanceof FolkSpreadSheetCell)) return;
+
+    const shape = this.sourceElements
+      .values()
+      .drop(cell.row - 1)
+      .find(() => true);
+
+    if (!(shape instanceof FolkShape)) return;
+
+    shape.highlighted = true;
+  };
+
+  #onFocusout = (event: Event) => {
+    const cell = event.target;
+
+    if (!(cell instanceof FolkSpreadSheetCell)) return;
+
+    const shape = this.sourceElements
+      .values()
+      .drop(cell.row - 1)
+      .find(() => true);
+
+    if (!(shape instanceof FolkShape)) return;
+
+    shape.highlighted = false;
   };
 
   override update(changedProperties: PropertyValues<this>): void {

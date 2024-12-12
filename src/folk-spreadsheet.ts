@@ -106,6 +106,11 @@ const styles = css`
     justify-content: end;
   }
 
+  ::slotted(folk-cell:hover) {
+    outline: 1px solid #1b73e8;
+    z-index: 5;
+  }
+
   ::slotted(folk-cell:focus) {
     outline: 2px solid #1b73e8;
     z-index: 4;
