@@ -1,35 +1,10 @@
-/**
- * A function that processes the event and updates the target element.
- * @param {Element} source - The source element that emitted the event
- * @param {Element} target - The target element that receives propagated changes
- * @param {Event} event - The event that triggered the propagation
- * @returns {any} - The result of the propagation
- */
-export type PropagatorFunction = (source: Element, target: Element, event: Event) => any;
+import { type PropagatorFunction, type PropagatorOptions, type PropagatorParser } from './Propagator';
 
 /**
- * A parser function that converts a string expression into a PropagatorFunction.
- * @param {string} body - The string expression to parse
- * @param {Propagator} [propagator] - The Propagator instance (optional)
- * @returns {PropagatorFunction | null} - The parsed PropagatorFunction or null if parsing fails
+ * A propagator takes a source and target element and listens for events on both.
+ * When an event is detected on one, it will execute a handler and update the other element.
  */
-export type PropagatorParser = (body: string) => PropagatorFunction | null;
-
-export type PropagatorOptions = {
-  source?: Element | null;
-  target?: Element | null;
-  event?: string | null;
-  handler?: PropagatorFunction | string;
-  parser?: PropagatorParser;
-  onParseSuccess?: (body: string) => void;
-  onParseError?: (error: Error) => void;
-};
-
-/**
- * A propagator takes a source and target element and listens for events on the source.
- * When an event is detected, it will execute a handler and update the target element.
- */
-export class Propagator {
+export class SymmetricPropagator {
   #source: Element | null = null;
   #target: Element | null = null;
   #eventName: string | null = null;
@@ -38,17 +13,11 @@ export class Propagator {
   #parser: PropagatorParser | null = null;
   #onParse: ((body: string) => void) | null = null;
   #onError: ((error: Error) => void) | null = null;
+  #isPropagationLocked = false;
 
   /**
-   * Creates a new Propagator instance.
+   * Creates a new BiPropagator instance.
    * @param {PropagatorOptions} options - Configuration options for the propagator
-   * @param {Element} [options.source] - Source element that emits events
-   * @param {Element} [options.target] - Target element that receives propagated changes
-   * @param {string} [options.event] - Event name to listen for on the source element
-   * @param {PropagatorFunction|string} [options.handler] - Event handler function or string expression
-   * @param {PropagatorParser} [options.parser] - Custom parser for string handlers
-   * @param {Function} [options.onParse] - Callback fired when a string handler is parsed
-   * @param {Function} [options.onError] - Callback fired when an error occurs during parsing
    */
   constructor(options: PropagatorOptions = {}) {
     const {
@@ -66,6 +35,7 @@ export class Propagator {
     this.#parser = parser;
     this.source = source;
     this.target = target;
+
     if (event) this.event = event;
     if (handler) this.handler = handler;
   }
@@ -81,52 +51,68 @@ export class Propagator {
   set source(element: Element | null) {
     // Remove listener from old source
     if (this.#source && this.#eventName) {
-      this.#source.removeEventListener(this.#eventName, this.#handleEvent);
+      this.#source.removeEventListener(this.#eventName, this.#handleSourceEvent);
     }
 
     this.#source = element;
 
     // Add listener to new source
     if (this.#source && this.#eventName) {
-      this.#source.addEventListener(this.#eventName, this.#handleEvent);
+      this.#source.addEventListener(this.#eventName, this.#handleSourceEvent);
     }
   }
 
   /**
    * The target element that receives propagated changes.
+   * Setting a new target will automatically update event listeners.
    */
   get target(): Element | null {
     return this.#target;
   }
 
   set target(element: Element | null) {
+    // Remove listener from old target
+    if (this.#target && this.#eventName) {
+      this.#target.removeEventListener(this.#eventName, this.#handleTargetEvent);
+    }
+
     this.#target = element;
+
+    // Add listener to new target
+    if (this.#target && this.#eventName) {
+      this.#target.addEventListener(this.#eventName, this.#handleTargetEvent);
+    }
   }
 
   /**
-   * The name of the event to listen for on the source element.
-   * Setting a new event name will automatically update event listeners.
+   * The name of the event to listen for on both the source and target elements.
    */
   get event(): string | null {
     return this.#eventName;
   }
 
-  set event(name: string) {
-    // Remove old listener
+  set event(name: string | null) {
+    // Remove old listeners
     if (this.#source && this.#eventName) {
-      this.#source.removeEventListener(this.#eventName, this.#handleEvent);
+      this.#source.removeEventListener(this.#eventName, this.#handleSourceEvent);
+    }
+    if (this.#target && this.#eventName) {
+      this.#target.removeEventListener(this.#eventName, this.#handleTargetEvent);
     }
 
     this.#eventName = name;
 
-    // Add new listener
+    // Add new listeners
     if (this.#source && this.#eventName) {
-      this.#source.addEventListener(this.#eventName, this.#handleEvent);
+      this.#source.addEventListener(this.#eventName, this.#handleSourceEvent);
+    }
+    if (this.#target && this.#eventName) {
+      this.#target.addEventListener(this.#eventName, this.#handleTargetEvent);
     }
   }
 
   /**
-   * The handler function that processes the event and updates the target.
+   * The handler function that processes the event and updates the other element.
    * Can be set using either a function or a string expression.
    */
   get handler(): PropagatorFunction | null {
@@ -146,7 +132,7 @@ export class Propagator {
   }
 
   /**
-   * Manually triggers the propagation with an optional event.
+   * Manually triggers the propagation from the source with an optional event.
    * If no event is provided and an event name is set, creates a new event.
    * @param {Event} [event] - Optional event to propagate
    */
@@ -155,7 +141,7 @@ export class Propagator {
       event = new Event(this.#eventName);
     }
     if (!event) return;
-    this.#handleEvent(event);
+    this.#handleSourceEvent(event);
   }
 
   /**
@@ -164,20 +150,47 @@ export class Propagator {
    */
   dispose(): void {
     if (this.#source && this.#eventName) {
-      this.#source.removeEventListener(this.#eventName, this.#handleEvent);
+      this.#source.removeEventListener(this.#eventName, this.#handleSourceEvent);
+    }
+    if (this.#target && this.#eventName) {
+      this.#target.removeEventListener(this.#eventName, this.#handleTargetEvent);
     }
     this.#source = null;
     this.#target = null;
     this.#handler = null;
   }
 
-  #handleEvent = (event: Event) => {
+  #handleSourceEvent = async (event: Event) => {
+    if (this.#isPropagationLocked) return;
     if (!this.#source || !this.#target || !this.#handler) return;
 
+    this.#isPropagationLocked = true;
+
     try {
+      // Update the target element
       this.#handler(this.#source, this.#target, event);
-    } catch (error) {
-      console.error('Error in propagator handler:', error);
+
+      // Wait for microtasks to complete
+      await Promise.resolve();
+    } finally {
+      this.#isPropagationLocked = false;
+    }
+  };
+
+  #handleTargetEvent = async (event: Event) => {
+    if (this.#isPropagationLocked) return;
+    if (!this.#source || !this.#target || !this.#handler) return;
+
+    this.#isPropagationLocked = true;
+
+    try {
+      // Update the source element
+      this.#handler(this.#target, this.#source, event);
+
+      // Wait for microtasks to complete
+      await Promise.resolve();
+    } finally {
+      this.#isPropagationLocked = false;
     }
   };
 

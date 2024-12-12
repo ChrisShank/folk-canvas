@@ -2,6 +2,7 @@ import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkRope } from './folk-rope.ts';
 import { property } from '@lit/reactive-element/decorators.js';
 import { Propagator } from './common/Propagator.ts';
+import { SymmetricPropagator } from './common/SymmetricPropagator.ts';
 
 export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';
@@ -32,7 +33,7 @@ export class FolkEventPropagator extends FolkRope {
 
   #triggerTextarea = document.createElement('textarea');
   #expressionTextarea = document.createElement('textarea');
-  #propagator: Propagator | null = null;
+  #propagator: SymmetricPropagator | null = null;
 
   override firstUpdated(changedProperties: PropertyValues<this>): void {
     super.firstUpdated(changedProperties);
@@ -68,7 +69,7 @@ export class FolkEventPropagator extends FolkRope {
 
   #initializePropagator() {
     this.#propagator?.dispose();
-    this.#propagator = new Propagator({
+    this.#propagator = new SymmetricPropagator({
       source: this.sourceElement,
       target: this.targetElement,
       event: this.trigger,
