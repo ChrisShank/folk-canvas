@@ -1,4 +1,4 @@
-import { FolkElement } from './common/folk-element';
+import { FolkElement } from '../../src/common/folk-element';
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -43,3 +43,5 @@ export class FolkTimer extends FolkElement {
     this.renderRoot.textContent = (time / 1000).toFixed(1);
   };
 }
+
+FolkTimer.define();

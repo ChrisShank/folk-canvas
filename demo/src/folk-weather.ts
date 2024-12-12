@@ -1,4 +1,4 @@
-import { html } from './common/tags';
+import { html } from '../../src/common/tags';
 
 interface Weather {
   temperature: string;
@@ -71,3 +71,5 @@ export class FolkWeather extends HTMLElement {
     `);
   }
 }
+
+FolkWeather.define();
