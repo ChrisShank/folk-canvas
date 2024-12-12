@@ -25,6 +25,8 @@ export class FolkSpaceProjector extends FolkBaseSet {
   override firstUpdated(changedProperties: PropertyValues<this>): void {
     super.firstUpdated(changedProperties);
 
+    this.#spreadsheet.style.setProperty('--cell-width', '50px');
+
     this.#shape.appendChild(this.#spreadsheet);
 
     this.renderRoot.append(this.#shape);
@@ -40,39 +42,43 @@ export class FolkSpaceProjector extends FolkBaseSet {
     this.#spreadsheet.removeEventListener('propagate', this.#onPropagate);
   }
 
+  #lock = false;
+
   #onPropagate = (event: Event) => {
+    if (this.#lock) return;
+
     const cell = event.target as FolkSpreadSheetCell;
 
     const shape = this.sourceElements
       .values()
-      .drop(cell.row)
+      .drop(cell.row - 1)
       .find(() => true);
 
     if (!(shape instanceof FolkShape)) return;
 
-    // infinite event loop
-    // switch (cell.column) {
-    //   case 'A': {
-    //     shape.x = cell.value;
-    //     return;
-    //   }
-    //   case 'B': {
-    //     shape.y = cell.value;
-    //     return;
-    //   }
-    //   case 'C': {
-    //     shape.width = cell.value;
-    //     return;
-    //   }
-    //   case 'D': {
-    //     shape.height = cell.value;
-    //     return;
-    //   }
-    //   case 'E': {
-    //     shape.rotation = cell.value;
-    //     return;
-    //   }
-    // }
+    // beware of infinite event loop
+    switch (cell.column) {
+      case 'A': {
+        shape.x = cell.value;
+        return;
+      }
+      case 'B': {
+        shape.y = cell.value;
+        return;
+      }
+      case 'C': {
+        shape.width = cell.value;
+        return;
+      }
+      case 'D': {
+        shape.height = cell.value;
+        return;
+      }
+      case 'E': {
+        shape.rotation = (cell.value * Math.PI) / 180;
+        return;
+      }
+    }
   };
 
   override update(changedProperties: PropertyValues<this>): void {
@@ -85,6 +91,7 @@ export class FolkSpaceProjector extends FolkBaseSet {
 
     if (this.sourcesMap.size !== this.sourceElements.size) return;
 
+    this.#lock = true;
     const rects = this.sourceRects;
     for (let i = 0; i < rects.length; i += 1) {
       const row = i + 1;
@@ -103,5 +110,8 @@ export class FolkSpaceProjector extends FolkBaseSet {
         this.#spreadsheet.getCell('D', row)!.expression = Math.round(rect.height);
       }
     }
+    Promise.resolve().then(() => {
+      this.#lock = false;
+    });
   }
 }
