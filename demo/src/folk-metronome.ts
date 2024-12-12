@@ -1,4 +1,4 @@
-import { FolkElement } from './common/folk-element';
+import { FolkElement } from '../../src/common/folk-element';
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -67,3 +67,5 @@ export class FolkMetronome extends FolkElement {
     this.textContent = this.#beat.toString();
   };
 }
+
+FolkMetronome.define();
