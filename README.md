@@ -9,6 +9,13 @@
 - How can someone annotate, re-layout, and program web pages they did not make or distribute?
 - How can we compose visual programming interfaces, hypermedia, and LLMs that work on any web page?
 
+## Primitives
+
+- `<folk-shape>`: Manipulate HTML elements in space.
+- `<folk-ink>`: Draw lines of ink.
+- `<folk-arrow>`: Define connection between HTML elements.
+- `<folk-camera>`: Control a camera (panning/zoom) and query elements in space
+
 ## Development
 
 1. Install [Bun](https://bun.sh/docs/installation)
@@ -18,10 +25,3 @@ bun i
 # then
 bun dev
 ```
-
-## Primitives
-
-- `<folk-shape>`: Manipulate HTML elements in space.
-- `<folk-ink>`: Draw lines of ink.
-- `<folk-arrow>`: Define connection between HTML elements.
-- `<folk-canvas>`: Control a camera (panning/zoom) and query elements in space
