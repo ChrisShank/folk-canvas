@@ -1,0 +1,22 @@
+{
+  "name": "folk-canvas-extension",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "background": {
+    "service_worker": "background.ts"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "contentScript.ts"
+      ]
+    }
+  ],
+  "browser_action": {
+    "default_title": "Add Folk Canvas"
+  }
+}
