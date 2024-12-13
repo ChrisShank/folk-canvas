@@ -128,7 +128,7 @@ describe('TransformDOMRect', () => {
   });
 
   describe('corner', () => {
-    test('setTopLeft with local space coordinates', () => {
+    test('set topLeft with local space coordinates', () => {
       const rect = new DOMRectTransform({
         x: 100,
         y: 100,
@@ -137,14 +137,14 @@ describe('TransformDOMRect', () => {
       });
 
       // Move top-left corner 50 units right and 25 units down in local space
-      rect.setTopLeft({ x: 50, y: 25 });
+      rect.topLeft = { x: 50, y: 25 };
       expect(rect.x).toBe(150); // Original x + local x
       expect(rect.y).toBe(125); // Original y + local y
       expect(rect.width).toBe(150); // Original width - local x
       expect(rect.height).toBe(75); // Original height - local y
     });
 
-    test('setTopRight with local space coordinates', () => {
+    test('set topRight with local space coordinates', () => {
       const rect = new DOMRectTransform({
         x: 100,
         y: 100,
@@ -153,14 +153,14 @@ describe('TransformDOMRect', () => {
       });
 
       // Set top-right corner to local coordinates (150, 25)
-      rect.setTopRight({ x: 150, y: 25 });
+      rect.topRight = { x: 150, y: 25 };
       expect(rect.x).toBe(100); // Original x unchanged
       expect(rect.y).toBe(125); // Original y + local y
       expect(rect.width).toBe(150); // New local x
       expect(rect.height).toBe(75); // Original height - local y
     });
 
-    test('setBottomRight with local space coordinates', () => {
+    test('set bottomRight with local space coordinates', () => {
       const rect = new DOMRectTransform({
         x: 100,
         y: 100,
@@ -169,14 +169,14 @@ describe('TransformDOMRect', () => {
       });
 
       // Set bottom-right corner to local coordinates (150, 75)
-      rect.setBottomRight({ x: 150, y: 75 });
+      rect.bottomRight = { x: 150, y: 75 };
       expect(rect.x).toBe(100); // Original x unchanged
       expect(rect.y).toBe(100); // Original y unchanged
       expect(rect.width).toBe(150); // New local x
       expect(rect.height).toBe(75); // New local y
     });
 
-    test('setBottomLeft with local space coordinates', () => {
+    test('set bottomLeft with local space coordinates', () => {
       const rect = new DOMRectTransform({
         x: 100,
         y: 100,
@@ -185,7 +185,7 @@ describe('TransformDOMRect', () => {
       });
 
       // Move bottom-left corner 50 units right in local space
-      rect.setBottomLeft({ x: 50, y: 75 });
+      rect.bottomLeft = { x: 50, y: 75 };
       expect(rect.x).toBe(150); // Original x + local x
       expect(rect.y).toBe(100); // Original y unchanged
       expect(rect.width).toBe(150); // Original width - local x
@@ -202,7 +202,7 @@ describe('TransformDOMRect', () => {
       });
 
       // Move top-left corner in local space
-      rect.setTopLeft({ x: 50, y: 25 });
+      rect.topLeft = { x: 50, y: 25 };
 
       // Verify the dimensions are correct
       expect(rect.width).toBe(150); // Original width - local x
@@ -215,7 +215,7 @@ describe('TransformDOMRect', () => {
       expectPointClose(backToLocal, localPoint);
     });
 
-    test('setBottomRight works with upside down rotation', () => {
+    test('set bottomRight works with upside down rotation', () => {
       const rect = new DOMRectTransform({
         x: 100,
         y: 100,
@@ -225,7 +225,7 @@ describe('TransformDOMRect', () => {
       });
 
       // Set bottom-right corner in local space
-      rect.setBottomRight({ x: 150, y: 75 });
+      rect.bottomRight = { x: 150, y: 75 };
 
       expect(rect.width).toBe(150);
       expect(rect.height).toBe(75);
@@ -246,7 +246,7 @@ describe('TransformDOMRect', () => {
       const originalTopLeft = rect.topLeft;
 
       // Resize from bottom-right corner
-      rect.setBottomRight({ x: 300, y: 200 });
+      rect.bottomRight = { x: 300, y: 200 };
 
       // Opposite corner (top-left) should remain the same
       expectPointClose(rect.topLeft, originalTopLeft);
@@ -265,7 +265,7 @@ describe('TransformDOMRect', () => {
       const originalBottomRight = rect.toParentSpace(rect.bottomRight);
 
       // Resize from bottom-right corner in local space
-      rect.setBottomRight({ x: 300, y: 150 });
+      rect.bottomRight = { x: 300, y: 150 };
 
       // Transform corners back to parent space to compare
       const newTopLeft = rect.toParentSpace(rect.topLeft);

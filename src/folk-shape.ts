@@ -527,16 +527,16 @@ export class FolkShape extends HTMLElement {
 
     switch (handle) {
       case 'resize-bottom-right':
-        this.#rect.setBottomRight(localPointer);
+        this.#rect.bottomRight = localPointer;
         break;
       case 'resize-bottom-left':
-        this.#rect.setBottomLeft(localPointer);
+        this.#rect.bottomLeft = localPointer;
         break;
       case 'resize-top-left':
-        this.#rect.setTopLeft(localPointer);
+        this.#rect.topLeft = localPointer;
         break;
       case 'resize-top-right':
-        this.#rect.setTopRight(localPointer);
+        this.#rect.topRight = localPointer;
         break;
     }
 

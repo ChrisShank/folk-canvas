@@ -300,7 +300,7 @@ export class DOMRectTransform implements DOMRect {
    * and keeps the **bottom-right corner** fixed in the **parent space**.
    * @param point - The new top-left corner point in local coordinate space.
    */
-  setTopLeft(point: Point) {
+  set topLeft(point: Point) {
     // Compute the parent-space position of the bottom-right corner before resizing
     const bottomRightBefore = this.toParentSpace(this.bottomRight);
 
@@ -336,7 +336,7 @@ export class DOMRectTransform implements DOMRect {
    * and keeps the **bottom-left corner** fixed in the **parent space**.
    * @param point - The new top-right corner point in local coordinate space.
    */
-  setTopRight(point: Point) {
+  set topRight(point: Point) {
     // Compute the parent-space position of the bottom-left corner before resizing
     const bottomLeftBefore = this.toParentSpace(this.bottomLeft);
 
@@ -371,7 +371,7 @@ export class DOMRectTransform implements DOMRect {
    * and keeps the **top-left corner** fixed in the **parent space**.
    * @param point - The new bottom-right corner point in local coordinate space.
    */
-  setBottomRight(point: Point) {
+  set bottomRight(point: Point) {
     // Compute the parent-space position of the top-left corner before resizing
     const topLeftBefore = this.toParentSpace(this.topLeft);
 
@@ -402,7 +402,7 @@ export class DOMRectTransform implements DOMRect {
    * and keeps the **top-right corner** fixed in the **parent space**.
    * @param point - The new bottom-left corner point in local coordinate space.
    */
-  setBottomLeft(point: Point) {
+  set bottomLeft(point: Point) {
     // Compute the parent-space position of the top-right corner before resizing
     const topRightBefore = this.toParentSpace(this.topRight);
 
