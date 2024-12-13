@@ -1,7 +1,7 @@
 import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkBaseSet } from './folk-base-set';
 import { FolkShape } from './folk-shape';
-import { FolkSpreadsheet, FolkSpreadSheetCell, templateCells } from './folk-spreadsheet';
+import { CellTemplate, FolkSpreadsheet, FolkSpreadSheetCell, templateCells } from './folk-spreadsheet';
 import { DOMRectTransform } from './common/DOMRectTransform';
 
 FolkShape.define();
@@ -120,17 +120,31 @@ export class FolkSpaceProjector extends FolkBaseSet {
     super.update(changedProperties);
 
     if (changedProperties.has('sourceElements')) {
-      const cells = templateCells(this.sourceElements.size, 5, {});
-      this.#spreadsheet.setHTMLUnsafe(cells);
+      const cells: Record<string, CellTemplate> = {};
+
+      let row = 1;
+      for (const el of this.sourceElements) {
+        if (!(el instanceof FolkShape)) {
+          cells[`A${row}`] = { readonly: true };
+          cells[`B${row}`] = { readonly: true };
+          cells[`C${row}`] = { readonly: true };
+          cells[`D${row}`] = { readonly: true };
+          cells[`E${row}`] = { readonly: true };
+        }
+        row++;
+      }
+
+      const html = templateCells(this.sourceElements.size, 5, cells);
+      this.#spreadsheet.setHTMLUnsafe(html);
     }
 
     if (this.sourcesMap.size !== this.sourceElements.size) return;
 
     this.#lock = true;
-    const rects = this.sourceRects;
-    for (let i = 0; i < rects.length; i += 1) {
-      const row = i + 1;
-      const rect = rects[i];
+    let row = 1;
+    for (const el of this.sourceElements) {
+      const rect = this.sourcesMap.get(el)!;
+
       if (rect instanceof DOMRectTransform) {
         const { x, y } = rect.toParentSpace(rect.topLeft);
         this.#spreadsheet.getCell('A', row)!.expression = Math.round(x);
@@ -143,8 +157,11 @@ export class FolkSpaceProjector extends FolkBaseSet {
         this.#spreadsheet.getCell('B', row)!.expression = Math.round(rect.y);
         this.#spreadsheet.getCell('C', row)!.expression = Math.round(rect.width);
         this.#spreadsheet.getCell('D', row)!.expression = Math.round(rect.height);
+        this.#spreadsheet.getCell('E', row)!.expression = 0;
       }
+      row += 1;
     }
+
     Promise.resolve().then(() => {
       this.#lock = false;
     });

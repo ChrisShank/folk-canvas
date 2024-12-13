@@ -106,6 +106,10 @@ const styles = css`
     justify-content: end;
   }
 
+  ::slotted(folk-cell[readonly]) {
+    color: grey;
+  }
+
   ::slotted(folk-cell:hover) {
     outline: 1px solid #1b73e8;
     z-index: 5;
@@ -132,21 +136,30 @@ export function relativeColumnName(name: string, num: number) {
   return alphabet[index + num];
 }
 
-export function templateCells(numberOfRows: number, numberOfColumns: number, expressions: Record<string, string> = {}) {
-  const cells: string[] = [];
+export interface CellTemplate {
+  expression?: string;
+  readonly?: boolean;
+}
+
+export function templateCells(numberOfRows: number, numberOfColumns: number, cells: Record<string, CellTemplate> = {}) {
+  const html: string[] = [];
   for (let i = 0; i < numberOfRows; i += 1) {
     for (let j = 0; j < numberOfColumns; j += 1) {
       const column = getColumnName(j);
       const row = i + 1;
-      const expression = expressions[`${column}${row}`];
-      cells.push(
-        `<folk-cell column="${column}" row="${row}" tabindex="0" ${
-          expression ? `expression="${expression}"` : ''
-        }></folk-cell>`
+      const { expression, readonly } = cells[`${column}${row}`] || {};
+      html.push(
+        `<folk-cell 
+          column="${column}" 
+          row="${row}" 
+          tabindex="0" 
+          ${expression ? `expression="${expression}"` : ''}
+          ${readonly ? 'readonly' : ''}
+        ></folk-cell>`
       );
     }
   }
-  return cells.join('\n');
+  return html.join('\n');
 }
 
 declare global {
@@ -168,7 +181,7 @@ export class FolkSpreadsheet extends HTMLElement {
 
   #shadow = this.attachShadow({ mode: 'open' });
 
-  #textarea: HTMLTextAreaElement | null = null;
+  #textarea!: HTMLTextAreaElement;
 
   #editedCell: FolkSpreadSheetCell | null = null;
 
@@ -326,7 +339,7 @@ export class FolkSpreadsheet extends HTMLElement {
   }
 
   #focusTextarea(cell: FolkSpreadSheetCell) {
-    if (this.#textarea === null) return;
+    if (cell.readonly) return;
     this.#editedCell = cell;
     const gridColumn = getColumnIndex(cell.column) + 2;
     const gridRow = cell.row + 1;
@@ -339,7 +352,6 @@ export class FolkSpreadsheet extends HTMLElement {
 
   #resetTextarea() {
     if (this.#editedCell === null) return;
-    if (this.#textarea === null) return;
     this.#textarea.style.setProperty('--text-column', '0');
     this.#textarea.style.setProperty('--text-row', '0');
     this.#editedCell.expression = this.#textarea.value;
@@ -469,6 +481,13 @@ export class FolkSpreadSheetCell extends HTMLElement {
     this.#function = new Function(...argNames, expression);
 
     this.#evaluate();
+  }
+
+  get readonly() {
+    return this.hasAttribute('readonly');
+  }
+  set readonly(readonly) {
+    readonly ? this.setAttribute('readonly', '') : this.removeAttribute('readonly');
   }
 
   #value: any;
