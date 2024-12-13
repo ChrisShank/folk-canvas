@@ -450,11 +450,14 @@ export class FolkSpreadSheetCell extends HTMLElement {
 
   #function = new Function();
 
-  get expression() {
+  get expression(): string {
     return this.#expression;
   }
   set expression(expression: any) {
     expression = String(expression).trim();
+
+    if (expression === this.#expression) return;
+
     this.#expression = expression;
 
     this.#dependencies.forEach((dep) => dep.removeEventListener('propagate', this));

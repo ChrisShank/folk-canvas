@@ -15,8 +15,8 @@ export class FolkSpaceProjector extends FolkBaseSet {
     css`
       folk-spreadsheet {
         position: absolute;
-        bottom: 5px;
-        right: 5px;
+        bottom: 15px;
+        right: 15px;
         pointer-events: auto;
         box-shadow: 0px 3px 5px 0px rgba(173, 168, 168, 0.6);
       }
@@ -50,9 +50,9 @@ export class FolkSpaceProjector extends FolkBaseSet {
   #lock = false;
 
   #onPropagate = (event: Event) => {
-    if (this.#lock) return;
-
     const cell = event.target as FolkSpreadSheetCell;
+
+    if (this.#lock && cell.dependencies.length === 0) return;
 
     const shape = this.sourceElements
       .values()
@@ -147,17 +147,17 @@ export class FolkSpaceProjector extends FolkBaseSet {
 
       if (rect instanceof DOMRectTransform) {
         const { x, y } = rect.toParentSpace(rect.topLeft);
-        this.#spreadsheet.getCell('A', row)!.expression = Math.round(x);
-        this.#spreadsheet.getCell('B', row)!.expression = Math.round(y);
-        this.#spreadsheet.getCell('C', row)!.expression = Math.round(rect.width);
-        this.#spreadsheet.getCell('D', row)!.expression = Math.round(rect.height);
-        this.#spreadsheet.getCell('E', row)!.expression = Math.round((rect.rotation * 180) / Math.PI);
+        updateCell(this.#spreadsheet.getCell('A', row)!, x);
+        updateCell(this.#spreadsheet.getCell('B', row)!, y);
+        updateCell(this.#spreadsheet.getCell('C', row)!, rect.width);
+        updateCell(this.#spreadsheet.getCell('D', row)!, rect.height);
+        updateCell(this.#spreadsheet.getCell('E', row)!, (rect.rotation * 180) / Math.PI);
       } else {
-        this.#spreadsheet.getCell('A', row)!.expression = Math.round(rect.x);
-        this.#spreadsheet.getCell('B', row)!.expression = Math.round(rect.y);
-        this.#spreadsheet.getCell('C', row)!.expression = Math.round(rect.width);
-        this.#spreadsheet.getCell('D', row)!.expression = Math.round(rect.height);
-        this.#spreadsheet.getCell('E', row)!.expression = 0;
+        updateCell(this.#spreadsheet.getCell('A', row)!, rect.x);
+        updateCell(this.#spreadsheet.getCell('B', row)!, rect.y);
+        updateCell(this.#spreadsheet.getCell('C', row)!, rect.width);
+        updateCell(this.#spreadsheet.getCell('D', row)!, rect.height);
+        updateCell(this.#spreadsheet.getCell('E', row)!, 0);
       }
       row += 1;
     }
@@ -166,4 +166,10 @@ export class FolkSpaceProjector extends FolkBaseSet {
       this.#lock = false;
     });
   }
+}
+
+function updateCell(cell: FolkSpreadSheetCell, expression: number) {
+  if (cell.dependencies.length) return;
+
+  cell.expression = Math.round(expression);
 }
