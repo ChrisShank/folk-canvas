@@ -29,14 +29,47 @@ export class FolkDistanceField extends FolkBaseSet {
   private renderProgram!: WebGLProgram; // Shader program for final rendering
   private seedProgram!: WebGLProgram; // Shader program for rendering seed points
 
-  private positionBufferEven: WebGLBuffer | null = null;
-  private positionBufferOdd: WebGLBuffer | null = null;
-
   private isPingTextureEven: boolean = true;
   private isPingTextureOdd: boolean = true;
 
+  /**
+   * Groups data for handling different sets of shapes.
+   * 'mergeA' and 'mergeB' shapes will have their distance fields merged in rendering,
+   * while 'others' will be processed separately.
+   */
+  private groups: {
+    [groupName: string]: {
+      textures: WebGLTexture[];
+      isPingTexture: boolean;
+      shapeVAO: WebGLVertexArrayObject;
+      positionBuffer: WebGLBuffer | null;
+    };
+  } = {};
+
   connectedCallback() {
     super.connectedCallback();
+
+    // Initialize groups for 'mergeA', 'mergeB', and 'others'
+    this.groups = {
+      mergeA: {
+        textures: [],
+        isPingTexture: true,
+        shapeVAO: null!,
+        positionBuffer: null,
+      },
+      mergeB: {
+        textures: [],
+        isPingTexture: true,
+        shapeVAO: null!,
+        positionBuffer: null,
+      },
+      others: {
+        textures: [],
+        isPingTexture: true,
+        shapeVAO: null!,
+        positionBuffer: null,
+      },
+    };
 
     this.initWebGL();
     this.initShaders();
@@ -94,14 +127,14 @@ export class FolkDistanceField extends FolkBaseSet {
 
   /**
    * Initializes textures and framebuffer for ping-pong rendering.
-   * Now supports separate textures for even and odd distance fields.
+   * Supports separate textures for 'mergeA', 'mergeB', and 'others' groups.
    */
   private initPingPongTextures() {
-    // Initialize textures for even distance field
-    this.texturesEven = this.createPingPongTextures();
-
-    // Initialize textures for odd distance field
-    this.texturesOdd = this.createPingPongTextures();
+    // Initialize textures for each group
+    for (const groupName in this.groups) {
+      this.groups[groupName].textures = this.createPingPongTextures();
+      this.groups[groupName].isPingTexture = true;
+    }
   }
 
   /**
@@ -140,18 +173,21 @@ export class FolkDistanceField extends FolkBaseSet {
   }
 
   /**
-   * Initializes rendering of seed points (shapes) into textures.
-   * Separates seed points into even and odd groups.
+   * Populates seed points and assigns shapes to 'mergeA', 'mergeB', or 'others' groups.
+   * Shapes with index 0 and 1 are assigned to 'mergeA' and 'mergeB' respectively.
    */
   private populateSeedPoints() {
     const gl = this.glContext;
-    const positionsEven: number[] = [];
-    const positionsOdd: number[] = [];
+    const groupPositions: { [groupName: string]: number[] } = {
+      mergeA: [],
+      mergeB: [],
+      others: [],
+    };
 
     const containerWidth = this.clientWidth;
     const containerHeight = this.clientHeight;
 
-    // Collect positions and assign unique IDs to all shapes
+    // Collect positions and assign shapes to groups
     this.sourceRects.forEach((rect, index) => {
       let topLeftParent: Point;
       let topRightParent: Point;
@@ -205,51 +241,51 @@ export class FolkDistanceField extends FolkBaseSet {
         shapeID,
       ];
 
-      if (index % 2 === 0) {
-        // Even index
-        positionsEven.push(...rectPositions);
+      // Assign shapes to groups based on index or any other criteria
+      let groupName: string;
+      if (index === 0) {
+        groupName = 'mergeA';
+      } else if (index === 1) {
+        groupName = 'mergeB';
       } else {
-        // Odd index
-        positionsOdd.push(...rectPositions);
+        groupName = 'others';
       }
+
+      groupPositions[groupName].push(...rectPositions);
     });
 
-    // Initialize buffers and VAOs for even seed points
-    if (!this.shapeVAOEven) {
-      this.shapeVAOEven = gl.createVertexArray()!;
-      gl.bindVertexArray(this.shapeVAOEven);
-      this.positionBufferEven = gl.createBuffer()!;
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferEven);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsEven), gl.DYNAMIC_DRAW);
+    // Initialize buffers and VAOs for each group
+    for (const groupName in groupPositions) {
+      const positions = groupPositions[groupName];
+      const group = this.groups[groupName];
 
-      const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-      gl.bindVertexArray(null);
-    } else {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferEven!);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positionsEven));
+      if (!group.shapeVAO) {
+        group.shapeVAO = gl.createVertexArray()!;
+        gl.bindVertexArray(group.shapeVAO);
+        group.positionBuffer = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+
+        const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+        gl.bindVertexArray(null);
+      } else {
+        gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer!);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
+      }
     }
 
-    // Initialize buffers and VAOs for odd seed points
-    if (!this.shapeVAOOdd) {
-      this.shapeVAOOdd = gl.createVertexArray()!;
-      gl.bindVertexArray(this.shapeVAOOdd);
-      this.positionBufferOdd = gl.createBuffer()!;
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferOdd);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsOdd), gl.DYNAMIC_DRAW);
-
-      const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-      gl.bindVertexArray(null);
-    } else {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferOdd!);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positionsOdd));
+    // Render the seed points into the textures for each group
+    for (const groupName in groupPositions) {
+      const positions = groupPositions[groupName];
+      const vertexCount = positions.length / 3;
+      this.renderSeedPointsForGroup(
+        this.groups[groupName].shapeVAO,
+        this.groups[groupName].textures[this.groups[groupName].isPingTexture ? 0 : 1],
+        vertexCount
+      );
     }
-
-    // Render the seed points into the textures
-    this.renderSeedPoints(positionsEven.length / 3, positionsOdd.length / 3);
   }
 
   /**
@@ -299,22 +335,25 @@ export class FolkDistanceField extends FolkBaseSet {
   }
 
   /**
-   * Executes the Jump Flooding Algorithm (JFA) separately for even and odd distance fields.
+   * Executes the Jump Flooding Algorithm (JFA) for each group separately.
+   * 'mergeA' and 'mergeB' groups will have their distance fields merged in rendering.
    */
   private runJumpFloodingAlgorithm() {
     // Compute initial step size
     let stepSize = 1 << Math.floor(Math.log2(Math.max(this.canvas.width, this.canvas.height)));
 
-    // Perform passes with decreasing step sizes for even distance field
-    for (let size = stepSize; size >= 1; size >>= 1) {
-      this.renderPass(size, this.texturesEven, this.isPingTextureEven);
-      this.isPingTextureEven = !this.isPingTextureEven;
-    }
+    // Perform passes with decreasing step sizes for each group
+    for (const groupName in this.groups) {
+      const group = this.groups[groupName];
+      const textures = group.textures;
+      let isPingTexture = group.isPingTexture;
 
-    // Perform passes with decreasing step sizes for odd distance field
-    for (let size = stepSize; size >= 1; size >>= 1) {
-      this.renderPass(size, this.texturesOdd, this.isPingTextureOdd);
-      this.isPingTextureOdd = !this.isPingTextureOdd;
+      for (let size = stepSize; size >= 1; size >>= 1) {
+        this.renderPass(size, textures, isPingTexture);
+        isPingTexture = !isPingTexture;
+      }
+
+      group.isPingTexture = isPingTexture; // Update the ping-pong status
     }
 
     // Render the final result to the screen
@@ -357,7 +396,7 @@ export class FolkDistanceField extends FolkBaseSet {
 
   /**
    * Renders the final distance field to the screen using the render shader program.
-   * Combines both distance fields using a 'soft merge' function.
+   * Merges 'mergeA' and 'mergeB' distance fields during rendering, while 'others' are not merged.
    */
   private renderToScreen() {
     const gl = this.glContext;
@@ -369,17 +408,16 @@ export class FolkDistanceField extends FolkBaseSet {
     // Use the render shader program
     gl.useProgram(this.renderProgram);
 
-    // Bind the final texture from even distance field
-    const finalTextureEven = this.texturesEven[this.isPingTextureEven ? 0 : 1];
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, finalTextureEven);
-    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_textureEven'), 0);
-
-    // Bind the final texture from odd distance field
-    const finalTextureOdd = this.texturesOdd[this.isPingTextureOdd ? 0 : 1];
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, finalTextureOdd);
-    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_textureOdd'), 1);
+    // Bind the final textures from each group
+    let textureUnit = 0;
+    for (const groupName in this.groups) {
+      const group = this.groups[groupName];
+      const finalTexture = group.textures[group.isPingTexture ? 0 : 1];
+      gl.activeTexture(gl.TEXTURE0 + textureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, finalTexture);
+      gl.uniform1i(gl.getUniformLocation(this.renderProgram, `u_texture_${groupName}`), textureUnit);
+      textureUnit++;
+    }
 
     // Draw a fullscreen quad to display the result
     this.drawFullscreenQuad();
@@ -481,26 +519,33 @@ export class FolkDistanceField extends FolkBaseSet {
   private cleanupWebGLResources() {
     const gl = this.glContext;
 
-    // Delete textures
-    this.texturesEven.forEach((texture) => gl.deleteTexture(texture));
-    this.texturesEven = [];
-    this.texturesOdd.forEach((texture) => gl.deleteTexture(texture));
-    this.texturesOdd = [];
+    // Delete resources for each group
+    for (const groupName in this.groups) {
+      const group = this.groups[groupName];
+
+      // Delete textures
+      group.textures.forEach((texture) => gl.deleteTexture(texture));
+      group.textures = [];
+
+      // Delete VAOs
+      if (group.shapeVAO) {
+        gl.deleteVertexArray(group.shapeVAO);
+      }
+
+      // Delete buffers
+      if (group.positionBuffer) {
+        gl.deleteBuffer(group.positionBuffer);
+      }
+    }
 
     // Delete framebuffer
     if (this.framebuffer) {
       gl.deleteFramebuffer(this.framebuffer);
     }
 
-    // Delete VAOs
+    // Delete fullscreen quad VAO
     if (this.fullscreenQuadVAO) {
       gl.deleteVertexArray(this.fullscreenQuadVAO);
-    }
-    if (this.shapeVAOEven) {
-      gl.deleteVertexArray(this.shapeVAOEven);
-    }
-    if (this.shapeVAOOdd) {
-      gl.deleteVertexArray(this.shapeVAOOdd);
     }
 
     // Delete shader programs
@@ -576,21 +621,23 @@ void main() {
 
 /**
  * Fragment shader for rendering the final distance field.
- * Converts distances to colors for visualization.
+ * Merges 'mergeA' and 'mergeB' distance fields during rendering.
  */
 const renderFragShader = glsl`#version 300 es
 precision mediump float;
 
-#define DEBUG_MODULO true
+#define DEBUG_MODULO false
+#define DEBUG_HARD_CUTOFF false
 #define FALLOFF_FACTOR 10.0
 #define SMOOTHING_FACTOR 0.1
-#define MERGE_DISTANCES true
+#define DEBUG_HARD_CUTOFF_DISTANCE 0.2
 
 in vec2 v_texCoord;
 out vec4 outColor;
 
-uniform sampler2D u_textureEven;
-uniform sampler2D u_textureOdd;
+uniform sampler2D u_texture_mergeA;
+uniform sampler2D u_texture_mergeB;
+uniform sampler2D u_texture_others;
 
 vec3 hsv2rgb(vec3 c) {
   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -605,63 +652,71 @@ float smoothMin(float a, float b, float k) {
 }
 
 void main() {
-  vec4 texelEven = texture(u_textureEven, v_texCoord);
-  vec4 texelOdd = texture(u_textureOdd, v_texCoord);
+  vec4 texelMergeA = texture(u_texture_mergeA, v_texCoord);
+  vec4 texelMergeB = texture(u_texture_mergeB, v_texCoord);
+  vec4 texelOthers = texture(u_texture_others, v_texCoord);
 
   // Extract shape IDs and distances
-  float shapeIDEven = texelEven.z;
-  float distanceEven = texelEven.a;
+  float shapeIDMergeA = texelMergeA.z;
+  float distanceMergeA = texelMergeA.a;
 
-  float shapeIDOdd = texelOdd.z;
-  float distanceOdd = texelOdd.a;
+  float shapeIDMergeB = texelMergeB.z;
+  float distanceMergeB = texelMergeB.a;
 
-  // Compute colors for both shapes first
-  float hueEven = fract(shapeIDEven * 0.61803398875);
-  vec3 colorEven = hsv2rgb(vec3(hueEven, 0.5, 0.95));
+  float shapeIDOthers = texelOthers.z;
+  float distanceOthers = texelOthers.a;
 
-  float hueOdd = fract(shapeIDOdd * 0.61803398875);
-  vec3 colorOdd = hsv2rgb(vec3(hueOdd, 0.5, 0.95));
+  // Compute colors for mergeA and mergeB
+  float hueMergeA = fract(shapeIDMergeA * 0.61803398875);
+  vec3 colorMergeA = hsv2rgb(vec3(hueMergeA, 0.5, 0.95));
 
-  float mergedDistance;
-  vec3 mergedColor;
+  float hueMergeB = fract(shapeIDMergeB * 0.61803398875);
+  vec3 colorMergeB = hsv2rgb(vec3(hueMergeB, 0.5, 0.95));
 
-  if (MERGE_DISTANCES) {
-    // Use smooth minimum to merge distances
-    mergedDistance = smoothMin(distanceEven, distanceOdd, SMOOTHING_FACTOR);
-    
-    // Calculate blend factor using the same smoothing parameter
-    float h = clamp(0.5 + 0.5 * (distanceOdd - distanceEven) / SMOOTHING_FACTOR, 0.0, 1.0);
-    
-    // Interpolate between the two colors
-    mergedColor = mix(colorOdd, colorEven, h);
+  // Merge distances of mergeA and mergeB
+  float mergedDistanceAB = smoothMin(distanceMergeA, distanceMergeB, SMOOTHING_FACTOR);
+
+  // Calculate blend factor for colors
+  float hAB = clamp(0.5 + 0.5 * (distanceMergeB - distanceMergeA) / SMOOTHING_FACTOR, 0.0, 1.0);
+  vec3 mergedColorAB = mix(colorMergeB, colorMergeA, hAB);
+
+  // Compute color and distance for others
+  float hueOthers = fract(shapeIDOthers * 0.61803398875);
+  vec3 colorOthers = hsv2rgb(vec3(hueOthers, 0.5, 0.95));
+
+  // Decide between merged distances and others
+  float finalDistance;
+  vec3 finalColor;
+
+  if (mergedDistanceAB <= distanceOthers) {
+    finalDistance = mergedDistanceAB;
+    finalColor = mergedColorAB;
   } else {
-    // Simply use the closest distance and its corresponding color
-    if (distanceEven <= distanceOdd) {
-      mergedDistance = distanceEven;
-      mergedColor = colorEven;
-    } else {
-      mergedDistance = distanceOdd;
-      mergedColor = colorOdd;
-    }
+    finalDistance = distanceOthers;
+    finalColor = colorOthers;
   }
-
-  vec3 finalColor = mergedColor;
 
   if (DEBUG_MODULO) {
     // Visualize distance bands using modulo
     float bandWidth = 0.02; // Adjust this value to change the width of the bands
-    float distanceBand = mod(mergedDistance, bandWidth) / bandWidth;
+    float distanceBand = mod(finalDistance, bandWidth) / bandWidth;
     
     // Create alternating black and white bands
     float bandColor = step(0.1, distanceBand);
     
     // Mix the band visualization with the merged color
-    finalColor = mix(vec3(0.0), mergedColor, bandColor);
+    finalColor = mix(vec3(0.0), finalColor, bandColor);
   }
 
-  // Apply intensity-based falloff (from pre-pretty commit)
-  float intensity = exp(-mergedDistance * FALLOFF_FACTOR);
-  finalColor *= intensity;
+  // Before applying any effects, check if we should use hard cutoff
+  if (DEBUG_HARD_CUTOFF) {
+    // If distance is greater than cutoff, set intensity to 0, otherwise 1
+    finalColor *= finalDistance > DEBUG_HARD_CUTOFF_DISTANCE ? 0.0 : exp(-finalDistance * FALLOFF_FACTOR);
+  } else {
+    // Use the original smooth falloff
+    finalColor *= exp(-finalDistance * FALLOFF_FACTOR);
+  }
+
 
   outColor = vec4(finalColor, 1.0);
 }`;
