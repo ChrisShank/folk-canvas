@@ -472,7 +472,9 @@ export class FolkShape extends HTMLElement {
   }
 
   #dispatchTransformEvent() {
-    const event = new TransformEvent(this.#rect, this.#previousRect);
+    this.#readonlyRect = new DOMRectTransformReadonly(this.#rect);
+
+    const event = new TransformEvent(this.#readonlyRect, this.#previousRect);
     this.dispatchEvent(event);
 
     if (event.xPrevented) {
