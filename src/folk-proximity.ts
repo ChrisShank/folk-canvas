@@ -16,7 +16,7 @@ export interface ElementConfig<E extends Element = Element> {
 }
 
 // TODO don't hard code this
-const PROXIMITY = 100;
+const PROXIMITY = 120;
 
 declare global {
   interface HTMLElementTagNameMap {
