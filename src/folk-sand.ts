@@ -108,8 +108,6 @@ export class FolkSand extends FolkBaseSet {
   }
 
   private initializeSimulation() {
-    const gl = this.gl;
-
     // Create shaders and programs
     this.program = this.createProgramFromStrings({
       vertex: vertexShader,

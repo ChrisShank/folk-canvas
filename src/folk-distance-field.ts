@@ -15,21 +15,25 @@ export class FolkDistanceField extends FolkBaseSet {
 
   static readonly MAX_DISTANCE = 99999.0;
 
-  private textures: WebGLTexture[] = [];
+  private texturesEven: WebGLTexture[] = [];
+  private texturesOdd: WebGLTexture[] = [];
 
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
-  private shapeVAO!: WebGLVertexArrayObject;
+  private shapeVAOEven!: WebGLVertexArrayObject;
+  private shapeVAOOdd!: WebGLVertexArrayObject;
 
   private jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
   private renderProgram!: WebGLProgram; // Shader program for final rendering
   private seedProgram!: WebGLProgram; // Shader program for rendering seed points
 
-  private positionBuffer: WebGLBuffer | null = null;
+  private positionBufferEven: WebGLBuffer | null = null;
+  private positionBufferOdd: WebGLBuffer | null = null;
 
-  private isPingTexture: boolean = true;
+  private isPingTextureEven: boolean = true;
+  private isPingTextureOdd: boolean = true;
 
   connectedCallback() {
     super.connectedCallback();
@@ -59,6 +63,12 @@ export class FolkDistanceField extends FolkBaseSet {
     this.canvas = canvas;
     this.renderRoot.prepend(canvas);
     this.glContext = gl;
+
+    // Create framebuffer object
+    this.framebuffer = gl.createFramebuffer();
+    if (!this.framebuffer) {
+      throw new Error('Failed to create framebuffer.');
+    }
   }
 
   /**
@@ -84,27 +94,32 @@ export class FolkDistanceField extends FolkBaseSet {
 
   /**
    * Initializes textures and framebuffer for ping-pong rendering.
-   * Ping-pong textures are used to alternate between reading and writing textures in multi-pass algorithms.
+   * Now supports separate textures for even and odd distance fields.
    */
   private initPingPongTextures() {
+    // Initialize textures for even distance field
+    this.texturesEven = this.createPingPongTextures();
+
+    // Initialize textures for odd distance field
+    this.texturesOdd = this.createPingPongTextures();
+  }
+
+  /**
+   * Utility method to create ping-pong textures.
+   */
+  private createPingPongTextures(): WebGLTexture[] {
     const gl = this.glContext;
     const width = this.canvas.width;
     const height = this.canvas.height;
-
-    // Delete existing textures to prevent memory leaks
-    for (const texture of this.textures) {
-      gl.deleteTexture(texture);
-    }
-    this.textures = [];
+    const textures: WebGLTexture[] = [];
 
     // Enable the EXT_color_buffer_half_float extension for high-precision floating-point textures
     const ext = gl.getExtension('EXT_color_buffer_half_float');
     if (!ext) {
       console.error('EXT_color_buffer_half_float extension is not supported.');
-      return;
+      return textures;
     }
 
-    // Create two textures for ping-pong rendering
     for (let i = 0; i < 2; i++) {
       const texture = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -118,29 +133,20 @@ export class FolkDistanceField extends FolkBaseSet {
       // Use high-precision format for accurate distance calculations
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
 
-      this.textures.push(texture);
+      textures.push(texture);
     }
 
-    // Create or reuse the framebuffer
-    if (!this.framebuffer) {
-      this.framebuffer = gl.createFramebuffer()!;
-    }
-
-    // Check if framebuffer is complete
-    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    if (status !== gl.FRAMEBUFFER_COMPLETE) {
-      console.error('Framebuffer is not complete:', status);
-      return;
-    }
+    return textures;
   }
 
   /**
-   * Initializes rendering of seed points (shapes) into a texture.
-   * Seed points are the starting locations for distance calculations.
+   * Initializes rendering of seed points (shapes) into textures.
+   * Separates seed points into even and odd groups.
    */
   private populateSeedPoints() {
     const gl = this.glContext;
-    const positions: number[] = [];
+    const positionsEven: number[] = [];
+    const positionsOdd: number[] = [];
 
     const containerWidth = this.clientWidth;
     const containerHeight = this.clientHeight;
@@ -177,7 +183,7 @@ export class FolkDistanceField extends FolkBaseSet {
       const shapeID = index + 1; // Avoid zero to prevent hash function issues
 
       // Represent each rectangle as two triangles, including shapeID as the z component
-      positions.push(
+      const rectPositions = [
         x1,
         y1,
         shapeID,
@@ -196,39 +202,78 @@ export class FolkDistanceField extends FolkBaseSet {
         shapeID,
         x4,
         y4,
-        shapeID
-      );
+        shapeID,
+      ];
+
+      if (index % 2 === 0) {
+        // Even index
+        positionsEven.push(...rectPositions);
+      } else {
+        // Odd index
+        positionsOdd.push(...rectPositions);
+      }
     });
 
-    if (!this.shapeVAO) {
-      this.shapeVAO = gl.createVertexArray()!;
-      gl.bindVertexArray(this.shapeVAO);
-      this.positionBuffer = gl.createBuffer()!;
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+    // Initialize buffers and VAOs for even seed points
+    if (!this.shapeVAOEven) {
+      this.shapeVAOEven = gl.createVertexArray()!;
+      gl.bindVertexArray(this.shapeVAOEven);
+      this.positionBufferEven = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferEven);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsEven), gl.DYNAMIC_DRAW);
 
       const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
       gl.enableVertexAttribArray(positionLocation);
       gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
     } else {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer!);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferEven!);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positionsEven));
     }
 
-    // Render the seed points into the texture
-    this.renderSeedPoints();
+    // Initialize buffers and VAOs for odd seed points
+    if (!this.shapeVAOOdd) {
+      this.shapeVAOOdd = gl.createVertexArray()!;
+      gl.bindVertexArray(this.shapeVAOOdd);
+      this.positionBufferOdd = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferOdd);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsOdd), gl.DYNAMIC_DRAW);
+
+      const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+      gl.bindVertexArray(null);
+    } else {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBufferOdd!);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positionsOdd));
+    }
+
+    // Render the seed points into the textures
+    this.renderSeedPoints(positionsEven.length / 3, positionsOdd.length / 3);
   }
 
   /**
-   * Renders the seed points (shapes) into one of the ping-pong textures.
-   * This serves as the initial state for the Jump Flooding Algorithm.
+   * Renders the seed points (shapes) into their respective textures for both even and odd groups.
    */
-  private renderSeedPoints() {
+  private renderSeedPoints(vertexCountEven: number, vertexCountOdd: number) {
+    // Render even seed points
+    this.renderSeedPointsForGroup(
+      this.shapeVAOEven,
+      this.texturesEven[this.isPingTextureEven ? 0 : 1],
+      vertexCountEven
+    );
+
+    // Render odd seed points
+    this.renderSeedPointsForGroup(this.shapeVAOOdd, this.texturesOdd[this.isPingTextureOdd ? 0 : 1], vertexCountOdd);
+  }
+
+  /**
+   * Utility method to render seed points for a given group.
+   */
+  private renderSeedPointsForGroup(vao: WebGLVertexArrayObject, seedTexture: WebGLTexture, vertexCount: number) {
     const gl = this.glContext;
 
     // Bind framebuffer to render to the seed texture
-    const seedTexture = this.textures[this.isPingTexture ? 0 : 1];
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, seedTexture, 0);
 
@@ -245,24 +290,31 @@ export class FolkDistanceField extends FolkBaseSet {
     gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
 
     // Bind VAO and draw shapes
-    gl.bindVertexArray(this.shapeVAO);
-    gl.drawArrays(gl.TRIANGLES, 0, this.sourcesMap.size * 6);
-
-    // Unbind VAO and framebuffer
+    gl.bindVertexArray(vao);
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
     gl.bindVertexArray(null);
+
+    // Unbind framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   /**
-   * Executes the Jump Flooding Algorithm (JFA) to compute the distance field.
-   * It progressively reduces step sizes to refine the distance calculations.
+   * Executes the Jump Flooding Algorithm (JFA) separately for even and odd distance fields.
    */
   private runJumpFloodingAlgorithm() {
+    // Compute initial step size
     let stepSize = 1 << Math.floor(Math.log2(Math.max(this.canvas.width, this.canvas.height)));
 
-    // Perform passes with decreasing step sizes
-    for (; stepSize >= 1; stepSize >>= 1) {
-      this.renderPass(stepSize);
+    // Perform passes with decreasing step sizes for even distance field
+    for (let size = stepSize; size >= 1; size >>= 1) {
+      this.renderPass(size, this.texturesEven, this.isPingTextureEven);
+      this.isPingTextureEven = !this.isPingTextureEven;
+    }
+
+    // Perform passes with decreasing step sizes for odd distance field
+    for (let size = stepSize; size >= 1; size >>= 1) {
+      this.renderPass(size, this.texturesOdd, this.isPingTextureOdd);
+      this.isPingTextureOdd = !this.isPingTextureOdd;
     }
 
     // Render the final result to the screen
@@ -270,16 +322,14 @@ export class FolkDistanceField extends FolkBaseSet {
   }
 
   /**
-   * Performs a single pass of the Jump Flooding Algorithm with a given step size.
-   * This involves sampling neighboring pixels at the current step size.
-   * @param stepSize The current step size for this pass.
+   * Performs a single pass of the Jump Flooding Algorithm with a given step size for a specific distance field.
    */
-  private renderPass(stepSize: number) {
+  private renderPass(stepSize: number, textures: WebGLTexture[], isPingTexture: boolean) {
     const gl = this.glContext;
 
     // Swap textures for ping-pong rendering
-    const inputTexture = this.isPingTexture ? this.textures[0] : this.textures[1];
-    const outputTexture = this.isPingTexture ? this.textures[1] : this.textures[0];
+    const inputTexture = isPingTexture ? textures[0] : textures[1];
+    const outputTexture = isPingTexture ? textures[1] : textures[0];
 
     // Bind framebuffer to output texture
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
@@ -301,12 +351,13 @@ export class FolkDistanceField extends FolkBaseSet {
     // Draw a fullscreen quad to process all pixels
     this.drawFullscreenQuad();
 
-    // Toggle the flag
-    this.isPingTexture = !this.isPingTexture;
+    // Unbind framebuffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   /**
    * Renders the final distance field to the screen using the render shader program.
+   * Combines both distance fields using a 'soft merge' function.
    */
   private renderToScreen() {
     const gl = this.glContext;
@@ -318,11 +369,17 @@ export class FolkDistanceField extends FolkBaseSet {
     // Use the render shader program
     gl.useProgram(this.renderProgram);
 
-    // Bind the final texture containing the computed distance field
-    const finalTexture = this.textures[this.isPingTexture ? 0 : 1];
+    // Bind the final texture from even distance field
+    const finalTextureEven = this.texturesEven[this.isPingTextureEven ? 0 : 1];
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, finalTexture);
-    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_texture'), 0);
+    gl.bindTexture(gl.TEXTURE_2D, finalTextureEven);
+    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_textureEven'), 0);
+
+    // Bind the final texture from odd distance field
+    const finalTextureOdd = this.texturesOdd[this.isPingTextureOdd ? 0 : 1];
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, finalTextureOdd);
+    gl.uniform1i(gl.getUniformLocation(this.renderProgram, 'u_textureOdd'), 1);
 
     // Draw a fullscreen quad to display the result
     this.drawFullscreenQuad();
@@ -425,8 +482,10 @@ export class FolkDistanceField extends FolkBaseSet {
     const gl = this.glContext;
 
     // Delete textures
-    this.textures.forEach((texture) => gl.deleteTexture(texture));
-    this.textures = [];
+    this.texturesEven.forEach((texture) => gl.deleteTexture(texture));
+    this.texturesEven = [];
+    this.texturesOdd.forEach((texture) => gl.deleteTexture(texture));
+    this.texturesOdd = [];
 
     // Delete framebuffer
     if (this.framebuffer) {
@@ -437,8 +496,11 @@ export class FolkDistanceField extends FolkBaseSet {
     if (this.fullscreenQuadVAO) {
       gl.deleteVertexArray(this.fullscreenQuadVAO);
     }
-    if (this.shapeVAO) {
-      gl.deleteVertexArray(this.shapeVAO);
+    if (this.shapeVAOEven) {
+      gl.deleteVertexArray(this.shapeVAOEven);
+    }
+    if (this.shapeVAOOdd) {
+      gl.deleteVertexArray(this.shapeVAOOdd);
     }
 
     // Delete shader programs
@@ -522,7 +584,8 @@ precision mediump float;
 in vec2 v_texCoord;
 out vec4 outColor;
 
-uniform sampler2D u_texture;
+uniform sampler2D u_textureEven;
+uniform sampler2D u_textureOdd;
 
 vec3 hsv2rgb(vec3 c) {
   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -531,20 +594,31 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 void main() {
-    vec4 texel = texture(u_texture, v_texCoord);
+    vec4 texelEven = texture(u_textureEven, v_texCoord);
+    vec4 texelOdd = texture(u_textureOdd, v_texCoord);
 
-    // Extract shape ID and distance
-    float shapeID = texel.z;
-    float distance = texel.a;
+    // Extract shape IDs and distances
+    float shapeIDEven = texelEven.z;
+    float distanceEven = texelEven.a;
 
-    float hue = fract(shapeID * 0.61803398875); // Golden ratio conjugate
-    vec3 shapeColor = hsv2rgb(vec3(hue, 0.5, 0.95));
- 
+    float shapeIDOdd = texelOdd.z;
+    float distanceOdd = texelOdd.a;
 
-    // Visualize distance as intensity
-    float intensity = exp(-distance * 10.0);
+    // Compute colors for even and odd distance fields
+    float hueEven = fract(shapeIDEven * 0.61803398875); // Golden ratio conjugate
+    vec3 colorEven = hsv2rgb(vec3(hueEven, 0.5, 0.95));
 
-    outColor = vec4(shapeColor * intensity, 1.0);
+    float hueOdd = fract(shapeIDOdd * 0.61803398875);
+    vec3 colorOdd = hsv2rgb(vec3(hueOdd, 0.5, 0.95));
+
+    // Apply 'soft merge' function (e.g., weighted average based on distance)
+    float weightEven = exp(-distanceEven * 10.0);
+    float weightOdd = exp(-distanceOdd * 10.0);
+    float totalWeight = weightEven + weightOdd;
+
+    vec3 mergedColor = (colorEven * weightEven + colorOdd * weightOdd) / totalWeight;
+
+    outColor = vec4(mergedColor, 1.0);
 }`;
 
 /**
