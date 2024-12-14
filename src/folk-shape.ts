@@ -472,30 +472,31 @@ export class FolkShape extends HTMLElement {
   }
 
   #dispatchTransformEvent() {
-    this.#readonlyRect = new DOMRectTransformReadonly(this.#rect);
-
-    const event = new TransformEvent(this.#readonlyRect, this.#previousRect);
+    const emmittedRect = new DOMRectTransform(this.#rect);
+    const event = new TransformEvent(emmittedRect, this.#previousRect);
     this.dispatchEvent(event);
 
     if (event.xPrevented) {
-      this.#rect.x = this.#previousRect.x;
+      emmittedRect.x = this.#previousRect.x;
     }
     if (event.yPrevented) {
-      this.#rect.y = this.#previousRect.y;
+      emmittedRect.y = this.#previousRect.y;
     }
     if (event.widthPrevented) {
-      this.#rect.width = this.#previousRect.width;
+      emmittedRect.width = this.#previousRect.width;
     }
     if (event.heightPrevented) {
-      this.#rect.height = this.#previousRect.height;
+      emmittedRect.height = this.#previousRect.height;
     }
     if (event.rotatePrevented) {
-      this.#rect.rotation = this.#previousRect.rotation;
+      emmittedRect.rotation = this.#previousRect.rotation;
     }
 
-    this.style.transform = this.#rect.toCssString();
-    this.style.width = this.#attrWidth === 'auto' ? '' : `${this.#rect.width}px`;
-    this.style.height = this.#attrHeight === 'auto' ? '' : `${this.#rect.height}px`;
+    this.style.transform = emmittedRect.toCssString();
+    this.style.width = this.#attrWidth === 'auto' ? '' : `${emmittedRect.width}px`;
+    this.style.height = this.#attrHeight === 'auto' ? '' : `${emmittedRect.height}px`;
+
+    this.#readonlyRect = new DOMRectTransformReadonly(emmittedRect);
   }
 
   #onAutoResize = (entry: ResizeObserverEntry) => {
