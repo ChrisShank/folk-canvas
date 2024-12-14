@@ -1,11 +1,11 @@
 /**
- * A function that processes the event and updates the target element.
- * @param {Element} source - The source element that emitted the event
- * @param {Element} target - The target element that receives propagated changes
+ * A function that processes the event and updates the target.
+ * @param {EventTarget} source - The source that emitted the event
+ * @param {EventTarget} target - The target that receives propagated changes
  * @param {Event} event - The event that triggered the propagation
  * @returns {any} - The result of the propagation
  */
-export type PropagatorFunction = (source: Element, target: Element, event: Event) => any;
+export type PropagatorFunction = (source: EventTarget, target: EventTarget, event: Event) => any;
 
 /**
  * A parser function that converts a string expression into a PropagatorFunction.
@@ -16,8 +16,8 @@ export type PropagatorFunction = (source: Element, target: Element, event: Event
 export type PropagatorParser = (body: string, propagator?: Propagator) => PropagatorFunction | null;
 
 export type PropagatorOptions = {
-  source?: Element | null;
-  target?: Element | null;
+  source?: EventTarget | null;
+  target?: EventTarget | null;
   event?: string | null;
   handler?: PropagatorFunction | string;
   parser?: PropagatorParser;
@@ -26,12 +26,12 @@ export type PropagatorOptions = {
 };
 
 /**
- * A propagator takes a source and target element and listens for events on the source.
- * When an event is detected, it will execute a handler and update the target element.
+ * A propagator takes in a source and target and listens for events on the source.
+ * When an event is detected, it will execute a handler and update the target.
  */
 export class Propagator {
-  #source: Element | null = null;
-  #target: Element | null = null;
+  #source: EventTarget | null = null;
+  #target: EventTarget | null = null;
   #eventName: string | null = null;
   #handler: PropagatorFunction | null = null;
 
@@ -42,9 +42,9 @@ export class Propagator {
   /**
    * Creates a new Propagator instance.
    * @param {PropagatorOptions} options - Configuration options for the propagator
-   * @param {Element} [options.source] - Source element that emits events
-   * @param {Element} [options.target] - Target element that receives propagated changes
-   * @param {string} [options.event] - Event name to listen for on the source element
+   * @param {EventTarget} [options.source] - Source that emits events
+   * @param {EventTarget} [options.target] - Target that receives propagated changes
+   * @param {string} [options.event] - Event name to listen for on the source
    * @param {PropagatorFunction|string} [options.handler] - Event handler function or string expression
    * @param {PropagatorParser} [options.parser] - Custom parser for string handlers
    * @param {Function} [options.onParse] - Callback fired when a string handler is parsed
@@ -71,20 +71,20 @@ export class Propagator {
   }
 
   /**
-   * The source element that emits events.
+   * The source that emits events.
    * Setting a new source will automatically update event listeners.
    */
-  get source(): Element | null {
+  get source(): EventTarget | null {
     return this.#source;
   }
 
-  set source(element: Element | null) {
+  set source(eventTarget: EventTarget | null) {
     // Remove listener from old source
     if (this.#source && this.#eventName) {
       this.#source.removeEventListener(this.#eventName, this.#handleEvent);
     }
 
-    this.#source = element;
+    this.#source = eventTarget;
 
     // Add listener to new source
     if (this.#source && this.#eventName) {
@@ -93,18 +93,18 @@ export class Propagator {
   }
 
   /**
-   * The target element that receives propagated changes.
+   * The target that receives propagated changes.
    */
-  get target(): Element | null {
+  get target(): EventTarget | null {
     return this.#target;
   }
 
-  set target(element: Element | null) {
-    this.#target = element;
+  set target(eventTarget: EventTarget | null) {
+    this.#target = eventTarget;
   }
 
   /**
-   * The name of the event to listen for on the source element.
+   * The name of the event to listen for on the source.
    * Setting a new event name will automatically update event listeners.
    */
   get event(): string | null {
@@ -219,12 +219,12 @@ export class Propagator {
         // If the key is a method, execute it if the condition is true
         const methodName = key.slice(0, -2);
         codeLines.push(`
-  if (typeof to.${methodName} !== 'function') throw new Error(\`Method '${methodName}' does not exist on target element.\`);
+  if (typeof to.${methodName} !== 'function') throw new Error(\`Method '${methodName}' does not exist on the target.\`);
   else if (${value}) to.${methodName}();`);
       } else {
         // For property assignments, assign the value directly
         codeLines.push(`
-  if (!('${key}' in to)) throw new Error(\`Property '${key}' does not exist on target element.\`);
+  if (!('${key}' in to)) throw new Error(\`Property '${key}' does not exist on the target.\`);
   to.${key} = ${value};`);
       }
     }
