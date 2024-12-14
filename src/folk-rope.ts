@@ -8,8 +8,6 @@ import { css, PropertyValues } from '@lit/reactive-element';
 import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
 import { property } from '@lit/reactive-element/decorators.js';
 
-const lerp = (first: number, second: number, percentage: number) => first + (second - first) * percentage;
-
 // Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!
 interface RopePoint {
   pos: Point;
@@ -103,20 +101,20 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
     let target: Point;
 
     if (sourceRect instanceof DOMRectTransform) {
-      source = sourceRect.toParentSpace({ x: sourceRect.width / 2, y: sourceRect.height });
+      source = sourceRect.center;
     } else {
       source = {
         x: sourceRect.x + sourceRect.width / 2,
-        y: sourceRect.y + sourceRect.height,
+        y: sourceRect.y + sourceRect.height / 2,
       };
     }
 
     if (targetRect instanceof DOMRectTransform) {
-      target = targetRect.toParentSpace({ x: targetRect.width / 2, y: targetRect.height });
+      target = targetRect.center;
     } else {
       target = {
         x: targetRect.x + targetRect.width / 2,
-        y: targetRect.y + targetRect.height,
+        y: targetRect.y + targetRect.height / 2,
       };
     }
 
@@ -173,10 +171,7 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
 
     for (let i = 0; i < pointsLen; i++) {
       const percentage = i / (pointsLen - 1);
-      const pos = {
-        x: lerp(start.x, end.x, percentage),
-        y: lerp(start.y, end.y, percentage),
-      };
+      const pos = Vector.lerp(start, end, percentage);
 
       points.push({
         pos,
@@ -226,18 +221,27 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
     if (point.prev) applyConstraint(point, point.prev);
   }
 
-  cut(index = Math.floor(this.#points.length / 2)) {
-    if (index < 0 || index >= this.#points.length - 1) return;
+  cut(atPercentage = 0.5) {
+    const index = this.#getPointIndexAt(atPercentage);
 
     this.#points[index].next = null;
     this.#points[index + 1].prev = null;
   }
 
-  mend(index = Math.floor(this.#points.length / 2)) {
-    if (index < 0 || index >= this.#points.length - 1) return;
+  mend(atPercentage = 0.5) {
+    const index = this.#getPointIndexAt(atPercentage);
 
     this.#points[index].next = this.#points[index + 1];
     this.#points[index + 1].prev = this.#points[index];
+  }
+
+  getPointAt(percentage: number) {
+    return this.#points[this.#getPointIndexAt(percentage)];
+  }
+
+  #getPointIndexAt(percentage: number) {
+    const clamped = Math.min(Math.max(percentage, 0), 1);
+    return Math.floor(this.#points.length * clamped);
   }
 }
 

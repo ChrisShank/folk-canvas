@@ -9,8 +9,14 @@ export class FolkEventPropagator extends FolkRope {
   static styles = [
     ...FolkRope.styles,
     css`
-      textarea {
+      .input-container {
         position: absolute;
+        display: flex;
+        flex-direction: column;
+        translate: -50% -50%;
+      }
+
+      textarea {
         width: auto;
         min-width: 3ch;
         height: auto;
@@ -21,8 +27,17 @@ export class FolkEventPropagator extends FolkRope {
         pointer-events: auto;
         overflow: hidden;
         field-sizing: content;
-        translate: -50% -50%;
-        border-radius: 5px;
+        box-sizing: content-box;
+      }
+
+      .trigger {
+        border-radius: 5px 5px 0 0;
+        border-bottom: none;
+        width: fit-content;
+      }
+
+      .expression {
+        border-radius: 0 5px 5px 5px;
       }
     `,
   ];
@@ -33,9 +48,15 @@ export class FolkEventPropagator extends FolkRope {
   #triggerTextarea = document.createElement('textarea');
   #expressionTextarea = document.createElement('textarea');
   #propagator: Propagator | null = null;
+  #container = document.createElement('div');
+  #hasError = false;
 
   override firstUpdated(changedProperties: PropertyValues<this>): void {
     super.firstUpdated(changedProperties);
+
+    this.#container.className = 'input-container';
+    this.#triggerTextarea.className = 'trigger';
+    this.#expressionTextarea.className = 'expression';
 
     this.#triggerTextarea.addEventListener('change', () => {
       this.trigger = this.#triggerTextarea.value;
@@ -45,10 +66,17 @@ export class FolkEventPropagator extends FolkRope {
       this.expression = this.#expressionTextarea.value;
     });
 
+    this.#expressionTextarea.addEventListener('focusout', () => {
+      if (this.#hasError) {
+        this.cut();
+      }
+    });
+
     this.#triggerTextarea.value = this.trigger;
     this.#expressionTextarea.value = this.expression;
 
-    this.renderRoot.append(this.#triggerTextarea, this.#expressionTextarea);
+    this.#container.append(this.#triggerTextarea, this.#expressionTextarea);
+    this.renderRoot.append(this.#container);
 
     this.#initializePropagator();
   }
@@ -73,24 +101,23 @@ export class FolkEventPropagator extends FolkRope {
       target: this.targetElement,
       event: this.trigger,
       handler: this.expression,
-      onParseError: () => this.cut(),
-      onParseSuccess: () => this.mend(),
+      onParseError: () => {
+        this.#hasError = true;
+      },
+      onParseSuccess: () => {
+        this.#hasError = false;
+        this.mend();
+      },
     });
   }
 
   override render() {
     super.render();
 
-    const triggerPoint = this.points[Math.floor(this.points.length / 5)];
-    if (triggerPoint) {
-      this.#triggerTextarea.style.left = `${triggerPoint.pos.x}px`;
-      this.#triggerTextarea.style.top = `${triggerPoint.pos.y}px`;
-    }
-
-    const expressionPoint = this.points[Math.floor(this.points.length / 2)];
-    if (expressionPoint) {
-      this.#expressionTextarea.style.left = `${expressionPoint.pos.x}px`;
-      this.#expressionTextarea.style.top = `${expressionPoint.pos.y}px`;
+    const point = this.getPointAt(0.5);
+    if (point) {
+      this.#container.style.left = `${point.pos.x}px`;
+      this.#container.style.top = `${point.pos.y}px`;
     }
   }
 }
