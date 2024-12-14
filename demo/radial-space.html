@@ -19,23 +19,22 @@
       }
 
       folk-shape {
-        background: rgb(187, 178, 178);
+        background: rgb(189, 184, 181);
       }
 
       folk-space-radial {
-        width: 500px;
-        height: 500px;
+        width: 700px;
+        height: 700px;
       }
     </style>
   </head>
   <body>
-    <folk-space-radial>
-      <folk-shape x="0" y="100" width="50" height="50"></folk-shape>
-      <folk-shape x="0" y="200" width="50" height="50"></folk-shape>
-      <folk-shape x="20" y="300" width="50" height="50" rotation="45"></folk-shape>
-      <folk-shape x="20" y="400" width="50" height="50" rotation="45"></folk-shape>
-      <folk-shape x="20" y="500" width="50" height="50" rotation="45"></folk-shape>
-    </folk-space-radial>
+    <folk-shape id="0" x="0" y="100" width="50" height="50"></folk-shape>
+    <folk-shape id="1" x="0" y="200" width="50" height="50"></folk-shape>
+    <folk-shape id="2" x="20" y="300" width="50" height="50" rotation="45"></folk-shape>
+    <folk-shape id="3" x="20" y="400" width="50" height="50" rotation="45"></folk-shape>
+    <folk-shape id="4" x="20" y="500" width="50" height="50" rotation="45"></folk-shape>
+    <folk-space-radial sources="folk-shape"> </folk-space-radial>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';

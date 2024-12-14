@@ -1,91 +1,161 @@
-import { css, html } from './common/tags';
-import { FolkShape } from './folk-shape';
 import { DOMRectTransform } from './common/DOMRectTransform';
+import { css, type PropertyValues } from '@lit/reactive-element';
+import { TransformEvent } from './common/TransformEvent';
+import { FolkShape } from './folk-shape';
+import { Experimental } from './common/Experimental';
+import { FolkBaseSet } from './folk-base-set';
+import { Vector } from './common/Vector';
+import type { Point } from './common/types';
 
-const styles = css`
-  :host {
-    display: block;
-    position: relative;
-    border: 2px dashed hsl(214, 84%, 56%);
-    border-radius: 50%;
+export class FolkSpaceRadial extends FolkBaseSet {
+  static override tagName = 'folk-space-radial';
+  static override styles = [
+    FolkBaseSet.styles,
+    css`
+      :host {
+        border: 2px dashed hsl(214, 84%, 56%);
+        border-radius: 50%;
+        box-sizing: border-box;
+      }
+
+      .center-point {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: hsl(214, 84%, 56%);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        left: 50%;
+        top: 50%;
+      }
+    `,
+  ];
+
+  #centerPoint: HTMLDivElement | null = null;
+
+  override firstUpdated(changedProperties: PropertyValues<this>) {
+    super.firstUpdated(changedProperties);
+
+    this.#centerPoint = document.createElement('div');
+    this.#centerPoint.className = 'center-point';
+    this.renderRoot.appendChild(this.#centerPoint);
+
+    // Add transform listeners to source elements
+    this.sourceElements.forEach((element) => {
+      if (element instanceof FolkShape) {
+        element.addEventListener('transform', this.#onTransform);
+      }
+    });
   }
 
-  ::slotted(*) {
-    position: absolute;
-    transform-origin: 50% 0%;
+  protected override updated(changedProperties: PropertyValues<this>) {
+    super.updated(changedProperties);
+
+    // Update transform listeners when source elements change
+    this.sourceElements.forEach((element) => {
+      if (element instanceof FolkShape) {
+        element.addEventListener('transform', (event) => {
+          this.#onTransform(event);
+          // this.#handleMoveBefore(event);
+        });
+      }
+    });
   }
 
-  .center-point {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: hsl(214, 84%, 56%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-`;
+  #handleMoveBefore(event: Event) {
+    if (!Experimental.canMoveBefore()) return;
 
-export class FolkSpaceRadial extends HTMLElement {
-  static tagName = 'folk-space-radial';
+    const shapeElement = event.target as HTMLElement;
 
-  static define() {
-    if (!customElements.get(this.tagName)) {
-      customElements.define(this.tagName, this);
+    // Calculate the center of the shape
+    const shapeBounds = shapeElement.getBoundingClientRect();
+    const shapeCenter = {
+      x: shapeBounds.left + shapeBounds.width / 2,
+      y: shapeBounds.top + shapeBounds.height / 2,
+    };
+
+    const bounds = this.getBoundingClientRect();
+    const spaceCenter = { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+
+    // Calculate distance from shape center to circle center
+    const distance = Vector.distance(shapeCenter, spaceCenter);
+
+    const circleRadius = bounds.width / 2;
+    const isInsideCircle = distance <= circleRadius;
+    const isInHost = shapeElement.parentElement === this;
+
+    if (isInsideCircle && !isInHost) {
+      (this as any).moveBefore(shapeElement, null);
+      // this.#ignoredShapes.delete(shapeElement);
+    } else if (!isInsideCircle && isInHost) {
+      (document.body as any).moveBefore(shapeElement, null);
+      // this.#ignoredShapes.add(shapeElement);
     }
   }
 
-  #shadow = this.attachShadow({ mode: 'open' });
-  #centerPoint: HTMLDivElement;
+  #onTransform = (event: Event) => {
+    if (!(event instanceof TransformEvent)) return;
 
-  constructor() {
-    super();
-    this.#shadow.adoptedStyleSheets = [styles];
+    const transform = event.current as DOMRectTransform;
 
-    // Create center point marker
-    this.#centerPoint = document.createElement('div');
-    this.#centerPoint.className = 'center-point';
+    // Set rotateOrigin to center
+    transform.rotateOrigin = { x: 0.5, y: 0.5 };
 
-    this.#shadow.setHTMLUnsafe(html`<slot></slot> `);
-    this.#shadow.appendChild(this.#centerPoint);
+    // Get the center of the radial space
+    const bounds = this.getBoundingClientRect();
+    const spaceCenter = { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
 
-    // Listen for changes in the slot to layout children when they change
-    const slot = this.#shadow.querySelector('slot');
-    slot?.addEventListener('slotchange', () => this.#layoutChildren());
-  }
+    // Calculate the absolute position of the rotateOrigin in local space
+    const rotateOriginLocal = {
+      x: transform.width * transform.rotateOrigin.x,
+      y: transform.height * transform.rotateOrigin.y,
+    };
 
-  connectedCallback() {
-    this.#layoutChildren();
-  }
+    // Convert the local rotateOrigin to parent space
+    const rotateOriginParent = transform.toParentSpace(rotateOriginLocal);
 
-  #layoutChildren() {
-    const slot = this.#shadow.querySelector('slot');
-    const assignedElements = slot?.assignedElements() || [];
-    const count = assignedElements.length;
+    const distance = Vector.distance(rotateOriginParent, spaceCenter);
 
-    // Determine the radius and center of the radial layout
-    const radius = Math.min(this.clientWidth, this.clientHeight) / 2 - 50;
-    const centerX = this.clientWidth / 2;
-    const centerY = this.clientHeight / 2;
+    // if the shape is outside the circle, don't move it
+    // tried using moveBefore, but will leave this here for now
+    if (distance > bounds.width / 2) {
+      return;
+    }
 
-    assignedElements.forEach((element, index) => {
-      if (!(element instanceof FolkShape)) return;
+    // Compute vector from space center to rotateOrigin in parent space
+    const dx = rotateOriginParent.x - spaceCenter.x;
+    const dy = rotateOriginParent.y - spaceCenter.y;
 
-      // Calculate the angle for each child
-      const angle = (index / count) * 2 * Math.PI;
+    // Calculate radius and angle
+    const radius = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
 
-      // Create a transform for each child
-      const transform = new DOMRectTransform({
-        x: centerX + radius * Math.cos(angle),
-        y: centerY + radius * Math.sin(angle),
-        rotation: angle,
-        transformOrigin: { x: 0.5, y: 0 },
-      });
+    // Update position so that rotateOrigin moves along the circle
+    const newRotateOriginParent = {
+      x: spaceCenter.x + radius * Math.cos(angle),
+      y: spaceCenter.y + radius * Math.sin(angle),
+    };
 
-      // Set the transform on the child
-      // element.setTransform(transform);
+    // Calculate the delta to move the shape so that its rotateOrigin is at the new position
+    const deltaX = newRotateOriginParent.x - rotateOriginParent.x;
+    const deltaY = newRotateOriginParent.y - rotateOriginParent.y;
+
+    // Update transform position
+    transform.x += deltaX;
+    transform.y += deltaY;
+
+    // Update rotation
+    transform.rotation = angle;
+  };
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up event listeners
+    this.sourceElements.forEach((element) => {
+      if (element instanceof FolkShape) {
+        element.removeEventListener('transform', this.#onTransform);
+      }
     });
   }
 }
-
-FolkSpaceRadial.define();

@@ -315,6 +315,7 @@ export class FolkShape extends HTMLElement {
     this.#update();
   }
 
+  // todo: rename to `getDOMRectTransform`
   getTransformDOMRect() {
     return this.#readonlyRect;
   }
@@ -471,9 +472,7 @@ export class FolkShape extends HTMLElement {
   }
 
   #dispatchTransformEvent() {
-    this.#readonlyRect = new DOMRectTransformReadonly(this.#rect);
-
-    const event = new TransformEvent(this.#readonlyRect, this.#previousRect);
+    const event = new TransformEvent(this.#rect, this.#previousRect);
     this.dispatchEvent(event);
 
     if (event.xPrevented) {
