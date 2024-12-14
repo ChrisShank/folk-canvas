@@ -6,6 +6,9 @@
     "service_worker": "background.ts"
   },
   "options_page": "options.html",
+  "web_accessible_resources": [
+    "injected.ts"
+  ],
   "content_scripts": [
     {
       "matches": [
