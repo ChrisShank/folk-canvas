@@ -180,8 +180,12 @@ export class FolkSpreadsheet extends HTMLElement {
   }
 
   #shadow = this.attachShadow({ mode: 'open' });
-
-  #textarea!: HTMLTextAreaElement;
+  #columns = document.createElement('s-columns');
+  #rows = document.createElement('s-rows');
+  #body = document.createElement('s-body');
+  #slot = document.createElement('slot');
+  #textarea = document.createElement('textarea');
+  #cellStyles = new CSSStyleSheet();
 
   #editedCell: FolkSpreadSheetCell | null = null;
 
@@ -194,12 +198,23 @@ export class FolkSpreadsheet extends HTMLElement {
     this.addEventListener('focusin', this);
     this.addEventListener('focusout', this);
 
-    this.#shadow.adoptedStyleSheets.push(styles);
+    this.#shadow.adoptedStyleSheets.push(styles, this.#cellStyles);
   }
 
   connectedCallback() {
-    this.#shadow.textContent = '';
+    const header = document.createElement('s-header');
+    header.setAttribute('empty', '');
 
+    this.#textarea.hidden = true;
+
+    this.#slot.addEventListener('slotchange', this.#onSlotUpdate);
+
+    this.#body.appendChild(this.#slot);
+
+    this.#shadow.append(header, this.#columns, this.#rows, this.#body, this.#textarea);
+  }
+
+  #onSlotUpdate = () => {
     const columnNames = new Set();
     const rowNames = new Set();
 
@@ -213,10 +228,18 @@ export class FolkSpreadsheet extends HTMLElement {
     const columns = Array.from({ length: columnNames.size }).map((_, i) => getColumnName(i));
     const rows = Array.from({ length: rowNames.size }).map((_, i) => i + 1);
 
-    const columnHeaders = columns.map((column) => `<s-header column="${column}">${column}</s-header>`).join('\n');
-    const rowHeaders = rows.map((row) => `<s-header row="${row}">${row}</s-header>`).join('\n');
+    this.#columns.setHTMLUnsafe(
+      columns.map((column) => `<s-header column="${column}">${column}</s-header>`).join('\n')
+    );
 
-    const style = `<style>
+    this.#rows.setHTMLUnsafe(rows.map((row) => `<s-header row="${row}">${row}</s-header>`).join('\n'));
+
+    this.#cellStyles.replaceSync(`
+      :host {
+        --column-count: ${columns.length};
+        --row-count: ${rows.length};
+      }
+
       ${columns
         .map(
           (column) =>
@@ -225,25 +248,11 @@ export class FolkSpreadsheet extends HTMLElement {
             }; }`
         )
         .join('\n')}
+
       ${rows
         .map((row) => `s-header[row="${row}"], ::slotted(folk-cell[row="${row}"]) { grid-row: ${row}; }`)
-        .join('\n')}
-    </style>`;
-
-    this.style.setProperty('--column-count', columns.length.toString());
-    this.style.setProperty('--row-count', rows.length.toString());
-
-    this.#shadow.setHTMLUnsafe(html`
-      <s-header empty></s-header>
-      <s-columns>${columnHeaders}</s-columns>
-      <s-rows>${rowHeaders}</s-rows>
-      <s-body><slot></slot></s-body>
-      <textarea hidden></textarea>
-      ${style}
-    `);
-
-    this.#textarea = this.#shadow.querySelector('textarea')!;
-  }
+        .join('\n')}`);
+  };
 
   #range = '';
   get range() {
