@@ -99,9 +99,6 @@ export class FolkSpaceRadial extends FolkBaseSet {
 
     const transform = event.current as DOMRectTransform;
 
-    // Set rotateOrigin to center
-    transform.rotateOrigin = { x: 0.5, y: 0.5 };
-
     // Get the center of the radial space
     const bounds = this.getBoundingClientRect();
     const spaceCenter = { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
