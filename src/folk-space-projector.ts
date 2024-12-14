@@ -25,12 +25,14 @@ export class FolkSpaceProjector extends FolkBaseSet {
 
   #spreadsheet = document.createElement('folk-spreadsheet');
 
-  override firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#spreadsheet.style.setProperty('--cell-width', '50px');
 
-    this.renderRoot.append(this.#spreadsheet);
+    root.append(this.#spreadsheet);
+
+    return root;
   }
 
   connectedCallback(): void {

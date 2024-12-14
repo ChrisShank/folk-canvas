@@ -49,12 +49,10 @@ export class FolkSpace extends FolkElement {
     }
   `;
 
-  override firstUpdated(changedProperties: PropertyValues): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot() as ShadowRoot;
 
-    if (!(this.renderRoot instanceof ShadowRoot)) return;
-
-    this.renderRoot.setHTMLUnsafe(html`
+    root.setHTMLUnsafe(html`
       <div class="space">
         <div class="face front">
           <slot name="front"></slot>
@@ -64,6 +62,8 @@ export class FolkSpace extends FolkElement {
         </div>
       </div>
     `);
+
+    return root;
   }
 
   transition() {

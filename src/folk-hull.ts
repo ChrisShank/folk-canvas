@@ -31,12 +31,14 @@ export class FolkHull extends FolkBaseSet {
 
   #hullEl = document.createElement('div');
 
-  override firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#hullEl.id = 'hull';
 
-    this.renderRoot.prepend(this.#hullEl);
+    root.prepend(this.#hullEl);
+
+    return root;
   }
 
   override update(changedProperties: PropertyValues<this>) {

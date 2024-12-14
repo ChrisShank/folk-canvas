@@ -34,12 +34,12 @@ export class FolkSpaceRadial extends FolkBaseSet {
 
   #centerPoint: HTMLDivElement | null = null;
 
-  override firstUpdated(changedProperties: PropertyValues<this>) {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#centerPoint = document.createElement('div');
     this.#centerPoint.className = 'center-point';
-    this.renderRoot.appendChild(this.#centerPoint);
+    root.appendChild(this.#centerPoint);
 
     // Add transform listeners to source elements
     this.sourceElements.forEach((element) => {
@@ -47,6 +47,8 @@ export class FolkSpaceRadial extends FolkBaseSet {
         element.addEventListener('transform', this.#onTransform);
       }
     });
+
+    return root;
   }
 
   protected override updated(changedProperties: PropertyValues<this>) {

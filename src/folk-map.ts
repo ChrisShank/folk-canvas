@@ -30,10 +30,10 @@ export class FolkMap extends FolkElement {
   #container = document.createElement('div');
   #map = map(this.#container);
 
-  override firstUpdated(changedProperties: PropertyValues): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
-    this.renderRoot.appendChild(this.#container);
+    root.appendChild(this.#container);
 
     this.#map.addLayer(
       tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -46,6 +46,8 @@ export class FolkMap extends FolkElement {
       (this.getAttribute('coordinates') || '0, 0').split(',').map(Number) as LatLngExpression,
       Number(this.getAttribute('zoom') || 13)
     );
+
+    return root;
   }
 
   connectedCallback(): void {

@@ -63,12 +63,14 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
 
   @property({ type: Object }) gravity = { x: 0, y: 3000 };
 
-  override firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#svg.append(this.#path, this.#path2);
 
-    this.renderRoot.appendChild(this.#svg);
+    root.appendChild(this.#svg);
+
+    return root;
   }
 
   tick() {

@@ -54,11 +54,13 @@ export class FolkInk extends FolkElement {
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   #tracingPromise: PromiseWithResolvers<void> | null = null;
 
-  override firstUpdated(changedProperties: PropertyValues): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#svg.appendChild(this.#path);
-    this.renderRoot.appendChild(this.#svg);
+
+    root.appendChild(this.#svg);
+    return root;
   }
 
   getPathBox() {

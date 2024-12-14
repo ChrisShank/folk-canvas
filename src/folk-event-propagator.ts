@@ -51,8 +51,8 @@ export class FolkEventPropagator extends FolkRope {
   #container = document.createElement('div');
   #hasError = false;
 
-  override firstUpdated(changedProperties: PropertyValues<this>): void {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.#container.className = 'input-container';
     this.#triggerTextarea.className = 'trigger';
@@ -76,9 +76,10 @@ export class FolkEventPropagator extends FolkRope {
     this.#expressionTextarea.value = this.expression;
 
     this.#container.append(this.#triggerTextarea, this.#expressionTextarea);
-    this.renderRoot.append(this.#container);
 
-    this.#initializePropagator();
+    root.append(this.#container);
+
+    return root;
   }
 
   override updated(changedProperties: PropertyValues<this>): void {

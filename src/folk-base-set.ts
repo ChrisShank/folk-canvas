@@ -36,12 +36,14 @@ export class FolkBaseSet extends FolkElement {
 
   #slot = document.createElement('slot');
 
-  override firstUpdated(changedProperties: PropertyValues<this>) {
-    super.firstUpdated(changedProperties);
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
-    this.renderRoot.append(this.#slot);
+    root.append(this.#slot);
 
     this.#slot.addEventListener('slotchange', this.#onSlotchange);
+
+    return root;
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
