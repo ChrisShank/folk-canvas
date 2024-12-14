@@ -581,6 +581,11 @@ void main() {
 const renderFragShader = glsl`#version 300 es
 precision mediump float;
 
+#define DEBUG_MODULO true
+#define FALLOFF_FACTOR 10.0
+#define SMOOTHING_FACTOR 0.1
+#define MERGE_DISTANCES true
+
 in vec2 v_texCoord;
 out vec4 outColor;
 
@@ -610,24 +615,55 @@ void main() {
   float shapeIDOdd = texelOdd.z;
   float distanceOdd = texelOdd.a;
 
-  // Use smooth minimum to merge distances
-  float k = 0.05; // Smoothing factor, adjust as needed
-  float mergedDistance = smoothMin(distanceEven, distanceOdd, k);
+  // Compute colors for both shapes first
+  float hueEven = fract(shapeIDEven * 0.61803398875);
+  vec3 colorEven = hsv2rgb(vec3(hueEven, 0.5, 0.95));
 
-  // Determine the contributing shape ID based on which distance is closer
-  float h = clamp(0.5 + 0.5 * (distanceOdd - distanceEven) / k, 0.0, 1.0);
-  float mergedShapeID = mix(shapeIDOdd, shapeIDEven, h);
+  float hueOdd = fract(shapeIDOdd * 0.61803398875);
+  vec3 colorOdd = hsv2rgb(vec3(hueOdd, 0.5, 0.95));
 
-  // Compute color based on the merged shape ID
-  float hue = fract(mergedShapeID * 0.61803398875); // Golden ratio conjugate
-  vec3 color = hsv2rgb(vec3(hue, 0.5, 0.95));
+  float mergedDistance;
+  vec3 mergedColor;
 
-  // Optionally, you can adjust the brightness based on the merged distance
-  // For example, fade out colors further from the shapes
-  float brightness = exp(-mergedDistance * 10.0);
-  color *= brightness;
+  if (MERGE_DISTANCES) {
+    // Use smooth minimum to merge distances
+    mergedDistance = smoothMin(distanceEven, distanceOdd, SMOOTHING_FACTOR);
+    
+    // Calculate blend factor using the same smoothing parameter
+    float h = clamp(0.5 + 0.5 * (distanceOdd - distanceEven) / SMOOTHING_FACTOR, 0.0, 1.0);
+    
+    // Interpolate between the two colors
+    mergedColor = mix(colorOdd, colorEven, h);
+  } else {
+    // Simply use the closest distance and its corresponding color
+    if (distanceEven <= distanceOdd) {
+      mergedDistance = distanceEven;
+      mergedColor = colorEven;
+    } else {
+      mergedDistance = distanceOdd;
+      mergedColor = colorOdd;
+    }
+  }
 
-  outColor = vec4(color, 1.0);
+  vec3 finalColor = mergedColor;
+
+  if (DEBUG_MODULO) {
+    // Visualize distance bands using modulo
+    float bandWidth = 0.02; // Adjust this value to change the width of the bands
+    float distanceBand = mod(mergedDistance, bandWidth) / bandWidth;
+    
+    // Create alternating black and white bands
+    float bandColor = step(0.1, distanceBand);
+    
+    // Mix the band visualization with the merged color
+    finalColor = mix(vec3(0.0), mergedColor, bandColor);
+  }
+
+  // Apply intensity-based falloff (from pre-pretty commit)
+  float intensity = exp(-mergedDistance * FALLOFF_FACTOR);
+  finalColor *= intensity;
+
+  outColor = vec4(finalColor, 1.0);
 }`;
 
 /**
