@@ -593,32 +593,41 @@ vec3 hsv2rgb(vec3 c) {
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+// Smooth minimum function
+float smoothMin(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+  return mix(b, a, h) - k * h * (1.0 - h);
+}
+
 void main() {
-    vec4 texelEven = texture(u_textureEven, v_texCoord);
-    vec4 texelOdd = texture(u_textureOdd, v_texCoord);
+  vec4 texelEven = texture(u_textureEven, v_texCoord);
+  vec4 texelOdd = texture(u_textureOdd, v_texCoord);
 
-    // Extract shape IDs and distances
-    float shapeIDEven = texelEven.z;
-    float distanceEven = texelEven.a;
+  // Extract shape IDs and distances
+  float shapeIDEven = texelEven.z;
+  float distanceEven = texelEven.a;
 
-    float shapeIDOdd = texelOdd.z;
-    float distanceOdd = texelOdd.a;
+  float shapeIDOdd = texelOdd.z;
+  float distanceOdd = texelOdd.a;
 
-    // Compute colors for even and odd distance fields
-    float hueEven = fract(shapeIDEven * 0.61803398875); // Golden ratio conjugate
-    vec3 colorEven = hsv2rgb(vec3(hueEven, 0.5, 0.95));
+  // Use smooth minimum to merge distances
+  float k = 0.05; // Smoothing factor, adjust as needed
+  float mergedDistance = smoothMin(distanceEven, distanceOdd, k);
 
-    float hueOdd = fract(shapeIDOdd * 0.61803398875);
-    vec3 colorOdd = hsv2rgb(vec3(hueOdd, 0.5, 0.95));
+  // Determine the contributing shape ID based on which distance is closer
+  float h = clamp(0.5 + 0.5 * (distanceOdd - distanceEven) / k, 0.0, 1.0);
+  float mergedShapeID = mix(shapeIDOdd, shapeIDEven, h);
 
-    // Apply 'soft merge' function (e.g., weighted average based on distance)
-    float weightEven = exp(-distanceEven * 10.0);
-    float weightOdd = exp(-distanceOdd * 10.0);
-    float totalWeight = weightEven + weightOdd;
+  // Compute color based on the merged shape ID
+  float hue = fract(mergedShapeID * 0.61803398875); // Golden ratio conjugate
+  vec3 color = hsv2rgb(vec3(hue, 0.5, 0.95));
 
-    vec3 mergedColor = (colorEven * weightEven + colorOdd * weightOdd) / totalWeight;
+  // Optionally, you can adjust the brightness based on the merged distance
+  // For example, fade out colors further from the shapes
+  float brightness = exp(-mergedDistance * 10.0);
+  color *= brightness;
 
-    outColor = vec4(mergedColor, 1.0);
+  outColor = vec4(color, 1.0);
 }`;
 
 /**
