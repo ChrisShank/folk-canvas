@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build --base=/folk-canvas",
+    "build": "tsc --noEmit && vite build",
     "preview": "tsc --noEmit && vite build && vite preview",
     "types": "tsc --noEmit",
     "bench": "bun run src/__tests__/bench.ts"
