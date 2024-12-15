@@ -49,12 +49,14 @@ export class FolkBaseConnection extends FolkElement {
         this.sourceRect = DOMRectReadOnly.fromRect(vertex);
       } else {
         this.sourceElement = document.querySelector(this.source);
+      }
+    }
 
-        if (this.sourceElement === null) {
-          this.sourceRect = null;
-        } else {
-          folkObserver.observe(this.sourceElement, this.#sourceCallback);
-        }
+    if (changedProperties.has('sourceElement')) {
+      if (this.sourceElement === null) {
+        this.sourceRect = null;
+      } else {
+        folkObserver.observe(this.sourceElement, this.#sourceCallback);
       }
     }
 
@@ -69,12 +71,14 @@ export class FolkBaseConnection extends FolkElement {
         this.targetRect = DOMRectReadOnly.fromRect(vertex);
       } else {
         this.targetElement = document.querySelector(this.target);
+      }
+    }
 
-        if (this.targetElement === null) {
-          this.targetRect = null;
-        } else {
-          folkObserver.observe(this.targetElement, this.#targetCallback);
-        }
+    if (changedProperties.has('targetElement')) {
+      if (this.targetElement === null) {
+        this.targetRect = null;
+      } else {
+        folkObserver.observe(this.targetElement, this.#targetCallback);
       }
     }
   }
