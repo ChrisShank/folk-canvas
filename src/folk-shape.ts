@@ -48,6 +48,7 @@ const styles = css`
     left: 0;
     cursor: move;
     transform-origin: 0 0;
+    box-sizing: border-box;
   }
 
   :host::before {

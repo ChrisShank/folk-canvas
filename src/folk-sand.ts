@@ -11,7 +11,7 @@ import {
 import { requestAnimationFrame } from './common/rAF.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { css, PropertyValues } from '@lit/reactive-element';
-import { DOMRectTransform, DOMRectTransformReadonly } from './common/DOMRectTransform.ts';
+import { DOMRectTransform } from './common/DOMRectTransform.ts';
 
 export class FolkSand extends FolkBaseSet {
   static override tagName = 'folk-sand';

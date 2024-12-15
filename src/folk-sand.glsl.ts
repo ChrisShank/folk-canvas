@@ -26,35 +26,7 @@ const float EPSILON = 1e-4;
 const float PI = acos(-1.);
 const float TAU = PI * 2.0;
 
-float safeacos(float x) { return acos(clamp(x, -1.0, 1.0)); }
-
-float saturate(float x) { return clamp(x, 0., 1.); }
-vec2 saturate(vec2 x) { return clamp(x, vec2(0), vec2(1)); }
 vec3 saturate(vec3 x) { return clamp(x, vec3(0), vec3(1)); }
-
-float sqr(float x) { return x*x; }
-vec2 sqr(vec2 x) { return x*x; }
-vec3 sqr(vec3 x) { return x*x; }
-
-float luminance(vec3 col) { return dot(col, vec3(0.2126729, 0.7151522, 0.0721750)); }
-
-mat2 rot2D(float a)
-{
-	float c = cos(a);
-	float s = sin(a);
-	return mat2(c, s, -s, c);
-}
-
-// https://iquilezles.org/articles/smin/
-float smin( float d1, float d2, float k ) {
-	float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
-	return mix( d2, d1, h ) - k*h*(1.0-h);
-}
-
-float smax( float d1, float d2, float k ) {
-	float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
-	return mix( d2, d1, h ) + k*h*(1.0-h);
-}
 
 // https://iquilezles.org/articles/palettes/
 vec3 palette(float t)
@@ -76,20 +48,6 @@ float hash13(vec3 p3)
 	p3  = fract(p3 * .1031);
 	p3 += dot(p3, p3.zyx + 31.32);
 	return fract((p3.x + p3.y) * p3.z);
-}
-
-vec2 hash22(vec2 p)
-{
-	vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
-	p3 += dot(p3, p3.yzx+33.33);
-	return fract((p3.xx+p3.yz)*p3.zy);
-}
-
-vec2 hash23(vec3 p3)
-{
-	p3 = fract(p3 * vec3(.1031, .1030, .0973));
-	p3 += dot(p3, p3.yzx+33.33);
-	return fract((p3.xx+p3.yz)*p3.zy);
 }
 
 vec3 hash33(vec3 p3)
@@ -117,13 +75,6 @@ vec3 RGBtoHCV(in vec3 RGB)
 	return vec3(H, C, Q.x);
 }
 
-vec3 RGBtoHSV(in vec3 RGB)
-{
-	vec3 HCV = RGBtoHCV(RGB);
-	float S = HCV.y / (HCV.z + EPSILON);
-	return vec3(HCV.x, S, HCV.z);
-}
-
 vec3 RGBtoHSL(in vec3 RGB)
 {
 	vec3 HCV = RGBtoHCV(RGB);
@@ -140,22 +91,11 @@ vec3 HUEtoRGB(in float H)
 	return saturate(vec3(R,G,B));
 }
 
-vec3 HSVtoRGB(in vec3 HSV)
-{
-	vec3 RGB = HUEtoRGB(HSV.x);
-	return ((RGB - 1.0) * HSV.y + 1.0) * HSV.z;
-}
-
 vec3 HSLtoRGB(in vec3 HSL)
 {
 	vec3 RGB = HUEtoRGB(HSL.x);
 	float C = (1.0 - abs(2.0 * HSL.z - 1.0)) * HSL.y;
 	return (RGB - 0.5) * C + HSL.z;
-}
-
-vec3 sRGBToLinear(vec3 col)
-{
-	return mix(pow((col + 0.055) / 1.055, vec3(2.4)), col / 12.92, lessThan(col, vec3(0.04045)));
 }
 
 vec3 linearTosRGB(vec3 col)
