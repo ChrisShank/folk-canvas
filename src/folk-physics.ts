@@ -7,6 +7,8 @@ import { FolkShape } from './folk-shape';
 export class FolkPhysics extends FolkBaseSet {
   static override tagName = 'folk-physics';
 
+  private static PHYSICS_SCALE = 0.1; // Adjust this value to tune the overall scale
+
   private world?: RAPIER.World;
   private bodies: Map<FolkShape, RAPIER.RigidBody> = new Map();
   private elementToRect: Map<FolkShape, DOMRectTransform> = new Map();
@@ -16,8 +18,11 @@ export class FolkPhysics extends FolkBaseSet {
   connectedCallback() {
     super.connectedCallback();
 
-    // Create physics world with gravity
-    this.world = new RAPIER.World({ x: 0.0, y: 9.81 });
+    // Create physics world with reduced gravity
+    this.world = new RAPIER.World({
+      x: 0.0,
+      y: 8,
+    });
 
     // Add container walls and floor
     this.createContainer();
@@ -67,13 +72,19 @@ export class FolkPhysics extends FolkBaseSet {
       if (!this.bodies.has(element)) {
         // Create new rigid body matching the element's position
         const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
-          .setTranslation(rect.x + rect.width / 2, rect.y + rect.height / 2)
+          .setTranslation(
+            (rect.x + rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
+            (rect.y + rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+          )
           .setRotation(rect.rotation);
 
         const body = this.world!.createRigidBody(bodyDesc);
 
-        // Create collider with top-left origin
-        const colliderDesc = RAPIER.ColliderDesc.cuboid(rect.width / 2, rect.height / 2).setTranslation(0, 0);
+        // Scale down the collider size
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(
+          (rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
+          (rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+        ).setTranslation(0, 0);
 
         this.world!.createCollider(colliderDesc, body);
         this.bodies.set(element, body);
@@ -89,8 +100,8 @@ export class FolkPhysics extends FolkBaseSet {
         body.setBodyType(RAPIER.RigidBodyType.KinematicPositionBased, true);
         body.setTranslation(
           {
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2,
+            x: (rect.x + rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
+            y: (rect.y + rect.height / 2) * FolkPhysics.PHYSICS_SCALE,
           },
           true
         );
@@ -100,7 +111,10 @@ export class FolkPhysics extends FolkBaseSet {
         const collider = body.collider(0);
         if (collider) {
           this.world!.removeCollider(collider, true);
-          const newColliderDesc = RAPIER.ColliderDesc.cuboid(rect.width / 2, rect.height / 2).setTranslation(0, 0);
+          const newColliderDesc = RAPIER.ColliderDesc.cuboid(
+            (rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
+            (rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+          ).setTranslation(0, 0);
           this.world!.createCollider(newColliderDesc, body);
         }
         body.setBodyType(RAPIER.RigidBodyType.Dynamic, true);
@@ -121,9 +135,9 @@ export class FolkPhysics extends FolkBaseSet {
         this.bodies.forEach((body, shape) => {
           if (shape !== document.activeElement) {
             const position = body.translation();
-            // Adjust position back to top-left
-            shape.x = position.x - shape.width / 2;
-            shape.y = position.y - shape.height / 2;
+            // Scale up the position when applying to visual elements
+            shape.x = position.x / FolkPhysics.PHYSICS_SCALE - shape.width / 2;
+            shape.y = position.y / FolkPhysics.PHYSICS_SCALE - shape.height / 2;
             shape.rotation = body.rotation();
           }
         });
@@ -142,20 +156,20 @@ export class FolkPhysics extends FolkBaseSet {
     const containerDesc = RAPIER.RigidBodyDesc.fixed();
     const container = this.world.createRigidBody(containerDesc);
 
-    // Create a single collider with all four walls as vertices
+    // Scale down the container walls
     const vertices = [
       // Floor: left to right
-      { x: -1000, y: this.clientHeight },
-      { x: 1000, y: this.clientHeight },
+      { x: -100, y: this.clientHeight * FolkPhysics.PHYSICS_SCALE },
+      { x: 100, y: this.clientHeight * FolkPhysics.PHYSICS_SCALE },
       // Right wall: bottom to top
-      { x: this.clientWidth, y: this.clientHeight },
-      { x: this.clientWidth, y: -1000 },
+      { x: this.clientWidth * FolkPhysics.PHYSICS_SCALE, y: this.clientHeight * FolkPhysics.PHYSICS_SCALE },
+      { x: this.clientWidth * FolkPhysics.PHYSICS_SCALE, y: -100 },
       // Ceiling: right to left
-      { x: 1000, y: 0 },
-      { x: -1000, y: 0 },
+      { x: 100, y: 0 },
+      { x: -100, y: 0 },
       // Left wall: top to bottom
-      { x: 0, y: -1000 },
-      { x: 0, y: this.clientHeight },
+      { x: 0, y: -100 },
+      { x: 0, y: this.clientHeight * FolkPhysics.PHYSICS_SCALE },
     ];
 
     const indices = [
