@@ -7,16 +7,16 @@ import { glsl } from './common/tags.ts';
 
 const CONSTANTS = glsl`
 #define AIR 0.0
-#define STEAM 1.0
-#define SMOKE 2.0
-#define WATER 3.0
-#define LAVA 4.0
-#define SAND 5.0
-#define PLANT 6.0
-#define STONE 7.0
-#define WALL 8.0
-#define ICE 9.0
+#define SMOKE 1.0
+#define WATER 2.0
+#define LAVA 3.0
+#define SAND 4.0
+#define PLANT 5.0
+#define STONE 6.0
+#define WALL 7.0
 #define COLLISION 99.0
+#define ICE 8.0
+#define STEAM 9.0
 
 const vec3 bgColor = pow(vec3(31, 34, 36) / 255.0, vec3(2));
 `;
@@ -64,40 +64,6 @@ vec4 hash43(vec3 p)
 	vec4 p4 = fract(vec4(p.xyzx)  * vec4(.1031, .1030, .0973, .1099));
 	p4 += dot(p4, p4.wzxy+33.33);
 	return fract((p4.xxyz+p4.yzzw)*p4.zywx);
-}
-
-// https://www.chilliant.com/rgb2hsv.html
-vec3 RGBtoHCV(in vec3 RGB)
-{
-	// Based on work by Sam Hocevar and Emil Persson
-	vec4 P = (RGB.g < RGB.b) ? vec4(RGB.bg, -1.0, 2.0/3.0) : vec4(RGB.gb, 0.0, -1.0/3.0);
-	vec4 Q = (RGB.r < P.x) ? vec4(P.xyw, RGB.r) : vec4(RGB.r, P.yzx);
-	float C = Q.x - min(Q.w, Q.y);
-	float H = abs((Q.w - Q.y) / (6.0 * C + EPSILON) + Q.z);
-	return vec3(H, C, Q.x);
-}
-
-vec3 RGBtoHSL(in vec3 RGB)
-{
-	vec3 HCV = RGBtoHCV(RGB);
-	float L = HCV.z - HCV.y * 0.5;
-	float S = HCV.y / (1.0 - abs(L * 2.0 - 1.0) + EPSILON);
-	return vec3(HCV.x, S, L);
-}
-
-vec3 HUEtoRGB(in float H)
-{
-	float R = abs(H * 6.0 - 3.0) - 1.0;
-	float G = 2.0 - abs(H * 6.0 - 2.0);
-	float B = 2.0 - abs(H * 6.0 - 4.0);
-	return saturate(vec3(R,G,B));
-}
-
-vec3 HSLtoRGB(in vec3 HSL)
-{
-	vec3 RGB = HUEtoRGB(HSL.x);
-	float C = (1.0 - abs(2.0 * HSL.z - 1.0)) * HSL.y;
-	return (RGB - 0.5) * C + HSL.z;
 }
 
 vec3 linearTosRGB(vec3 col)
@@ -193,65 +159,29 @@ vec4 createParticle(float id)
 {
 	if (id == AIR)
 	{
-		return vec4(bgColor, AIR);
-	} else if (id == SMOKE)
+		return vec4(0.0, 0.0, 0.0, AIR);
+	} 
+	else if (id == STEAM || id == SMOKE)
 	{
-		return vec4(mix(bgColor, vec3(0.15), 0.5), SMOKE);
-	} else if (id == WATER)
-	{
-		return vec4(mix(bgColor, vec3(0.15, 0.45, 0.9), 0.7), WATER);
-	} else if (id == LAVA)
-	{
-		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(255, 40, 20) / 255.0;
-		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 12.0 / 255.0;
-		hsl.y += (r.x - 0.5) * 16.0 / 255.0;
-		hsl.z *= (r.y * 80.0 / 255.0 + (255.0 - 80.0) / 255.0);
-		return vec4(HSLtoRGB(hsl), LAVA);
-	} else if (id == SAND)
-	{
-		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(220, 158, 70) / 255.0;
-		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 12.0 / 255.0;
-		hsl.y += (r.x - 0.5) * 16.0 / 255.0;
-		hsl.z += (r.y - 0.5) * 40.0 / 255.0;
-		return vec4(HSLtoRGB(hsl), SAND);
-	} else if (id == PLANT)
-	{
-		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(34, 139, 34) / 255.0;  // Forest green base color
-		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 0.1;  // Slight hue variation
-		hsl.y += (r.x - 0.5) * 0.2;  // Saturation variation
-		hsl.z *= (r.y * 0.4 + 0.6);  // Base lightness variation
-		vec3 rgb = HSLtoRGB(hsl);
-		// Store water level in red channel (0.2 initial water)
-		// Use green and blue channels for color, making it more vibrant with water
-		return vec4(0.2, rgb.g * 1.2, rgb.b * 0.8, PLANT);
-	} else if (id == STONE)
-	{
-		float r = hash13(vec3(gl_FragCoord.xy, frame));
-		return vec4(vec3(0.08, 0.1, 0.12) * (r * 0.5 + 0.5), STONE);
-	} else if (id == WALL)
-	{
-		float r = hash13(vec3(gl_FragCoord.xy, frame));
-		return vec4(bgColor * 0.5 * (r * 0.4 + 0.6), WALL);
-	} else if (id == ICE)
-	{
-		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(0.8, 0.9, 1.0); // Light blue base
-		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 0.05;  // Slight hue variation
-		hsl.y += (r.x - 0.5) * 0.1;   // Slight saturation variation
-		hsl.z *= (r.y * 0.2 + 0.8);   // Brightness variation
-		return vec4(HSLtoRGB(hsl), ICE);
-	} else if (id == STEAM)
-	{
-		return vec4(mix(bgColor, vec3(0.8, 0.8, 0.8), 0.5), STEAM);  // Whiter than smoke
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.0, id);
 	}
-		return vec4(bgColor, AIR);
+	else if (id == WATER)
+	{
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.0, WATER);
+	} 
+	else if (id == LAVA || id == SAND || id == ICE)
+	{
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.0, id);
+	} 
+	else if (id == PLANT)
+	{
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.5, PLANT); 
+	} 
+	else if (id == STONE || id == WALL)
+	{
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.0, id);
+	}
+	return vec4(0.0, 0.0, 0.0, AIR);
 }
 
 void main() {
@@ -341,8 +271,6 @@ void main() {
 		} else if (r.z < 0.003)
 		{
 			t10 = vec4(bgColor, AIR);
-		} else if (t10.a == STEAM && r.w < 0.001) { // Small chance for steam to condense
-			t10 = createParticle(WATER);
 		}
 	}
 
@@ -553,13 +481,13 @@ void main() {
 	{
 		// Direct water contact increases water level and has a chance to consume water
 		if (t01.a == WATER) {
-			t00.r = min(t00.r + 0.1, 1.0); // Increase water level
-			if (r.x < 0.1) { // 10% chance to consume water
+			t00.b = min(t00.b + 0.1, 1.0);
+			if (r.x < 0.1) {
 				t01 = createParticle(AIR);
 			}
 		}
 		if (t10.a == WATER) {
-			t00.r = min(t00.r + 0.1, 1.0);
+			t00.b = min(t00.b + 0.1, 1.0);
 			if (r.y < 0.1) { // Using r.y for different randomness
 				t10 = createParticle(AIR);
 			}
@@ -567,28 +495,28 @@ void main() {
 		
 		// Propagate water to nearby plants (use red channel)
 		if (t01.a == PLANT) {
-			float avgWater = (t00.r + t01.r) * 0.5;
-			t00.r = t01.r = avgWater;
+			float avgWater = (t00.b + t01.b) * 0.5;
+			t00.b = t01.b = avgWater;
 		}
 		if (t10.a == PLANT) {
-			float avgWater = (t00.r + t10.r) * 0.5;
-			t00.r = t10.r = avgWater;
+			float avgWater = (t00.b + t10.b) * 0.5;
+			t00.b = t10.b = avgWater;
 		}
 
 		// Growth primarily happens upward if water level is sufficient
-		if (t00.r > 0.4)
+		if (t00.b > 0.4)
 		{
 			if ((t01.a == AIR || t10.a == AIR) && r.x < 0.01)
 			{
 				if (r.y < 0.8 && t01.a == AIR)
 				{
 					t01 = createParticle(PLANT);
-					t00.r *= 0.7;
+					t00.b *= 0.7;
 				}
 				else if (t10.a == AIR)
 				{
 					t10 = createParticle(PLANT);
-					t00.r *= 0.7;
+					t00.b *= 0.7;
 				}
 			}
 		}
@@ -598,40 +526,40 @@ void main() {
 	if (t10.a == PLANT)
 	{
 		if (t11.a == WATER) {
-			t10.r = min(t10.r + 0.1, 1.0);
+			t10.b = min(t10.b + 0.1, 1.0);
 			if (r.z < 0.1) {
 				t11 = createParticle(AIR);
 			}
 		}
 		if (t00.a == WATER) {
-			t10.r = min(t10.r + 0.1, 1.0);
+			t10.b = min(t10.b + 0.1, 1.0);
 			if (r.w < 0.1) {
 				t00 = createParticle(AIR);
 			}
 		}
 		
 		if (t11.a == PLANT) {
-			float avgWater = (t10.r + t11.r) * 0.5;
-			t10.r = t11.r = avgWater;
+			float avgWater = (t10.b + t11.b) * 0.5;
+			t10.b = t11.b = avgWater;
 		}
 		if (t00.a == PLANT) {
-			float avgWater = (t10.r + t00.r) * 0.5;
-			t10.r = t00.r = avgWater;
+			float avgWater = (t10.b + t00.b) * 0.5;
+			t10.b = t00.b = avgWater;
 		}
 
-		if (t10.r > 0.4)
+		if (t10.b > 0.4)
 		{
 			if ((t11.a == AIR || t00.a == AIR) && r.x < 0.01)
 			{
 				if (r.y < 0.8 && t11.a == AIR)
 				{
 					t11 = createParticle(PLANT);
-					t10.r *= 0.7;
+					t10.b *= 0.7;
 				}
 				else if (t00.a == AIR)
 				{
 					t00 = createParticle(PLANT);
-					t10.r *= 0.7;
+					t10.b *= 0.7;
 				}
 			}
 		}
@@ -640,40 +568,40 @@ void main() {
 	if (t01.a == PLANT)
 	{
 		if (t00.a == WATER) {
-			t01.r = min(t01.r + 0.1, 1.0);
+			t01.b = min(t01.b + 0.1, 1.0);
 			if (r.x < 0.1) {
 				t00 = createParticle(AIR);
 			}
 		}
 		if (t11.a == WATER) {
-			t01.r = min(t01.r + 0.1, 1.0);
+			t01.b = min(t01.b + 0.1, 1.0);
 			if (r.y < 0.1) {
 				t11 = createParticle(AIR);
 			}
 		}
 		
 		if (t00.a == PLANT) {
-			float avgWater = (t01.r + t00.r) * 0.5;
-			t01.r = t00.r = avgWater;
+			float avgWater = (t01.b + t00.b) * 0.5;
+			t01.b = t00.b = avgWater;
 		}
 		if (t11.a == PLANT) {
-			float avgWater = (t01.r + t11.r) * 0.5;
-			t01.r = t11.r = avgWater;
+			float avgWater = (t01.b + t11.b) * 0.5;
+			t01.b = t11.b = avgWater;
 		}
 
-		if (t01.r > 0.4)
+		if (t01.b > 0.4)
 		{
 			if ((t00.a == AIR || t11.a == AIR) && r.x < 0.01)
 			{
 				if (r.y < 0.8 && t00.a == AIR)
 				{
 					t00 = createParticle(PLANT);
-					t01.r *= 0.7;
+					t01.b *= 0.7;
 				}
 				else if (t11.a == AIR)
 				{
 					t11 = createParticle(PLANT);
-					t01.r *= 0.7;
+					t01.b *= 0.7;
 				}
 			}
 		}
@@ -682,40 +610,40 @@ void main() {
 	if (t11.a == PLANT)
 	{
 		if (t10.a == WATER) {
-			t11.r = min(t11.r + 0.1, 1.0);
+			t11.b = min(t11.b + 0.1, 1.0);
 			if (r.z < 0.1) {
 				t10 = createParticle(AIR);
 			}
 		}
 		if (t01.a == WATER) {
-			t11.r = min(t11.r + 0.1, 1.0);
+			t11.b = min(t11.b + 0.1, 1.0);
 			if (r.w < 0.1) {
 				t00 = createParticle(AIR);
 			}
 		}
 		
 		if (t10.a == PLANT) {
-			float avgWater = (t11.r + t10.r) * 0.5;
-			t11.r = t10.r = avgWater;
+			float avgWater = (t11.b + t10.b) * 0.5;
+			t11.b = t10.b = avgWater;
 		}
 		if (t01.a == PLANT) {
-			float avgWater = (t11.r + t01.r) * 0.5;
-			t11.r = t01.r = avgWater;
+			float avgWater = (t11.b + t01.b) * 0.5;
+			t11.b = t01.b = avgWater;
 		}
 
-		if (t11.r > 0.4)
+		if (t11.b > 0.4)
 		{
 			if ((t10.a == AIR || t01.a == AIR) && r.x < 0.01)
 			{
 				if (r.y < 0.8 && t10.a == AIR)
 				{
 					t10 = createParticle(PLANT);
-					t11.r *= 0.7;
+					t11.b *= 0.7;
 				}
 				else if (t01.a == AIR)
 				{
 					t01 = createParticle(PLANT);
-					t11.r *= 0.7;
+					t11.b *= 0.7;
 				}
 			}
 		}
@@ -807,6 +735,8 @@ void main()
 	vec2 uv = gl_FragCoord.xy / resolution;
 
 	vec4 data = texture(dataTex, uv);
+	// Expand the single channel here too
+	data.gb = data.rr;
 
 	fragColorR = vec4(-1, -1, 0, 0);
 	fragColorG = vec4(-1, -1, 0, 0);
@@ -836,8 +766,8 @@ void main()
 	} else if (data.a == PLANT)
 	{
 		fragColorR.w = 4.0 - data.r * 4.0;
-		fragColorG.w = 4.0 - data.g * 4.0;
-		fragColorB.w = 4.0 - data.b * 4.0;
+		fragColorG.w = 4.0 - data.r * 4.0;
+		fragColorB.w = 4.0 - data.r * 4.0;
 	}
 }
 `;
@@ -955,6 +885,60 @@ vec3 linearTosRGB(vec3 col)
 	return mix(1.055 * pow(col, vec3(1.0 / 2.4)) - 0.055, col * 12.92, lessThan(col, vec3(0.0031308)));
 }
 
+vec3 getParticleColor(vec4 data)
+{
+	float rand = data.r; // Our stored random value
+
+	if (data.a == AIR) {
+		return bgColor;
+	}
+	else if (data.a == STEAM) {
+		return mix(bgColor, vec3(0.8), 0.4 + rand * 0.2);
+	}
+	else if (data.a == SMOKE) {
+		return mix(bgColor, vec3(0.15), 0.4 + rand * 0.2);
+	}
+	else if (data.a == WATER) {
+		// More subtle water with slight color variation
+		vec3 waterColor = vec3(0.2, 0.4, 0.8);
+		return mix(bgColor, waterColor, 0.6 + rand * 0.2);
+	}
+	else if (data.a == LAVA) {
+		// Darker base color for internal lava
+		vec3 baseColor = vec3(0.7, 0.1, 0.03);
+		vec3 glowColor = vec3(0.8, 0.2, 0.05);
+		return mix(baseColor, glowColor, rand) * (0.8 + rand * 0.4);
+	}
+	else if (data.a == SAND) {
+		vec3 baseColor = vec3(0.86, 0.62, 0.27);
+		vec3 altColor = vec3(0.82, 0.58, 0.23);
+		return mix(baseColor, altColor, rand) * (0.8 + rand * 0.3);
+	}
+	else if (data.a == PLANT) {
+		// More varied plant colors
+		vec3 darkGreen = vec3(0.13, 0.55, 0.13);
+		vec3 lightGreen = vec3(0.2, 0.65, 0.2);
+		vec3 baseColor = mix(darkGreen, lightGreen, rand);
+		// Use data.b instead of data.r for water level
+		return baseColor * (0.7 + data.b * 0.5);
+	}
+	else if (data.a == STONE) {
+		vec3 baseColor = vec3(0.08, 0.1, 0.12);
+		vec3 altColor = vec3(0.12, 0.14, 0.16);
+		return mix(baseColor, altColor, rand) * (0.7 + rand * 0.3);
+	}
+	else if (data.a == WALL) {
+		return bgColor * 0.5 * (rand * 0.4 + 0.6);
+	}
+	else if (data.a == ICE) {
+		// Subtle ice color variation
+		vec3 baseColor = vec3(0.8, 0.9, 1.0);
+		vec3 altColor = vec3(0.7, 0.85, 0.95);
+		return mix(baseColor, altColor, rand) * (0.9 + rand * 0.2);
+	}
+	return bgColor;
+}
+
 void main() {
 	vec2 uv = gl_FragCoord.xy / (texResolution * texScale);
 
@@ -968,10 +952,15 @@ void main() {
 	vec4 dataUp = texture(tex, getCoordsAA(fc + vec2(0, 1)) / texResolution);
 	vec4 dataDown = texture(tex, getCoordsAA(fc - vec2(0, 1)) / texResolution);
 
+	// Expand single channel into RGB for each sample
+	data.gb = data.rr;
+	dataUp.gb = dataUp.rr;
+	dataDown.gb = dataDown.rr;
+
 	float hig = float(data.a > dataUp.a);
 	float dropSha = 1.0 - float(data.a > dataDown.a);
 
-	vec3 color = data.rgb == vec3(0) ? bgColor : data.rgb;
+	vec3 color = getParticleColor(data);
 
 	vec4 shaDataR = texture(shadowTexR, uv);
 	vec4 shaDataG = texture(shadowTexG, uv);
@@ -984,11 +973,22 @@ void main() {
 	vec3 sha = clamp(1.0 - vec3(shaR, shaG, shaB) / 16.0, vec3(0.0), vec3(1.0));
 	sha *= sha;
 
+	// Add extra lava glow contribution
+	if (data.a == LAVA) {
+		// Internal darkening for depth
+		float depth = 1.0 - sha.r; // Invert shadow for depth
+		color *= 0.8 + 0.4 * (1.0 - depth * depth); // Darker internal areas
+		
+		// Keep strong red lighting emission for affecting neighboring particles
+		vec3 emission = vec3(0.6, 0.05, 0.0) * depth * depth;
+		color += emission;
+	}
+
 	color *= 0.5 * max(hig, dropSha) + 0.5;
 	color *= sha * 1.0 + 0.2;
 	color += color * 0.4 * hig;
 
-	fragColor = vec4(linearTosRGB(color), 1);
+	fragColor = vec4(linearTosRGB(color), 1.0);
 }
 `;
 
