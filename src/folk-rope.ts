@@ -142,7 +142,10 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
 
     // Calculate desired length based on source and target positions
     const distance = Vector.distance(this.sourceRect, this.targetRect);
-    const desiredPoints = Math.floor(distance / FolkRope.#resolution);
+    // Apply a nonlinear scaling to gradually increase point spacing with distance
+    const scaleFactor = Math.log10(distance + 10) / 2; // adjust the '+10' and '/2' to tune the curve
+    const effectiveResolution = FolkRope.#resolution * scaleFactor;
+    const desiredPoints = Math.floor(distance / effectiveResolution);
 
     while (this.#points.length < desiredPoints) {
       const lastPoint = this.#points.at(-1)!;
