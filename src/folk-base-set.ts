@@ -13,6 +13,7 @@ export class FolkBaseSet extends FolkElement {
       display: block;
       position: absolute;
       inset: 0;
+      pointer-events: none;
     }
 
     ::slotted(*) {
