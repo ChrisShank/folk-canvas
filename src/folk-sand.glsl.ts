@@ -325,13 +325,18 @@ void main() {
 
 	if (t01.a == SAND || t01.a == STONE)
 	{
-		if (t00.a < SAND && t00.a != WATER)
+		if (t00.a < SAND && t00.a != WATER && t00.a != LAVA)
 		{
 			if (r.y < 0.9) swap(t01, t00);
 		}
 		else if (t00.a == WATER)
 		{
 			if (r.y < 0.3) swap(t01, t00);
+		}
+		else if (t00.a == LAVA)
+		{
+			float fallProb = t01.a == SAND ? 0.15 : 0.25;
+			if (r.y < fallProb) swap(t01, t00);
 		}
 		else if (t11.a < SAND && t10.a < SAND)
 		{
@@ -341,13 +346,18 @@ void main() {
 
 	if (t11.a == SAND || t11.a == STONE)
 	{
-		if (t10.a < SAND && t10.a != WATER)
+		if (t10.a < SAND && t10.a != WATER && t10.a != LAVA)
 		{
 			if (r.y < 0.9) swap(t11, t10);
 		}
 		else if (t10.a == WATER)
 		{
 			if (r.y < 0.3) swap(t11, t10);
+		}
+		else if (t10.a == LAVA)
+		{
+			float fallProb = t11.a == SAND ? 0.15 : 0.25;
+			if (r.y < fallProb) swap(t11, t10);
 		}
 		else if (t01.a < SAND && t00.a < SAND)
 		{
