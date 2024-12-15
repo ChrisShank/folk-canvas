@@ -15,22 +15,14 @@ export class FolkDistanceField extends FolkBaseSet {
 
   static readonly MAX_DISTANCE = 99999.0;
 
-  private texturesEven: WebGLTexture[] = [];
-  private texturesOdd: WebGLTexture[] = [];
-
   private canvas!: HTMLCanvasElement;
   private glContext!: WebGL2RenderingContext;
   private framebuffer!: WebGLFramebuffer;
   private fullscreenQuadVAO!: WebGLVertexArrayObject;
-  private shapeVAOEven!: WebGLVertexArrayObject;
-  private shapeVAOOdd!: WebGLVertexArrayObject;
 
   private jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
   private renderProgram!: WebGLProgram; // Shader program for final rendering
   private seedProgram!: WebGLProgram; // Shader program for rendering seed points
-
-  private isPingTextureEven: boolean = true;
-  private isPingTextureOdd: boolean = true;
 
   /**
    * Groups data for handling different sets of shapes.
@@ -44,6 +36,11 @@ export class FolkDistanceField extends FolkBaseSet {
       shapeVAO: WebGLVertexArrayObject;
       positionBuffer: WebGLBuffer | null;
     };
+  } = {};
+
+  // Add class property to store Float32Arrays
+  private groupBuffers: {
+    [groupName: string]: Float32Array;
   } = {};
 
   connectedCallback() {
@@ -260,19 +257,35 @@ export class FolkDistanceField extends FolkBaseSet {
       const group = this.groups[groupName];
 
       if (!group.shapeVAO) {
+        // First time initialization
         group.shapeVAO = gl.createVertexArray()!;
         gl.bindVertexArray(group.shapeVAO);
         group.positionBuffer = gl.createBuffer()!;
+
+        // Create and store the Float32Array
+        this.groupBuffers[groupName] = new Float32Array(positions);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.groupBuffers[groupName], gl.DYNAMIC_DRAW);
 
         const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.bindVertexArray(null);
       } else {
-        gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer!);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
+        // Reuse existing Float32Array if size hasn't changed
+        const existingArray = this.groupBuffers[groupName];
+        if (positions.length !== existingArray.length) {
+          // Only create new array if size changed
+          this.groupBuffers[groupName] = new Float32Array(positions);
+          gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer!);
+          gl.bufferData(gl.ARRAY_BUFFER, this.groupBuffers[groupName], gl.DYNAMIC_DRAW);
+        } else {
+          // Reuse existing array
+          existingArray.set(positions);
+          gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer!);
+          gl.bufferData(gl.ARRAY_BUFFER, existingArray, gl.DYNAMIC_DRAW);
+        }
       }
     }
 
@@ -286,21 +299,6 @@ export class FolkDistanceField extends FolkBaseSet {
         vertexCount
       );
     }
-  }
-
-  /**
-   * Renders the seed points (shapes) into their respective textures for both even and odd groups.
-   */
-  private renderSeedPoints(vertexCountEven: number, vertexCountOdd: number) {
-    // Render even seed points
-    this.renderSeedPointsForGroup(
-      this.shapeVAOEven,
-      this.texturesEven[this.isPingTextureEven ? 0 : 1],
-      vertexCountEven
-    );
-
-    // Render odd seed points
-    this.renderSeedPointsForGroup(this.shapeVAOOdd, this.texturesOdd[this.isPingTextureOdd ? 0 : 1], vertexCountOdd);
   }
 
   /**
@@ -558,6 +556,8 @@ export class FolkDistanceField extends FolkBaseSet {
     if (this.seedProgram) {
       gl.deleteProgram(this.seedProgram);
     }
+
+    this.groupBuffers = {};
   }
 }
 
