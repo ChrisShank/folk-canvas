@@ -55,7 +55,7 @@ export class FolkShapeTool extends FolkInteractionHandler {
 
     switch (event.type) {
       case 'pointerdown':
-        if (!target || target instanceof FolkShape) return;
+        if (!target || target instanceof FolkShape || target instanceof FolkInteractionHandler) return;
         event.stopImmediatePropagation();
 
         const rect = target.getBoundingClientRect();
@@ -106,13 +106,18 @@ export class FolkShapeTool extends FolkInteractionHandler {
         if (!this.currentShape) return;
         event.stopImmediatePropagation();
 
-        // Remove shape if it's too small
-        if (this.currentShape.width < 10 || this.currentShape.height < 10) {
-          this.currentShape.remove();
-        } else {
-          this.currentShape.focus();
+        // If the shape is too small (meaning almost no drag occurred)
+        // create a default sized shape instead
+        if (this.currentShape.width <= 1 || this.currentShape.height <= 1) {
+          const defaultSize = 100;
+          this.currentShape.width = defaultSize;
+          this.currentShape.height = defaultSize;
+          // Center the shape on the click point
+          this.currentShape.x = this.startPoint!.x - defaultSize / 2;
+          this.currentShape.y = this.startPoint!.y - defaultSize / 2;
         }
 
+        this.currentShape.focus();
         target.releasePointerCapture(event.pointerId);
         this.currentShape = null;
         this.startPoint = null;
@@ -182,7 +187,7 @@ export class FolkToolset extends HTMLElement {
     }
 
     // If clicking same tool, just deactivate
-    if (this.currentHandler === tool.handleEvent.bind(tool)) {
+    if (this.activeTool === tool) {
       this.currentHandler = null;
       this.activeTool = null;
       return;
