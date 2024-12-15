@@ -22,6 +22,9 @@
         background-color: rgba(100, 100, 100, 0.5);
         border: 2px solid rgba(0, 0, 0, 0.5);
       }
+      folk-event-propagator {
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -34,8 +37,8 @@
       <folk-shape x="180" y="250" width="65" height="55" rotation="-40"></folk-shape>
       <folk-shape x="420" y="150" width="110" height="25" rotation="10"></folk-shape>
       <folk-shape x="280" y="380" width="75" height="95" rotation="-50"></folk-shape>
+      <folk-event-propagator source="#shape1" target="#shape2"></folk-event-propagator>
     </folk-physics>
-    <folk-event-propagator source="#shape1" target="#shape2"></folk-event-propagator>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';
