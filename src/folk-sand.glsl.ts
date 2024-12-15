@@ -219,12 +219,15 @@ vec4 createParticle(float id)
 	} else if (id == PLANT)
 	{
 		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(34, 139, 34) / 255.0;
+		vec3 color = vec3(34, 139, 34) / 255.0;  // Forest green base color
 		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 0.1;
-		hsl.y += (r.x - 0.5) * 0.2;
-		hsl.z *= (r.y * 0.4 + 0.6);
-		return vec4(HSLtoRGB(hsl), PLANT);
+		hsl.x += (r.z - 0.5) * 0.1;  // Slight hue variation
+		hsl.y += (r.x - 0.5) * 0.2;  // Saturation variation
+		hsl.z *= (r.y * 0.4 + 0.6);  // Base lightness variation
+		vec3 rgb = HSLtoRGB(hsl);
+		// Store water level in red channel (0.2 initial water)
+		// Use green and blue channels for color, making it more vibrant with water
+		return vec4(0.2, rgb.g * 1.2, rgb.b * 0.8, PLANT);
 	} else if (id == STONE)
 	{
 		float r = hash13(vec3(gl_FragCoord.xy, frame));
@@ -518,6 +521,178 @@ void main() {
 		swap(t01, t11);
 	}
 
+	// Plant growth and water propagation
+	if (t00.a == PLANT)
+	{
+		// Direct water contact increases water level and has a chance to consume water
+		if (t01.a == WATER) {
+			t00.r = min(t00.r + 0.1, 1.0); // Increase water level
+			if (r.x < 0.1) { // 10% chance to consume water
+				t01 = createParticle(AIR);
+			}
+		}
+		if (t10.a == WATER) {
+			t00.r = min(t00.r + 0.1, 1.0);
+			if (r.y < 0.1) { // Using r.y for different randomness
+				t10 = createParticle(AIR);
+			}
+		}
+		
+		// Propagate water to nearby plants (use red channel)
+		if (t01.a == PLANT) {
+			float avgWater = (t00.r + t01.r) * 0.5;
+			t00.r = t01.r = avgWater;
+		}
+		if (t10.a == PLANT) {
+			float avgWater = (t00.r + t10.r) * 0.5;
+			t00.r = t10.r = avgWater;
+		}
+
+		// Growth primarily happens upward if water level is sufficient
+		if (t00.r > 0.4)
+		{
+			if ((t01.a == AIR || t10.a == AIR) && r.x < 0.01)
+			{
+				if (r.y < 0.8 && t01.a == AIR)
+				{
+					t01 = createParticle(PLANT);
+					t00.r *= 0.7;
+				}
+				else if (t10.a == AIR)
+				{
+					t10 = createParticle(PLANT);
+					t00.r *= 0.7;
+				}
+			}
+		}
+	}
+
+	// Similar updates for t10
+	if (t10.a == PLANT)
+	{
+		if (t11.a == WATER) {
+			t10.r = min(t10.r + 0.1, 1.0);
+			if (r.z < 0.1) {
+				t11 = createParticle(AIR);
+			}
+		}
+		if (t00.a == WATER) {
+			t10.r = min(t10.r + 0.1, 1.0);
+			if (r.w < 0.1) {
+				t00 = createParticle(AIR);
+			}
+		}
+		
+		if (t11.a == PLANT) {
+			float avgWater = (t10.r + t11.r) * 0.5;
+			t10.r = t11.r = avgWater;
+		}
+		if (t00.a == PLANT) {
+			float avgWater = (t10.r + t00.r) * 0.5;
+			t10.r = t00.r = avgWater;
+		}
+
+		if (t10.r > 0.4)
+		{
+			if ((t11.a == AIR || t00.a == AIR) && r.x < 0.01)
+			{
+				if (r.y < 0.8 && t11.a == AIR)
+				{
+					t11 = createParticle(PLANT);
+					t10.r *= 0.7;
+				}
+				else if (t00.a == AIR)
+				{
+					t00 = createParticle(PLANT);
+					t10.r *= 0.7;
+				}
+			}
+		}
+	}
+
+	if (t01.a == PLANT)
+	{
+		if (t00.a == WATER) {
+			t01.r = min(t01.r + 0.1, 1.0);
+			if (r.x < 0.1) {
+				t00 = createParticle(AIR);
+			}
+		}
+		if (t11.a == WATER) {
+			t01.r = min(t01.r + 0.1, 1.0);
+			if (r.y < 0.1) {
+				t11 = createParticle(AIR);
+			}
+		}
+		
+		if (t00.a == PLANT) {
+			float avgWater = (t01.r + t00.r) * 0.5;
+			t01.r = t00.r = avgWater;
+		}
+		if (t11.a == PLANT) {
+			float avgWater = (t01.r + t11.r) * 0.5;
+			t01.r = t11.r = avgWater;
+		}
+
+		if (t01.r > 0.4)
+		{
+			if ((t00.a == AIR || t11.a == AIR) && r.x < 0.01)
+			{
+				if (r.y < 0.8 && t00.a == AIR)
+				{
+					t00 = createParticle(PLANT);
+					t01.r *= 0.7;
+				}
+				else if (t11.a == AIR)
+				{
+					t11 = createParticle(PLANT);
+					t01.r *= 0.7;
+				}
+			}
+		}
+	}
+
+	if (t11.a == PLANT)
+	{
+		if (t10.a == WATER) {
+			t11.r = min(t11.r + 0.1, 1.0);
+			if (r.z < 0.1) {
+				t10 = createParticle(AIR);
+			}
+		}
+		if (t01.a == WATER) {
+			t11.r = min(t11.r + 0.1, 1.0);
+			if (r.w < 0.1) {
+				t00 = createParticle(AIR);
+			}
+		}
+		
+		if (t10.a == PLANT) {
+			float avgWater = (t11.r + t10.r) * 0.5;
+			t11.r = t10.r = avgWater;
+		}
+		if (t01.a == PLANT) {
+			float avgWater = (t11.r + t01.r) * 0.5;
+			t11.r = t01.r = avgWater;
+		}
+
+		if (t11.r > 0.4)
+		{
+			if ((t10.a == AIR || t01.a == AIR) && r.x < 0.01)
+			{
+				if (r.y < 0.8 && t10.a == AIR)
+				{
+					t10 = createParticle(PLANT);
+					t11.r *= 0.7;
+				}
+				else if (t01.a == AIR)
+				{
+					t01 = createParticle(PLANT);
+					t11.r *= 0.7;
+				}
+			}
+		}
+	}
 
 	fragColor = i == 0 ? t00 :
     i == 1 ? t10 :
