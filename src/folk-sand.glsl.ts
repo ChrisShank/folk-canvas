@@ -15,6 +15,8 @@ const CONSTANTS = glsl`
 #define STONE 6.0
 #define WALL 7.0
 #define COLLISION 99.0
+#define ICE 8.0
+#define STEAM 9.0
 
 const vec3 bgColor = pow(vec3(31, 34, 36) / 255.0, vec3(2));
 `;
@@ -236,6 +238,24 @@ vec4 createParticle(float id)
 	{
 		float r = hash13(vec3(gl_FragCoord.xy, frame));
 		return vec4(bgColor * 0.5 * (r * 0.4 + 0.6), WALL);
+	} else if (id == ICE)
+	{
+		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
+		vec3 color = vec3(0.8, 0.9, 1.0); // Light blue base
+		vec3 hsl = RGBtoHSL(color);
+		hsl.x += (r.z - 0.5) * 0.05;  // Slight hue variation
+		hsl.y += (r.x - 0.5) * 0.1;   // Slight saturation variation
+		hsl.z *= (r.y * 0.2 + 0.8);   // Brightness variation
+		return vec4(HSLtoRGB(hsl), ICE);
+	} else if (id == STEAM)
+	{
+		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
+		vec3 color = vec3(0.8, 0.8, 0.8); // Light gray for steam
+		vec3 hsl = RGBtoHSL(color);
+		hsl.x += (r.z - 0.5) * 0.05;  // Hue variation
+		hsl.y += (r.x - 0.5) * 0.1;   // Saturation variation
+		hsl.z *= (r.y * 0.4 + 0.6);   // Brightness variation
+		return vec4(HSLtoRGB(hsl), STEAM);
 	}
 		return vec4(bgColor, AIR);
 }
@@ -692,6 +712,68 @@ void main() {
 				}
 			}
 		}
+	}
+
+	// Ice melting near lava
+	if (t00.a == ICE)
+	{
+		// Check for nearby lava
+		if (t01.a == LAVA || t10.a == LAVA)
+		{
+			if (r.x < 0.2) { // 20% chance to melt per frame
+				t00 = createParticle(WATER);
+				// Create some steam
+				if (r.y < 0.5) {
+					if (t01.a == LAVA) t01 = createParticle(SMOKE);
+					if (t10.a == LAVA) t10 = createParticle(SMOKE);
+				}
+			}
+		}
+	}
+
+	// Similar checks for other ice positions
+	if (t10.a == ICE)
+	{
+		if (t11.a == LAVA || t00.a == LAVA)
+		{
+			if (r.x < 0.2) {
+				t10 = createParticle(WATER);
+				if (r.y < 0.5) {
+					if (t11.a == LAVA) t11 = createParticle(SMOKE);
+					if (t00.a == LAVA) t00 = createParticle(SMOKE);
+				}
+			}
+		}
+	}
+
+	// Water freezing into ice
+	if (t00.a == WATER)
+	{
+		// Check for nearby ice
+		if (t01.a == ICE || t10.a == ICE)
+		{
+			if (r.x < 0.05) { // 5% chance to freeze per frame
+				t00 = createParticle(ICE);
+			}
+		}
+	}
+
+	// Similar checks for other water positions
+	if (t10.a == WATER)
+	{
+		if (t11.a == ICE || t00.a == ICE)
+		{
+			if (r.x < 0.05) {
+				t10 = createParticle(ICE);
+			}
+		}
+	}
+
+	// Make ice behave like a solid (similar to stone) when not melting
+	if (t01.a == ICE || t11.a == ICE)
+	{
+		// Ice doesn't fall or move unless melted
+		// This is handled by not adding any movement behavior
 	}
 
 	fragColor = i == 0 ? t00 :
