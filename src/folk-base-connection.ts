@@ -17,13 +17,13 @@ export class FolkBaseConnection extends FolkElement {
     }
   `;
 
-  @property({ type: String, reflect: true }) source = '';
+  @property({ type: String, reflect: true }) source?: string;
 
   @state() sourceElement: Element | null = null;
 
   @state() sourceRect: DOMRectReadOnly | null = null;
 
-  @property({ type: String, reflect: true }) target = '';
+  @property({ type: String, reflect: true }) target?: string;
 
   @state() targetRect: DOMRectReadOnly | null = null;
 
@@ -40,6 +40,8 @@ export class FolkBaseConnection extends FolkElement {
 
     if (changedProperties.has('source')) {
       this.#unobserveSource();
+
+      if (!this.source) return;
 
       const vertex = parseVertex(this.source);
 
@@ -58,6 +60,8 @@ export class FolkBaseConnection extends FolkElement {
 
     if (changedProperties.has('target')) {
       this.#unobserveTarget();
+
+      if (!this.target) return;
 
       const vertex = parseVertex(this.target);
 

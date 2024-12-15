@@ -1,3 +1,4 @@
+import { FolkEventPropagator } from './folk-event-propagator';
 import { FolkShape } from './folk-shape';
 
 export abstract class FolkInteractionHandler extends HTMLElement {
@@ -32,10 +33,85 @@ export abstract class FolkInteractionHandler extends HTMLElement {
   }
 
   activate() {
-    console.log('activate', this);
     FolkToolset.setActiveTool(this);
   }
 }
+
+export class FolkPropagatorTool extends FolkInteractionHandler {
+  static tagName = 'folk-propagator-tool';
+  readonly events = ['pointerdown', 'pointermove', 'pointerup'];
+
+  private currentPropagator: FolkEventPropagator | null = null;
+
+  constructor() {
+    super();
+    this.button.textContent = 'Create Propagator';
+  }
+
+  handleEvent(event: Event): void {
+    if (!(event instanceof PointerEvent)) return;
+    const target = event.target as HTMLElement;
+
+    switch (event.type) {
+      case 'pointerdown':
+        if (!target || target instanceof FolkEventPropagator || target instanceof FolkInteractionHandler) return;
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
+        if (!target.id) {
+          target.id = `folk-source-${Date.now()}`;
+        }
+
+        this.currentPropagator = new FolkEventPropagator();
+        this.currentPropagator.source = `#${target.id}`;
+
+        document.body.appendChild(this.currentPropagator);
+        break;
+
+      case 'pointermove':
+        if (!this.currentPropagator) return;
+        event.stopImmediatePropagation();
+
+        // Update the target position to follow the mouse
+        const rect = document.body.getBoundingClientRect();
+        const targetPoint = `${event.clientX - rect.left}, ${event.clientY - rect.top}`;
+        this.currentPropagator.target = targetPoint;
+        this.currentPropagator.stretch();
+        break;
+
+      case 'pointerup':
+        if (!this.currentPropagator) return;
+        event.stopImmediatePropagation();
+
+        const finalTarget = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement;
+
+        if (
+          !finalTarget ||
+          finalTarget instanceof FolkEventPropagator ||
+          finalTarget instanceof FolkInteractionHandler
+        ) {
+          this.currentPropagator.remove();
+        } else {
+          if (!finalTarget.id) {
+            finalTarget.id = `folk-target-${Date.now()}`;
+          }
+
+          this.currentPropagator.target = `#${finalTarget.id}`;
+        }
+
+        this.currentPropagator = null;
+        break;
+    }
+  }
+
+  static define() {
+    if (!customElements.get(this.tagName)) {
+      customElements.define(this.tagName, this);
+    }
+  }
+}
+
+// Add this line at the bottom of the file with the other define() calls
 
 export class FolkShapeTool extends FolkInteractionHandler {
   static tagName = 'folk-shape-tool';
@@ -213,4 +289,5 @@ export class FolkToolset extends HTMLElement {
 
 FolkShapeTool.define();
 FolkDeleteTool.define();
+FolkPropagatorTool.define();
 FolkToolset.define();

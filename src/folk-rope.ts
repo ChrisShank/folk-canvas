@@ -30,6 +30,8 @@ declare global {
 export class FolkRope extends FolkBaseConnection implements AnimationFrameControllerHost {
   static override tagName = 'folk-rope';
 
+  static #resolution = 5;
+
   static styles = [
     FolkBaseConnection.styles,
     css`
@@ -41,7 +43,7 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
 
       path {
         fill: none;
-        pointer-events: auto;
+        pointer-events: none;
         stroke: var(--folk-rope-color, black);
         stroke-width: var(--folk-rope-width, 3);
         stroke-linecap: var(--folk-rope-linecap, round);
@@ -134,6 +136,38 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
     endingPoint.pos = target;
   }
 
+  /** add/remove points based on distance between source and target rects */
+  stretch() {
+    if (this.sourceRect === null || this.targetRect === null || this.#points.length < 2) return;
+
+    // Calculate desired length based on source and target positions
+    const distance = Vector.distance(this.sourceRect, this.targetRect);
+    const desiredPoints = Math.floor(distance / FolkRope.#resolution);
+
+    while (this.#points.length < desiredPoints) {
+      const lastPoint = this.#points.at(-1)!;
+      lastPoint.isFixed = false;
+      const newPoint = {
+        pos: { ...lastPoint.pos },
+        oldPos: { ...lastPoint.pos },
+        distanceToNextPoint: FolkRope.#resolution,
+        mass: 1,
+        damping: 0.99,
+        velocity: Vector.zero(),
+        isFixed: true,
+        prev: lastPoint,
+        next: null,
+      };
+      lastPoint.next = newPoint;
+      this.#points.push(newPoint);
+    }
+
+    while (this.#points.length > desiredPoints) {
+      this.#points.pop();
+      this.#points.at(-1)!.isFixed = true;
+    }
+  }
+
   render() {
     if (this.#points.length < 2) return;
 
@@ -167,9 +201,8 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
   #generatePoints(start: Point, end: Point) {
     const delta = Vector.sub(end, start);
     const len = Vector.mag(delta);
-    const resolution = 5;
     const points: RopePoint[] = [];
-    const pointsLen = Math.floor(len / resolution);
+    const pointsLen = Math.floor(len / FolkRope.#resolution);
 
     for (let i = 0; i < pointsLen; i++) {
       const percentage = i / (pointsLen - 1);
@@ -178,7 +211,7 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
       points.push({
         pos,
         oldPos: { ...pos },
-        distanceToNextPoint: resolution,
+        distanceToNextPoint: FolkRope.#resolution,
         mass: 1,
         damping: 0.99,
         velocity: Vector.zero(),
