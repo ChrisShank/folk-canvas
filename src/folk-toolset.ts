@@ -39,7 +39,10 @@ export abstract class FolkInteractionHandler extends HTMLElement {
 
 export class FolkShapeTool extends FolkInteractionHandler {
   static tagName = 'folk-shape-tool';
-  readonly events = ['pointerdown'];
+  readonly events = ['pointerdown', 'pointermove', 'pointerup'];
+
+  private currentShape: FolkShape | null = null;
+  private startPoint: { x: number; y: number } | null = null;
 
   constructor() {
     super();
@@ -49,21 +52,72 @@ export class FolkShapeTool extends FolkInteractionHandler {
   handleEvent(event: Event): void {
     if (!(event instanceof PointerEvent)) return;
     const target = event.target as HTMLElement;
-    if (!target || target instanceof FolkShape) return;
 
-    event.stopImmediatePropagation();
+    switch (event.type) {
+      case 'pointerdown':
+        if (!target || target instanceof FolkShape) return;
+        event.stopImmediatePropagation();
 
-    const shape = new FolkShape();
-    const rect = target.getBoundingClientRect();
-    const width = 100;
-    const height = 100;
-    shape.x = event.clientX - rect.left - width / 2;
-    shape.y = event.clientY - rect.top - height / 2;
-    shape.width = width;
-    shape.height = height;
+        const rect = target.getBoundingClientRect();
+        this.startPoint = {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
 
-    target.appendChild(shape);
-    shape.focus();
+        this.currentShape = new FolkShape();
+        this.currentShape.x = this.startPoint.x;
+        this.currentShape.y = this.startPoint.y;
+        this.currentShape.width = 0;
+        this.currentShape.height = 0;
+
+        target.appendChild(this.currentShape);
+        target.setPointerCapture(event.pointerId);
+        break;
+
+      case 'pointermove':
+        if (!this.currentShape || !this.startPoint) return;
+        event.stopImmediatePropagation();
+
+        const rect2 = target.getBoundingClientRect();
+        const currentX = event.clientX - rect2.left;
+        const currentY = event.clientY - rect2.top;
+
+        // Calculate width and height based on drag direction
+        const width = currentX - this.startPoint.x;
+        const height = currentY - this.startPoint.y;
+
+        // Update shape position and size based on drag direction
+        if (width < 0) {
+          this.currentShape.x = currentX;
+          this.currentShape.width = Math.abs(width);
+        } else {
+          this.currentShape.width = width;
+        }
+
+        if (height < 0) {
+          this.currentShape.y = currentY;
+          this.currentShape.height = Math.abs(height);
+        } else {
+          this.currentShape.height = height;
+        }
+        break;
+
+      case 'pointerup':
+        if (!this.currentShape) return;
+        event.stopImmediatePropagation();
+
+        // Remove shape if it's too small
+        if (this.currentShape.width < 10 || this.currentShape.height < 10) {
+          this.currentShape.remove();
+        } else {
+          this.currentShape.focus();
+        }
+
+        target.releasePointerCapture(event.pointerId);
+        this.currentShape = null;
+        this.startPoint = null;
+        break;
+    }
   }
 
   static define() {
