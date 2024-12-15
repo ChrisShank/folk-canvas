@@ -7,7 +7,7 @@ import { FolkShape } from './folk-shape';
 export class FolkPhysics extends FolkBaseSet {
   static override tagName = 'folk-physics';
 
-  private static PHYSICS_SCALE = 0.1; // Adjust this value to tune the overall scale
+  private static PHYSICS_SCALE = 0.1;
 
   private world?: RAPIER.World;
   private bodies: Map<FolkShape, RAPIER.RigidBody> = new Map();
@@ -18,23 +18,19 @@ export class FolkPhysics extends FolkBaseSet {
   connectedCallback() {
     super.connectedCallback();
 
-    // Create physics world with reduced gravity
     this.world = new RAPIER.World({
       x: 0.0,
-      y: 8,
+      y: 5,
     });
 
-    // Add container walls and floor
     this.createContainer();
 
-    // Start the simulation loop
     this.startSimulation();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
 
-    // Stop simulation loop
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -50,7 +46,6 @@ export class FolkPhysics extends FolkBaseSet {
 
     if (!this.world || this.sourcesMap.size !== this.sourceElements.size) return;
 
-    // Update physics bodies to match source elements
     this.updatePhysicsBodies();
   }
 
