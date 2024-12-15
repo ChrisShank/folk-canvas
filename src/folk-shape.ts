@@ -391,7 +391,11 @@ export class FolkShape extends HTMLElement {
       };
     } else if (event.type === 'pointermove') {
       if (!target) return;
-      moveDelta = { x: event.movementX, y: event.movementY };
+      const zoom = window.visualViewport?.scale ?? 1;
+      moveDelta = {
+        x: event.movementX / zoom,
+        y: event.movementY / zoom,
+      };
     }
 
     if (!moveDelta) return;
