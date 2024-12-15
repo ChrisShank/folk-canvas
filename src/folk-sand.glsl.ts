@@ -7,15 +7,16 @@ import { glsl } from './common/tags.ts';
 
 const CONSTANTS = glsl`
 #define AIR 0.0
-#define SMOKE 1.0
-#define WATER 2.0
-#define LAVA 3.0
-#define SAND 4.0
-#define PLANT 5.0
-#define STONE 6.0
-#define WALL 7.0
+#define STEAM 1.0
+#define SMOKE 2.0
+#define WATER 3.0
+#define LAVA 4.0
+#define SAND 5.0
+#define PLANT 6.0
+#define STONE 7.0
+#define WALL 8.0
+#define ICE 9.0
 #define COLLISION 99.0
-#define ICE 8.0
 
 const vec3 bgColor = pow(vec3(31, 34, 36) / 255.0, vec3(2));
 `;
@@ -246,6 +247,9 @@ vec4 createParticle(float id)
 		hsl.y += (r.x - 0.5) * 0.1;   // Slight saturation variation
 		hsl.z *= (r.y * 0.2 + 0.8);   // Brightness variation
 		return vec4(HSLtoRGB(hsl), ICE);
+	} else if (id == STEAM)
+	{
+		return vec4(mix(bgColor, vec3(0.8, 0.8, 0.8), 0.5), STEAM);  // Whiter than smoke
 	}
 		return vec4(bgColor, AIR);
 }
@@ -303,12 +307,21 @@ void main() {
 	vec4 r = hash43(vec3(p, frame));
 
 	if ((t01.a == SMOKE && t11.a < SMOKE ||
-		t01.a < SMOKE && t11.a == SMOKE) && r.x < 0.25)
+		t01.a < SMOKE && t11.a == SMOKE ||
+		t01.a == STEAM && t11.a < STEAM ||
+		t01.a < STEAM && t11.a == STEAM) && r.x < 0.25)
+	{
+		swap(t01, t11);
+	}
+	
+		
+	if ((t01.a == STEAM && t11.a < STEAM ||
+		t01.a < STEAM && t11.a == STEAM) && r.x < 0.25)
 	{
 		swap(t01, t11);
 	}
 
-	if (t00.a == SMOKE)
+	if (t00.a == SMOKE || t00.a == STEAM)
 	{
 		if (t01.a < t00.a && r.y < 0.25)
 		{
@@ -316,9 +329,11 @@ void main() {
 		} else if (r.z < 0.003)
 		{
 			t00 = vec4(bgColor, AIR);
+		} else if (t00.a == STEAM && r.w < 0.001) { // Small chance for steam to condense
+			t00 = createParticle(WATER);
 		}
 	}
-	if (t10.a == SMOKE)
+	if (t10.a == SMOKE || t10.a == STEAM)
 	{
 		if (t11.a < t10.a && r.y < 0.25)
 		{
@@ -326,6 +341,8 @@ void main() {
 		} else if (r.z < 0.003)
 		{
 			t10 = vec4(bgColor, AIR);
+		} else if (t10.a == STEAM && r.w < 0.001) { // Small chance for steam to condense
+			t10 = createParticle(WATER);
 		}
 	}
 
@@ -711,11 +728,11 @@ void main() {
 		if (t01.a == LAVA || t10.a == LAVA)
 		{
 			if (r.x < 0.2) { // 20% chance to melt per frame
-				t00 = createParticle(WATER);
-				// Create some steam
+				t00 = createParticle(STEAM);
+				// Create additional steam from the lava contact points
 				if (r.y < 0.5) {
-					if (t01.a == LAVA) t01 = createParticle(SMOKE);
-					if (t10.a == LAVA) t10 = createParticle(SMOKE);
+					if (t01.a == LAVA) t01 = createParticle(STEAM);
+					if (t10.a == LAVA) t10 = createParticle(STEAM);
 				}
 			}
 		}
@@ -727,10 +744,10 @@ void main() {
 		if (t11.a == LAVA || t00.a == LAVA)
 		{
 			if (r.x < 0.2) {
-				t10 = createParticle(WATER);
+				t10 = createParticle(STEAM);
 				if (r.y < 0.5) {
-					if (t11.a == LAVA) t11 = createParticle(SMOKE);
-					if (t00.a == LAVA) t00 = createParticle(SMOKE);
+					if (t11.a == LAVA) t11 = createParticle(STEAM);
+					if (t00.a == LAVA) t00 = createParticle(STEAM);
 				}
 			}
 		}
@@ -757,13 +774,6 @@ void main() {
 				t10 = createParticle(ICE);
 			}
 		}
-	}
-
-	// Make ice behave like a solid (similar to stone) when not melting
-	if (t01.a == ICE || t11.a == ICE)
-	{
-		// Ice doesn't fall or move unless melted
-		// This is handled by not adding any movement behavior
 	}
 
 	fragColor = i == 0 ? t00 :
