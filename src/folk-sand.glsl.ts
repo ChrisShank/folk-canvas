@@ -325,10 +325,15 @@ void main() {
 
 	if (t01.a == SAND || t01.a == STONE)
 	{
-		if (t00.a < SAND)
+		if (t00.a < SAND && t00.a != WATER)
 		{
 			if (r.y < 0.9) swap(t01, t00);
-		} else if (t11.a < SAND && t10.a < SAND)
+		}
+		else if (t00.a == WATER)
+		{
+			if (r.y < 0.3) swap(t01, t00);
+		}
+		else if (t11.a < SAND && t10.a < SAND)
 		{
 			swap(t01, t10);
 		}
@@ -336,10 +341,15 @@ void main() {
 
 	if (t11.a == SAND || t11.a == STONE)
 	{
-		if (t10.a < SAND)
+		if (t10.a < SAND && t10.a != WATER)
 		{
 			if (r.y < 0.9) swap(t11, t10);
-		} else if (t01.a < SAND && t00.a < SAND)
+		}
+		else if (t10.a == WATER)
+		{
+			if (r.y < 0.3) swap(t11, t10);
+		}
+		else if (t01.a < SAND && t00.a < SAND)
 		{
 			swap(t11, t00);
 		}
