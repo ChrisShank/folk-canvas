@@ -16,7 +16,6 @@ const CONSTANTS = glsl`
 #define WALL 7.0
 #define COLLISION 99.0
 #define ICE 8.0
-#define STEAM 9.0
 
 const vec3 bgColor = pow(vec3(31, 34, 36) / 255.0, vec3(2));
 `;
@@ -247,15 +246,6 @@ vec4 createParticle(float id)
 		hsl.y += (r.x - 0.5) * 0.1;   // Slight saturation variation
 		hsl.z *= (r.y * 0.2 + 0.8);   // Brightness variation
 		return vec4(HSLtoRGB(hsl), ICE);
-	} else if (id == STEAM)
-	{
-		vec3 r = hash33(vec3(gl_FragCoord.xy, frame));
-		vec3 color = vec3(0.8, 0.8, 0.8); // Light gray for steam
-		vec3 hsl = RGBtoHSL(color);
-		hsl.x += (r.z - 0.5) * 0.05;  // Hue variation
-		hsl.y += (r.x - 0.5) * 0.1;   // Saturation variation
-		hsl.z *= (r.y * 0.4 + 0.6);   // Brightness variation
-		return vec4(HSLtoRGB(hsl), STEAM);
 	}
 		return vec4(bgColor, AIR);
 }
