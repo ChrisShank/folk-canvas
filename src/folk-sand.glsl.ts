@@ -438,20 +438,21 @@ void main() {
 		{
 			t00 = createParticle(STONE);
 			t10 = createParticle(SMOKE);
-		} else if (t01.a == PLANT && r.x < 1.0) // left
+		} else if (t01.a == PLANT && r.x < 0.03) // left
 		{
-			t00 = createParticle(LAVA);
 			t01 = createParticle(SMOKE);
-		} else if (t10.a == PLANT && r.x < 1.0) // right
+			if (r.y < 0.04) {
+				t00 = createParticle(STONE);
+			}
+		} else if (t10.a == PLANT && r.x < 0.03) // right
 		{
-			t00 = createParticle(LAVA);
 			t10 = createParticle(SMOKE);
-		} else if (t00.a == PLANT && r.x < 1.0) // bottom
-		{
-			t00 = createParticle(LAVA);
-			t00 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t10 = createParticle(STONE);
+			}
 		}
 	}
+
 	if (t10.a == LAVA)
 	{
 		if (t11.a == WATER)
@@ -462,16 +463,52 @@ void main() {
 		{
 			t10 = createParticle(STONE);
 			t00 = createParticle(SMOKE);
-		} 
-		
-		else if (t11.a == PLANT)
+		} else if (t11.a == PLANT && r.x < 0.03)
 		{
-			t10 = createParticle(LAVA);
 			t11 = createParticle(SMOKE);
-		} else if (t00.a == PLANT)
+			if (r.y < 0.04) {
+				t10 = createParticle(STONE);
+			}
+		} else if (t00.a == PLANT && r.x < 0.03)
 		{
-			t10 = createParticle(LAVA);
 			t00 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t10 =  createParticle(STONE);
+			}
+		}
+	}
+
+	if (t01.a == LAVA)
+	{
+		if (t00.a == PLANT && r.x < 0.03)
+		{
+			t00 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t01 = createParticle(STONE);
+			}
+		} else if (t11.a == PLANT && r.x < 0.03)
+		{
+			t11 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t01 = createParticle(STONE);
+			}
+		}
+	}
+
+	if (t11.a == LAVA)
+	{
+		if (t10.a == PLANT && r.x < 0.03)
+		{
+			t10 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t11 = createParticle(STONE);
+			}
+		} else if (t01.a == PLANT && r.x < 0.03)
+		{
+			t01 = createParticle(SMOKE);
+			if (r.y < 0.04) {
+				t11 =  createParticle(STONE);
+			}
 		}
 	}
 
