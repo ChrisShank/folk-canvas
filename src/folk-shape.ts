@@ -493,19 +493,8 @@ export class FolkShape extends HTMLElement {
     }
 
     this.style.transform = emmittedRect.toCssString();
-    if (this.#attrWidth !== 'auto') {
-      this.style.width = `${emmittedRect.width}px`;
-    } else {
-      this.style.width = '';
-      emmittedRect.width = this.#previousRect.width;
-    }
-
-    if (this.#attrHeight !== 'auto') {
-      this.style.height = `${emmittedRect.height}px`;
-    } else {
-      this.style.height = '';
-      emmittedRect.height = this.#previousRect.height;
-    }
+    this.style.width = this.#attrWidth === 'auto' ? '' : `${emmittedRect.width}px`;
+    this.style.height = this.#attrHeight === 'auto' ? '' : `${emmittedRect.height}px`;
 
     this.#readonlyRect = new DOMRectTransformReadonly(emmittedRect);
   }
