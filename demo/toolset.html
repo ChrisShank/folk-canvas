@@ -18,7 +18,7 @@
 
       folk-shape {
         background: transparent;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgb(140, 140, 140);
         border-radius: 2px;
         border: 2px solid rgba(0, 0, 0, 0.5);
       }
@@ -31,7 +31,7 @@
   </head>
   <body>
     <folk-toolset>
-      <folk-distance-field>
+      <folk-sand>
         <folk-shape id="s1" x="100" y="100" width="50" height="50"></folk-shape>
         <folk-shape id="s2" x="100" y="200" width="50" height="50"></folk-shape>
         <folk-shape id="s3" x="100" y="300" width="50" height="50"></folk-shape>
@@ -48,13 +48,14 @@
         <folk-shape x="500" y="300">
           <folk-propagator-tool></folk-propagator-tool>
         </folk-shape>
-      </folk-distance-field>
+      </folk-sand>
     </folk-toolset>
 
     <script type="module">
       import '../src/standalone/folk-event-propagator.ts';
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-distance-field.ts';
+      import '../src/standalone/folk-sand.ts';
       import '../src/standalone/folk-toolset.ts';
     </script>
   </body>

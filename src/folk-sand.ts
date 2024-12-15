@@ -11,7 +11,7 @@ import {
 import { requestAnimationFrame } from './common/rAF.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { css, PropertyValues } from '@lit/reactive-element';
-import { DOMRectTransformReadonly } from './common/DOMRectTransform.ts';
+import { DOMRectTransform, DOMRectTransformReadonly } from './common/DOMRectTransform.ts';
 
 export class FolkSand extends FolkBaseSet {
   static override tagName = 'folk-sand';
@@ -608,7 +608,7 @@ export class FolkSand extends FolkBaseSet {
       // Get the transformed vertices in parent space
       let transformedPoints;
 
-      if (rect instanceof DOMRectTransformReadonly) {
+      if (rect instanceof DOMRectTransform) {
         transformedPoints = rect.vertices().map((point) => rect.toParentSpace(point));
       } else {
         transformedPoints = [

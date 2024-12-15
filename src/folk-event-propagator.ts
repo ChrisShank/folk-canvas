@@ -42,8 +42,8 @@ export class FolkEventPropagator extends FolkRope {
     `,
   ];
 
-  @property({ type: String, reflect: true }) trigger = '';
-  @property({ type: String, reflect: true }) expression = '';
+  @property({ type: String, reflect: true }) trigger?: string;
+  @property({ type: String, reflect: true }) expression?: string;
 
   #triggerTextarea = document.createElement('textarea');
   #expressionTextarea = document.createElement('textarea');
@@ -72,8 +72,8 @@ export class FolkEventPropagator extends FolkRope {
       }
     });
 
-    this.#triggerTextarea.value = this.trigger;
-    this.#expressionTextarea.value = this.expression;
+    this.#triggerTextarea.value = this.trigger ?? '';
+    this.#expressionTextarea.value = this.expression ?? '';
 
     this.#container.append(this.#triggerTextarea, this.#expressionTextarea);
 
@@ -84,6 +84,13 @@ export class FolkEventPropagator extends FolkRope {
 
   override updated(changedProperties: PropertyValues<this>): void {
     super.update(changedProperties);
+
+    if (changedProperties.has('trigger')) {
+      this.#triggerTextarea.value = this.trigger ?? '';
+    }
+    if (changedProperties.has('expression')) {
+      this.#expressionTextarea.value = this.expression ?? '';
+    }
 
     if (changedProperties.has('trigger') || changedProperties.has('expression')) {
       this.#initializePropagator();

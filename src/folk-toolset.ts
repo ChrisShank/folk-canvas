@@ -1,3 +1,5 @@
+import type { DOMRectTransform } from './common/DOMRectTransform';
+import { Vector } from './common/Vector';
 import { FolkEventPropagator } from './folk-event-propagator';
 import { FolkShape } from './folk-shape';
 
@@ -42,6 +44,7 @@ export class FolkPropagatorTool extends FolkInteractionHandler {
   readonly events = ['pointerdown', 'pointermove', 'pointerup'];
 
   private currentPropagator: FolkEventPropagator | null = null;
+  private startPoint: { x: number; y: number } | null = null;
 
   constructor() {
     super();
@@ -57,6 +60,8 @@ export class FolkPropagatorTool extends FolkInteractionHandler {
         if (!target || target instanceof FolkEventPropagator || target instanceof FolkInteractionHandler) return;
         event.stopImmediatePropagation();
         event.preventDefault();
+
+        this.startPoint = { x: event.clientX, y: event.clientY };
 
         if (!target.id) {
           target.id = `folk-source-${Date.now()}`;
@@ -85,10 +90,13 @@ export class FolkPropagatorTool extends FolkInteractionHandler {
 
         const finalTarget = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement;
 
+        const distance = Vector.distance(this.startPoint || { x: 0, y: 0 }, { x: event.clientX, y: event.clientY });
+        console.log(distance);
         if (
           !finalTarget ||
           finalTarget instanceof FolkEventPropagator ||
-          finalTarget instanceof FolkInteractionHandler
+          finalTarget instanceof FolkInteractionHandler ||
+          distance <= 1
         ) {
           this.currentPropagator.remove();
         } else {
@@ -99,6 +107,8 @@ export class FolkPropagatorTool extends FolkInteractionHandler {
           this.currentPropagator.target = `#${finalTarget.id}`;
         }
 
+        this.currentPropagator.trigger = 'transform';
+        this.currentPropagator.expression = 'x: from.y';
         this.currentPropagator = null;
         break;
     }
