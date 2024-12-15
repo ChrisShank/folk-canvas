@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
+import vitePluginWasm from 'vite-plugin-wasm';
 
 const demoDir = resolve(__dirname, 'demo');
 
@@ -65,7 +66,7 @@ const linkGenerator = (): Plugin => {
 
 export default defineConfig({
   root: 'demo',
-  plugins: [linkGenerator()],
+  plugins: [linkGenerator(), vitePluginWasm()],
   build: {
     target: 'esnext',
     rollupOptions: {

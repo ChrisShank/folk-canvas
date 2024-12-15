@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distance Field Demo</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        overscroll-behavior: none;
+      }
+
+      folk-shape {
+        position: absolute;
+        background-color: rgba(100, 100, 100, 0.5);
+        border: 2px solid rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <folk-physics>
+      <folk-shape x="250" y="50" width="120" height="30" rotation="30"></folk-shape>
+      <folk-shape x="450" y="350" width="40" height="120" rotation="45"></folk-shape>
+      <folk-shape x="150" y="150" width="70" height="70" rotation="15"></folk-shape>
+      <folk-shape x="350" y="300" width="90" height="45" rotation="-20"></folk-shape>
+      <folk-shape x="550" y="200" width="35" height="85" rotation="60"></folk-shape>
+      <folk-shape x="180" y="250" width="65" height="55" rotation="-40"></folk-shape>
+      <folk-shape x="420" y="150" width="110" height="25" rotation="10"></folk-shape>
+      <folk-shape x="280" y="380" width="75" height="95" rotation="-50"></folk-shape>
+    </folk-physics>
+
+    <script type="module">
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-physics.ts';
+    </script>
+  </body>
+</html>
