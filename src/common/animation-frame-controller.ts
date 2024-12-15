@@ -34,9 +34,7 @@ export class AnimationFrameController implements ReactiveController {
   }
 
   hostUpdated() {
-    window.clearTimeout(this.#timeoutId);
-    this.#timeoutId = window.setTimeout(this.stop, this.#timeoutMs);
-    this.start();
+    this.reset();
   }
 
   hostDisconnected() {
@@ -66,6 +64,12 @@ export class AnimationFrameController implements ReactiveController {
     this.#lastTime = 0;
     this.#isRunning = true;
     this.#tick();
+  }
+
+  reset() {
+    window.clearTimeout(this.#timeoutId);
+    this.#timeoutId = window.setTimeout(this.stop, this.#timeoutMs);
+    this.start();
   }
 
   stop = () => {

@@ -68,7 +68,7 @@ export class FolkEventPropagator extends FolkRope {
 
     this.#expressionTextarea.addEventListener('focusout', () => {
       if (this.#hasError) {
-        this.cut();
+        super.cut();
       }
     });
 
@@ -113,8 +113,10 @@ export class FolkEventPropagator extends FolkRope {
         this.#hasError = true;
       },
       onParseSuccess: () => {
+        if (this.#hasError) {
+          super.mend();
+        }
         this.#hasError = false;
-        this.mend();
       },
     });
   }
@@ -127,5 +129,17 @@ export class FolkEventPropagator extends FolkRope {
       this.#container.style.left = `${point.pos.x}px`;
       this.#container.style.top = `${point.pos.y}px`;
     }
+  }
+
+  override cut(atPercentage?: number): void {
+    super.cut(atPercentage);
+
+    this.#propagator?.dispose();
+  }
+
+  override mend(): void {
+    super.mend();
+
+    this.#initializePropagator();
   }
 }

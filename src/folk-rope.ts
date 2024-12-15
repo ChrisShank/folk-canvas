@@ -259,18 +259,29 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
     if (point.prev) applyConstraint(point, point.prev);
   }
 
-  cut(atPercentage = 0.5) {
-    const index = this.#getPointIndexAt(atPercentage);
+  #cutIndex = -1;
 
-    this.#points[index].next = null;
-    this.#points[index + 1].prev = null;
+  get isCut() {
+    return this.#cutIndex !== -1;
   }
 
-  mend(atPercentage = 0.5) {
-    const index = this.#getPointIndexAt(atPercentage);
+  cut(atPercentage = 0.5) {
+    if (this.isCut) return;
 
-    this.#points[index].next = this.#points[index + 1];
-    this.#points[index + 1].prev = this.#points[index];
+    this.#cutIndex = this.#getPointIndexAt(atPercentage);
+
+    this.#points[this.#cutIndex].next = null;
+    this.#points[this.#cutIndex + 1].prev = null;
+    this.#rAF.reset();
+  }
+
+  mend() {
+    if (!this.isCut) return;
+
+    this.#points[this.#cutIndex].next = this.#points[this.#cutIndex + 1];
+    this.#points[this.#cutIndex + 1].prev = this.#points[this.#cutIndex];
+    this.#cutIndex = -1;
+    this.#rAF.reset();
   }
 
   getPointAt(percentage: number) {
@@ -280,6 +291,25 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
   #getPointIndexAt(percentage: number) {
     const clamped = Math.min(Math.max(percentage, 0), 1);
     return Math.floor(this.#points.length * clamped);
+  }
+
+  getPercentageFromPoint(hitPoint: Point): number | null {
+    for (let i = 0; i < this.#points.length - 1; i++) {
+      const point = this.#points[i];
+      const nextPoint = point.next;
+
+      if (nextPoint === null) return null;
+
+      if (
+        Vector.distance(point.pos, hitPoint) +
+          Vector.distance(hitPoint, nextPoint.pos) -
+          Vector.distance(point.pos, nextPoint.pos) <
+        1
+      ) {
+        return i / this.#points.length;
+      }
+    }
+    return null;
   }
 }
 
