@@ -13,7 +13,6 @@ export class FolkBaseSet extends FolkElement {
       display: block;
       position: absolute;
       inset: 0;
-      pointer-events: none;
     }
 
     ::slotted(*) {
@@ -21,7 +20,7 @@ export class FolkBaseSet extends FolkElement {
     }
   `;
 
-  @property({ type: String, reflect: true }) sources = '';
+  @property({ type: String, reflect: true }) sources?: string;
 
   #sourcesMap = new Map<Element, DOMRectReadOnly>();
   get sourcesMap(): ReadonlyMap<Element, DOMRectReadOnly> {
