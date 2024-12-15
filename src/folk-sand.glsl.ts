@@ -16,7 +16,8 @@ const CONSTANTS = glsl`
 #define WALL 7.0
 #define COLLISION 99.0
 #define ICE 8.0
-#define STEAM 9.0
+#define FIRE 9.0
+#define STEAM 10.0
 
 const vec3 bgColor = pow(vec3(31, 34, 36) / 255.0, vec3(2));
 `;
@@ -181,6 +182,11 @@ vec4 createParticle(float id)
 	{
 		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.0, id);
 	}
+	else if (id == FIRE)
+	{
+		// Use r for randomness, b for heat (0.5-1.0 range for initial heat)
+		return vec4(hash13(vec3(gl_FragCoord.xy, frame)), 0.0, 0.5 + hash13(vec3(gl_FragCoord.xy, float(frame) + 1.0)) * 0.5, FIRE);
+	}
 	return vec4(0.0, 0.0, 0.0, AIR);
 }
 
@@ -193,10 +199,7 @@ void main() {
 		if (r < 0.15)
 		{
 			id = SAND;
-		} else if (r < 0.25)
-		{
-			id = SMOKE;
-		}
+		} 
 
 		fragColor = createParticle(id);
 		return;
@@ -704,6 +707,78 @@ void main() {
 		}
 	}
 
+	// Fire behavior
+	if (t00.a == FIRE)
+	{
+		// Count nearby fire particles
+		float nearbyFire = 0.0;
+		if (t01.a == FIRE) nearbyFire += 1.0;
+		if (t10.a == FIRE) nearbyFire += 1.0;
+		if (t11.a == FIRE) nearbyFire += 1.0;
+		
+		// More nearby fire increases smoke production
+		float smokeChance = nearbyFire * 0.1;
+		
+		// Spread fire in all directions, with upward bias
+		// Up
+		if (t01.a == AIR && r.x < t00.b * 0.4)
+		{
+			t01 = createParticle(FIRE);
+			t01.b = max(t00.b - 0.1, 0.1);
+		}
+		// Right/Left symmetric movement (like water/sand)
+		if ((t01.a == AIR && t11.a == FIRE ||
+			t01.a == FIRE && t11.a == AIR) && r.y < t00.b * 0.2)
+		{
+			swap(t01, t11);
+		}
+		if ((t00.a == FIRE && t10.a == AIR ||
+			t00.a == AIR && t10.a == FIRE) && r.z < t00.b * 0.2)
+		{
+			swap(t00, t10);
+		}
+		
+		// Fire spreads to plants and gains heat from them
+		if (t01.a == PLANT && r.x < t00.b * 0.8)
+		{
+			t01 = createParticle(FIRE);
+			t01.b = min(t00.b + 0.2, 1.0);
+		}
+		if (t10.a == PLANT && r.y < t00.b * 0.8)
+		{
+			t10 = createParticle(FIRE);
+			t10.b = min(t00.b + 0.2, 1.0);
+		}
+		if (t11.a == PLANT && r.z < t00.b * 0.8)
+		{
+			t11 = createParticle(FIRE);
+			t11.b = min(t00.b + 0.2, 1.0);
+		}
+		
+		// Fire loses heat over time, less when surrounded by fire
+		float heatLoss = 0.01 * (1.0 - nearbyFire * 0.2);
+		t00.b = max(t00.b - heatLoss, 0.0);
+		
+		// Convert to smoke based on heat and nearby fire
+		if ((t00.b < 0.1 && r.z < 0.1) || r.w < smokeChance)
+		{
+			t00 = createParticle(SMOKE);
+		}
+		
+		// Create smoke above fire, more likely with higher heat
+		if (t01.a == AIR && r.w < t00.b * 0.2)
+		{
+			t01 = createParticle(SMOKE);
+		}
+	}
+
+	// Lava ignites plants and creates fire
+	if (t00.a == LAVA && t01.a == PLANT && r.x < 0.3)
+	{
+		t01 = createParticle(FIRE);
+		t01.b = 1.0; // Start with maximum heat
+	}
+
 	fragColor = i == 0 ? t00 :
     i == 1 ? t10 :
     i == 2 ? t01 : t11;
@@ -936,6 +1011,17 @@ vec3 getParticleColor(vec4 data)
 		vec3 altColor = vec3(0.7, 0.85, 0.95);
 		return mix(baseColor, altColor, rand) * (0.9 + rand * 0.2);
 	}
+	else if (data.a == FIRE) {
+		// Base colors for fire
+		vec3 coolColor = vec3(0.8, 0.2, 0.0);  // More orange
+		vec3 hotColor = vec3(1.0, 0.7, 0.2);   // More yellow
+		
+		// Mix between colors based on heat
+		vec3 fireColor = mix(coolColor, hotColor, data.b);
+		
+		// Add some variation based on random value
+		return fireColor * (0.8 + data.r * 0.4);
+	}
 	return bgColor;
 }
 
@@ -987,6 +1073,13 @@ void main() {
 	color *= 0.5 * max(hig, dropSha) + 0.5;
 	color *= sha * 1.0 + 0.2;
 	color += color * 0.4 * hig;
+
+	if (data.a == FIRE) {
+		// Add glow based on heat
+		float glowIntensity = data.b * data.b; // Square for more dramatic effect
+		vec3 glowColor = vec3(1.0, 0.3, 0.1) * glowIntensity;
+		color += glowColor * 0.5;
+	}
 
 	fragColor = vec4(linearTosRGB(color), 1.0);
 }
