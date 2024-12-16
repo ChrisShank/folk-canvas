@@ -1,52 +1,7 @@
-import { FolkShape } from '../folk-shape.ts';
-import { ClientRectObserverManager, ClientRectObserverEntry } from './client-rect-observer.ts';
-import { TransformEvent } from './TransformEvent.ts';
+import { ClientRectObserverEntry } from './client-rect-observer.ts';
+import { FolkObserver } from './folk-observer.ts';
 
-const clientRectObserver = new ClientRectObserverManager();
-
-interface ObservedElementEntry {
-  selector: string;
-  element: Element;
-  count: number;
-}
-
-class ObservedElements {
-  #elements: ObservedElementEntry[] = [];
-
-  observe(selector: string) {
-    let entry = this.#elements.find((e) => e.selector === selector);
-
-    if (entry === undefined) {
-      entry = { selector, element: document.querySelector(selector)!, count: 0 };
-      this.#elements.push(entry);
-    }
-
-    entry.count += 1;
-
-    return entry.element;
-  }
-
-  unobserve(selector: string) {
-    const entryIndex = this.#elements.findIndex((e) => e.selector === selector);
-    const entry = this.#elements[entryIndex];
-
-    if (entry === undefined) return;
-
-    entry.count -= 1;
-
-    if (entry.count === 0) {
-      this.#elements.splice(entryIndex, 1);
-    }
-  }
-
-  getElement(selector: string) {
-    return this.#elements.find((e) => e.selector === selector)?.element;
-  }
-
-  getSelector(element: Element) {
-    return this.#elements.find((e) => e.element === element)?.selector;
-  }
-}
+const folkObserver = new FolkObserver();
 
 // If this page is framed in then mock inject the following post message script
 if (window.parent !== window) {
@@ -58,15 +13,7 @@ if (window.parent !== window) {
     window.parent.postMessage({
       type: 'folk-element-change',
       selector: observedSelectors.get(entry.target),
-      boundingBox: entry.contentRect,
-    });
-  }
-
-  function onGeometryChange(event: TransformEvent) {
-    window.parent.postMessage({
-      type: 'folk-element-change',
-      selector: observedSelectors.get(event.target),
-      boundingBox: (event.target as FolkShape)?.getTransformDOMRect(),
+      contentRect: entry.contentRect.toJSON(),
     });
   }
 
@@ -81,17 +28,7 @@ if (window.parent !== window) {
         observedElements.set(selector, element);
         observedSelectors.set(element, selector);
 
-        if (element instanceof FolkShape) {
-          element.addEventListener('transform', onGeometryChange);
-
-          window.parent.postMessage({
-            type: 'folk-element-change',
-            selector: selector,
-            boundingBox: element.getTransformDOMRect(),
-          });
-        } else {
-          clientRectObserver.observe(element, boundingBoxCallback);
-        }
+        folkObserver.observe(element, boundingBoxCallback);
         return;
       }
       case 'folk-unobserve-element': {
@@ -100,15 +37,7 @@ if (window.parent !== window) {
 
         if (element === undefined) return;
 
-        if (element instanceof FolkShape) {
-          element.removeEventListener('transform', onGeometryChange);
-          observedElements.delete(selector);
-          observedSelectors.delete(element);
-        } else {
-          clientRectObserver.unobserve(element, boundingBoxCallback);
-        }
-
-        return;
+        folkObserver.unobserve(element, boundingBoxCallback);
       }
     }
   });

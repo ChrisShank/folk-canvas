@@ -171,12 +171,8 @@ export class ClientRectObserver {
   }
 
   takeRecords(): ClientRectObserverEntry[] {
-    if (this.#rafId === 0) return [];
-
     const entries = this.#entries;
     this.#entries = [];
-    cancelAnimationFrame(this.#rafId);
-    this.#rafId = 0;
     return entries;
   }
 

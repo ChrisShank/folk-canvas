@@ -4,6 +4,130 @@ import { TransformEvent } from './TransformEvent';
 
 export type ClientRectObserverEntryCallback = (entry: ClientRectObserverEntry) => void;
 
+export type FolkObserverOptions = {
+  iframeSelector?: string;
+};
+
+interface IframeChild {
+  rect: DOMRectReadOnly | null;
+  callbacks: Set<ClientRectObserverEntryCallback>;
+}
+
+type PostMessageSendEvent =
+  | { type: 'folk-observe-element'; selector: string }
+  | { type: 'folk-unobserve-element'; selector: string };
+
+class IframeObserver {
+  #iframe;
+  #observer;
+  #iframeRect!: DOMRectReadOnly;
+  #iframeChildren = new Map<string, IframeChild>();
+  #isDisposed = false;
+
+  get isDisposed() {
+    return this.#isDisposed;
+  }
+
+  constructor(iframe: HTMLIFrameElement, observer: FolkObserver) {
+    this.#iframe = iframe;
+    this.#observer = observer;
+
+    observer.observe(iframe, this.#iframeCallback);
+    window.addEventListener('message', this.#onPostmessage);
+  }
+
+  observeChild(selector: string, callback: ClientRectObserverEntryCallback) {
+    let child = this.#iframeChildren.get(selector);
+
+    if (child === undefined) {
+      child = {
+        callbacks: new Set(),
+        rect: null,
+      };
+
+      this.#iframeChildren.set(selector, child);
+
+      this.#postMessage({ type: 'folk-observe-element', selector });
+    }
+
+    child.callbacks.add(callback);
+  }
+
+  unobserveChild(selector: string, callback: ClientRectObserverEntryCallback) {
+    let child = this.#iframeChildren.get(selector);
+
+    if (child === undefined) return;
+
+    child.callbacks.delete(callback);
+
+    if (child.callbacks.size === 0) {
+      this.#iframeChildren.delete(selector);
+      this.#postMessage({ type: 'folk-unobserve-element', selector });
+    }
+
+    if (this.#iframeChildren.size === 0) {
+      this.#observer.unobserve(this.#iframe, this.#iframeCallback);
+      window.removeEventListener('message', this.#onPostmessage);
+      this.#isDisposed = true;
+    }
+  }
+
+  #iframeCallback = (entry: ClientRectObserverEntry) => {
+    this.#iframeRect = entry.contentRect;
+
+    for (const selector of this.#iframeChildren.keys()) {
+      this.#updatedChildRect(selector);
+    }
+  };
+
+  #onPostmessage = (event: MessageEvent) => {
+    if (event.source !== this.#iframe.contentWindow) return;
+
+    switch (event.data.type) {
+      case 'folk-iframe-ready': {
+        for (const selector of this.#iframeChildren.keys()) {
+          this.#postMessage({ type: 'folk-observe-element', selector });
+        }
+        return;
+      }
+      case 'folk-element-change': {
+        this.#updatedChildRect(event.data.selector, event.data.contentRect);
+        return;
+      }
+    }
+  };
+
+  #updatedChildRect(selector: string, rect?: DOMRectReadOnly) {
+    const child = this.#iframeChildren.get(selector);
+
+    if (child === undefined) return;
+
+    if (rect) {
+      child.rect = rect;
+    }
+
+    if (child.rect === null) return;
+
+    const contentRect = DOMRectReadOnly.fromRect({
+      x: this.#iframeRect.x + child.rect.x,
+      y: this.#iframeRect.y + child.rect.y,
+      height: child.rect.height,
+      width: child.rect.width,
+    });
+
+    child.callbacks.forEach((callback) =>
+      callback({
+        target: this.#iframe,
+        contentRect,
+      })
+    );
+  }
+
+  #postMessage(event: PostMessageSendEvent) {
+    this.#iframe.contentWindow?.postMessage(event);
+  }
+}
+
 export class FolkObserver {
   static #instance: FolkObserver | null = null;
 
@@ -16,6 +140,7 @@ export class FolkObserver {
   }
 
   #elementMap = new WeakMap<Element, Set<ClientRectObserverEntryCallback>>();
+  #iframeMap = new WeakMap<HTMLIFrameElement, IframeObserver>();
 
   #vo = new ClientRectObserver((entries) => {
     for (const entry of entries) {
@@ -35,29 +160,62 @@ export class FolkObserver {
     this.#updateTarget({ target: event.target as HTMLElement, contentRect: event.current });
   };
 
-  observe(target: Element, callback: ClientRectObserverEntryCallback): void {
-    let callbacks = this.#elementMap.get(target);
+  observe(
+    target: Element,
+    callback: ClientRectObserverEntryCallback,
+    { iframeSelector }: FolkObserverOptions = {}
+  ): void {
+    if (target instanceof HTMLIFrameElement && iframeSelector) {
+      let iframeObserver = this.#iframeMap.get(target);
 
-    const isFolkShape = target instanceof FolkShape;
+      if (iframeObserver === undefined) {
+        iframeObserver = new IframeObserver(target, this);
+        this.#iframeMap.set(target, iframeObserver);
+      }
+
+      iframeObserver.observeChild(iframeSelector, callback);
+
+      return;
+    }
+
+    let callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) {
       this.#elementMap.set(target, (callbacks = new Set()));
 
-      if (isFolkShape) {
+      if (target instanceof FolkShape) {
         target.addEventListener('transform', this.#onTransform);
         callback({ target, contentRect: target.getTransformDOMRect() });
       } else {
         this.#vo.observe(target);
       }
     } else {
-      const contentRect = isFolkShape ? target.getTransformDOMRect() : target.getBoundingClientRect();
+      const contentRect = target instanceof FolkShape ? target.getTransformDOMRect() : target.getBoundingClientRect();
       callback({ target, contentRect });
     }
 
     callbacks.add(callback);
   }
 
-  unobserve(target: Element, callback: ClientRectObserverEntryCallback): void {
+  unobserve(
+    target: Element,
+    callback: ClientRectObserverEntryCallback,
+    { iframeSelector }: FolkObserverOptions = {}
+  ): void {
+    if (target instanceof HTMLIFrameElement && iframeSelector) {
+      let iframeObserver = this.#iframeMap.get(target);
+
+      if (iframeObserver === undefined) return;
+
+      iframeObserver.unobserveChild(iframeSelector, callback);
+
+      if (iframeObserver.isDisposed) {
+        this.#iframeMap.delete(target);
+      }
+
+      return;
+    }
+
     let callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) return;
@@ -75,6 +233,6 @@ export class FolkObserver {
   }
 }
 
-export function parseCSSSelector(selector: string): string[] {
+export function parseDeepCSSSelector(selector: string): string[] {
   return selector.split('>>>').map((s) => s.trim());
 }

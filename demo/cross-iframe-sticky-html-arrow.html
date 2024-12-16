@@ -23,6 +23,8 @@
       iframe {
         width: 100%;
         height: 100%;
+        /* margins cause infinite resize loops */
+        box-sizing: border-box;
       }
     </style>
   </head>
@@ -34,7 +36,7 @@
       <iframe id="frame2" src="./sticky-html-arrow.html"></iframe>
     </folk-shape>
 
-    <folk-rope source="#frame1 >>> #box1" target="#frame2 >>> #box1"></folk-rope>
+    <folk-rope source="#frame1 >>> #box1" target="#frame2 >>> #box2"></folk-rope>
 
     <script type="module">
       import '../src/standalone/folk-shape.ts';

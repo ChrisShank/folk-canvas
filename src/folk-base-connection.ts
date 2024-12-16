@@ -1,6 +1,6 @@
 import { parseVertex } from './common/utils.ts';
 import { ClientRectObserverEntry } from './common/client-rect-observer.ts';
-import { FolkObserver } from './common/folk-observer.ts';
+import { FolkObserver, parseDeepCSSSelector } from './common/folk-observer.ts';
 import { FolkElement } from './common/folk-element.ts';
 import { property, state } from '@lit/reactive-element/decorators.js';
 import { css, CSSResultGroup, PropertyValues } from '@lit/reactive-element';
@@ -19,11 +19,15 @@ export class FolkBaseConnection extends FolkElement {
 
   @property({ type: String, reflect: true }) source?: string;
 
+  #sourceIframeSelector: string | undefined = undefined;
+
   @state() sourceElement: Element | null = null;
 
   @state() sourceRect: DOMRectReadOnly | null = null;
 
   @property({ type: String, reflect: true }) target?: string;
+
+  #targetIframeSelector: string | undefined = undefined;
 
   @state() targetRect: DOMRectReadOnly | null = null;
 
@@ -48,7 +52,9 @@ export class FolkBaseConnection extends FolkElement {
       if (vertex) {
         this.sourceRect = DOMRectReadOnly.fromRect(vertex);
       } else {
-        this.sourceElement = document.querySelector(this.source);
+        const [selector, iframeSelector] = parseDeepCSSSelector(this.source);
+        this.#sourceIframeSelector = iframeSelector;
+        this.sourceElement = document.querySelector(selector);
       }
     }
 
@@ -56,7 +62,7 @@ export class FolkBaseConnection extends FolkElement {
       if (this.sourceElement === null) {
         this.sourceRect = null;
       } else {
-        folkObserver.observe(this.sourceElement, this.#sourceCallback);
+        folkObserver.observe(this.sourceElement, this.#sourceCallback, { iframeSelector: this.#sourceIframeSelector });
       }
     }
 
@@ -70,7 +76,9 @@ export class FolkBaseConnection extends FolkElement {
       if (vertex) {
         this.targetRect = DOMRectReadOnly.fromRect(vertex);
       } else {
-        this.targetElement = document.querySelector(this.target);
+        const [selector, iframeSelector] = parseDeepCSSSelector(this.target);
+        this.#targetIframeSelector = iframeSelector;
+        this.targetElement = document.querySelector(selector);
       }
     }
 
@@ -78,7 +86,7 @@ export class FolkBaseConnection extends FolkElement {
       if (this.targetElement === null) {
         this.targetRect = null;
       } else {
-        folkObserver.observe(this.targetElement, this.#targetCallback);
+        folkObserver.observe(this.targetElement, this.#targetCallback, { iframeSelector: this.#targetIframeSelector });
       }
     }
   }
@@ -90,7 +98,7 @@ export class FolkBaseConnection extends FolkElement {
   #unobserveSource() {
     if (this.sourceElement === null) return;
 
-    folkObserver.unobserve(this.sourceElement, this.#sourceCallback);
+    folkObserver.unobserve(this.sourceElement, this.#sourceCallback, { iframeSelector: this.#sourceIframeSelector });
   }
 
   #targetCallback = (entry: ClientRectObserverEntry) => {
@@ -99,6 +107,6 @@ export class FolkBaseConnection extends FolkElement {
 
   #unobserveTarget() {
     if (this.targetElement === null) return;
-    folkObserver.unobserve(this.targetElement, this.#targetCallback);
+    folkObserver.unobserve(this.targetElement, this.#targetCallback, { iframeSelector: this.#targetIframeSelector });
   }
 }
