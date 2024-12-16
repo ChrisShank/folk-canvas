@@ -65,6 +65,8 @@
       <div><span class="key-number">5</span> Plant</div>
       <div><span class="key-number">6</span> Stone</div>
       <div><span class="key-number">7</span> Wall</div>
+      <div><span class="key-number">8</span> Ice</div>
+      <div><span class="key-number">9</span> Fire</div>
     </div>
 
     <folk-sand>
@@ -81,6 +83,24 @@
     <script type="module">
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-sand.ts';
+
+      const sandElement = document.querySelector('folk-sand');
+      const keyNumbers = document.querySelectorAll('.key-number');
+
+      // Reset all key styles
+      function resetKeyStyles() {
+        keyNumbers.forEach((key) => {
+          key.style.background = 'rgba(255, 255, 255, 0.2)';
+        });
+      }
+
+      sandElement.onMaterialChange = (materialNumber) => {
+        resetKeyStyles();
+        const activeKey = keyNumbers[materialNumber - 1];
+        if (activeKey) {
+          activeKey.style.background = 'rgba(255, 255, 255, 0.6)';
+        }
+      };
     </script>
   </body>
 </html>

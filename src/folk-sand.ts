@@ -75,6 +75,8 @@ export class FolkSand extends FolkBaseSet {
   private shapeIndexBuffer!: WebGLBuffer;
   private shapeIndexCount = 0;
 
+  onMaterialChange?: (type: number) => void;
+
   connectedCallback(): void {
     super.connectedCallback();
 
@@ -325,6 +327,7 @@ export class FolkSand extends FolkBaseSet {
 
   private setMaterialType(type: number) {
     this.materialType = Math.min(Math.max(type, 0), 9);
+    this.onMaterialChange?.(this.materialType);
   }
 
   private resizeCanvas() {
