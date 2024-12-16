@@ -2,15 +2,15 @@ import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
 import { Layout } from 'webcola';
 import { FolkShape } from './folk-shape.ts';
-import { FolkArrow } from './folk-arrow.ts';
 import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
+import { FolkBaseConnection } from './folk-base-connection';
 
 export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHost {
   static override tagName = 'folk-graph';
 
   private graphSim = new Layout();
   private nodes = new Map<FolkShape, number>();
-  private arrows = new Set<FolkArrow>();
+  private arrows = new Set<FolkBaseConnection>();
   #rAF = new AnimationFrameController(this);
 
   connectedCallback() {
@@ -29,7 +29,7 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);
-    this.updateGraph();
+    this.createGraph();
   }
 
   tick() {
@@ -48,7 +48,7 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
     });
   }
 
-  private updateGraph() {
+  private createGraph() {
     this.nodes.clear();
     this.arrows.clear();
 
@@ -77,7 +77,7 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
 
   private createLinks() {
     return Array.from(this.sourceElements)
-      .filter((element): element is FolkArrow => element instanceof FolkArrow)
+      .filter((element): element is FolkBaseConnection => element instanceof FolkBaseConnection)
       .map((arrow) => {
         this.arrows.add(arrow);
         const source = this.nodes.get(arrow.sourceElement as FolkShape);
