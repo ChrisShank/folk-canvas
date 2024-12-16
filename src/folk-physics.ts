@@ -3,6 +3,7 @@ import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
 import { FolkShape } from './folk-shape';
 import RAPIER, { init } from '@dimforge/rapier2d-compat';
+import { TransformIntegrator } from './common/EffectIntegrator.ts';
 await init();
 
 export class FolkPhysics extends FolkBaseSet {
@@ -15,6 +16,7 @@ export class FolkPhysics extends FolkBaseSet {
   private elementToRect: Map<FolkShape, DOMRectTransform> = new Map();
   private animationFrameId?: number;
   private lastTimestamp?: number;
+  private integrator = TransformIntegrator.register('physics');
 
   connectedCallback() {
     super.connectedCallback();
@@ -119,7 +121,7 @@ export class FolkPhysics extends FolkBaseSet {
   }
 
   private startSimulation() {
-    const step = (timestamp: number) => {
+    const step = async (timestamp: number) => {
       if (!this.lastTimestamp) {
         this.lastTimestamp = timestamp;
       }
@@ -127,16 +129,33 @@ export class FolkPhysics extends FolkBaseSet {
       if (this.world) {
         this.world.step();
 
-        // Update visual elements based on physics
-        this.bodies.forEach((body, shape) => {
-          if (shape !== document.activeElement) {
-            const position = body.translation();
-            // Scale up the position when applying to visual elements
-            shape.x = position.x / FolkPhysics.PHYSICS_SCALE - shape.width / 2;
-            shape.y = position.y / FolkPhysics.PHYSICS_SCALE - shape.height / 2;
-            shape.rotation = body.rotation();
+        // Yield physics effects
+        for (const [shape, body] of this.bodies) {
+          const position = body.translation();
+          this.integrator.yield(shape, {
+            x: position.x / FolkPhysics.PHYSICS_SCALE - shape.width / 2,
+            y: position.y / FolkPhysics.PHYSICS_SCALE - shape.height / 2,
+            rotation: body.rotation(),
+            width: shape.width,
+            height: shape.height,
+          });
+        }
+
+        // Get integrated results and update physics state
+        const results = await this.integrator.integrate();
+        for (const [shape, result] of results) {
+          const body = this.bodies.get(shape);
+          if (body) {
+            body.setTranslation(
+              {
+                x: (result.x + result.width / 2) * FolkPhysics.PHYSICS_SCALE,
+                y: (result.y + result.height / 2) * FolkPhysics.PHYSICS_SCALE,
+              },
+              true
+            );
+            body.setRotation(result.rotation, true);
           }
-        });
+        }
       }
 
       this.animationFrameId = requestAnimationFrame(step);

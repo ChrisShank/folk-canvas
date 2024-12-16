@@ -4,17 +4,17 @@ import type { FolkShape } from '../folk-shape';
  * Coordinates effects between multiple systems, integrating their proposals into a single result.
  * Systems register, yield effects, and await integration when all systems are ready.
  */
-export class EffectIntegrator<T> {
-  private pending = new Map<Element, T[] | T>();
+export class EffectIntegrator<E extends Element, T> {
+  private pending = new Map<E, T[] | T>();
   private systems = new Set<string>();
   private waiting = new Set<string>();
-  private resolvers: ((value: Map<Element, T>) => void)[] = [];
+  private resolvers: ((value: Map<E, T>) => void)[] = [];
 
   /** Register a system to participate in effect integration */
   register(id: string) {
     this.systems.add(id);
     return {
-      yield: (element: Element, effect: T) => {
+      yield: (element: E, effect: T) => {
         if (!this.pending.has(element)) {
           this.pending.set(element, []);
         }
@@ -22,7 +22,7 @@ export class EffectIntegrator<T> {
       },
 
       /** Wait for all systems to submit effects, then receive integrated results */
-      integrate: async (): Promise<Map<Element, T>> => {
+      integrate: async (): Promise<Map<E, T>> => {
         this.waiting.add(id);
 
         if (this.waiting.size === this.systems.size) {
@@ -30,7 +30,7 @@ export class EffectIntegrator<T> {
           for (const [element, effects] of this.pending) {
             this.pending.set(element, (this.constructor as typeof EffectIntegrator).integrate(element, effects as T[]));
           }
-          const results = this.pending as Map<Element, T>;
+          const results = this.pending as Map<E, T>;
 
           // Reset for next frame
           this.pending = new Map();
@@ -66,7 +66,7 @@ interface TransformEffect {
   height: number;
 }
 
-export class TransformIntegrator extends EffectIntegrator<TransformEffect> {
+export class TransformIntegrator extends EffectIntegrator<FolkShape, TransformEffect> {
   private static instance: TransformIntegrator;
 
   static register(id: string) {
