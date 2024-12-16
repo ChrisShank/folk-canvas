@@ -29,10 +29,12 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);
+    // TODO: we're recreating the graph every frame, need to.. not do that...
     this.createGraph();
   }
 
   tick() {
+    // TODO: figure out how to let cola continue running. I was never able to do that in the past...
     this.graphSim.start(1, 0, 0, 0, true, false);
 
     this.graphSim.nodes().forEach((node: any) => {
