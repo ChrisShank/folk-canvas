@@ -80,7 +80,7 @@ export class FolkBaseSet extends FolkElement {
 
   #sourcesCallback = (entry: ClientRectObserverEntry) => {
     this.#sourcesMap.set(entry.target, entry.contentRect);
-    this.requestUpdate();
+    this.requestUpdate('sourcesMap');
   };
 
   unobserveSources(elements: Set<Element> = this.sourceElements) {

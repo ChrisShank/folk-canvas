@@ -80,7 +80,7 @@ export class FolkInk extends FolkElement {
 
   addPoint(point: Point) {
     this.points.push(point);
-    this.requestUpdate();
+    this.requestUpdate('points');
   }
 
   handleEvent(event: PointerEvent) {
