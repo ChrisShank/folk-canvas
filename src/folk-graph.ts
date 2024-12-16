@@ -58,6 +58,8 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
     const colaNodes = this.createNodes();
     const colaLinks = this.createLinks();
 
+    console.log(colaNodes, colaLinks);
+
     this.graphSim.nodes(colaNodes).links(colaLinks).linkDistance(250).avoidOverlaps(true).handleDisconnected(true);
   }
 

@@ -63,11 +63,16 @@ export class FolkBaseSet extends FolkElement {
   #onSlotchange = () => this.#observeSources();
 
   #observeSources() {
+    console.log('observeSources');
     const childElements = new Set(this.children);
     const elements = this.sources ? document.querySelectorAll(this.sources) : [];
     const sourceElements = new Set(elements).union(childElements);
     const elementsToObserve = sourceElements.difference(this.sourceElements);
     const elementsToUnobserve = this.sourceElements.difference(sourceElements);
+
+    console.log('sourceElements', sourceElements);
+    console.log('elementsToObserve', elementsToObserve);
+    console.log('elementsToUnobserve', elementsToUnobserve);
 
     this.unobserveSources(elementsToUnobserve);
 
