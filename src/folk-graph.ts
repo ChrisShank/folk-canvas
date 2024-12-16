@@ -5,45 +5,26 @@ import { FolkShape } from './folk-shape.ts';
 import { FolkArrow } from './folk-arrow.ts';
 import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
 
-type ColaNode = {
-  id: FolkShape;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-};
-
-type ColaLink = {
-  source: FolkShape;
-  target: FolkShape;
-};
-
 export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHost {
   static override tagName = 'folk-graph';
 
-  private graphSim: Layout;
-  private colaNodes: Map<FolkShape, ColaNode> = new Map();
-  private colaLinks: Map<FolkArrow, ColaLink> = new Map();
+  private graphSim = new Layout();
+  private nodes = new Map<FolkShape, number>();
+  private arrows = new Set<FolkArrow>();
   #rAF = new AnimationFrameController(this);
-
-  constructor() {
-    super();
-    this.graphSim = new Layout();
-  }
-
-  render() {}
 
   connectedCallback() {
     super.connectedCallback();
     this.#rAF.start();
   }
 
+  render() {}
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this.#rAF.stop();
-    this.colaNodes.clear();
-    this.colaLinks.clear();
+    this.nodes.clear();
+    this.arrows.clear();
   }
 
   override update(changedProperties: PropertyValues<this>) {
@@ -54,68 +35,55 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
   tick() {
     this.graphSim.start(1, 0, 0, 0, true, false);
 
-    for (const node of this.graphSim.nodes() as ColaNode[]) {
+    this.graphSim.nodes().forEach((node: any) => {
       const shape = node.id;
-      if (shape !== document.activeElement) {
-        shape.x = node.x - shape.width / 2;
-        shape.y = node.y - shape.height / 2;
-      } else {
+      if (shape === document.activeElement) {
         const rect = shape.getTransformDOMRect();
         node.x = rect.center.x;
         node.y = rect.center.y;
+      } else {
+        shape.x = node.x - shape.width / 2;
+        shape.y = node.y - shape.height / 2;
       }
-    }
+    });
   }
 
   private updateGraph() {
-    this.colaNodes.clear();
-    this.colaLinks.clear();
+    this.nodes.clear();
+    this.arrows.clear();
 
-    // Create nodes for shapes
-    for (const element of this.sourceElements) {
-      if (!(element instanceof FolkShape)) continue;
-      const rect = element.getTransformDOMRect();
+    const colaNodes = this.createNodes();
+    const colaLinks = this.createLinks();
 
-      const node: ColaNode = {
-        id: element,
-        x: rect.center.x,
-        y: rect.center.y,
-        width: rect.width,
-        height: rect.height,
-        rotation: rect.rotation,
-      };
-      this.colaNodes.set(element, node);
-    }
+    this.graphSim.nodes(colaNodes).links(colaLinks).linkDistance(250).avoidOverlaps(true).handleDisconnected(true);
+  }
 
-    // Create links from arrows
-    const arrows = Array.from(this.sourceElements).filter(
-      (element): element is FolkArrow => element instanceof FolkArrow
-    );
+  private createNodes() {
+    return Array.from(this.sourceElements)
+      .filter((element): element is FolkShape => element instanceof FolkShape)
+      .map((shape, index) => {
+        this.nodes.set(shape, index);
+        const rect = shape.getTransformDOMRect();
+        return {
+          id: shape,
+          x: rect.center.x,
+          y: rect.center.y,
+          width: rect.width,
+          height: rect.height,
+          rotation: rect.rotation,
+        };
+      });
+  }
 
-    for (const arrow of arrows) {
-      const source = arrow.sourceElement as FolkShape;
-      const target = arrow.targetElement as FolkShape;
-      if (!source || !target) continue;
-      if (!this.colaNodes.has(source) || !this.colaNodes.has(target)) continue;
-
-      const link: ColaLink = {
-        source,
-        target,
-      };
-      this.colaLinks.set(arrow, link);
-    }
-
-    const nodes = [...this.colaNodes.values()];
-    const nodeIdToIndex = new Map(nodes.map((n, i) => [n.id, i]));
-
-    const links = Array.from(this.colaLinks.values())
-      .map((l) => {
-        const source = nodeIdToIndex.get(l.source);
-        const target = nodeIdToIndex.get(l.target);
+  private createLinks() {
+    return Array.from(this.sourceElements)
+      .filter((element): element is FolkArrow => element instanceof FolkArrow)
+      .map((arrow) => {
+        this.arrows.add(arrow);
+        const source = this.nodes.get(arrow.sourceElement as FolkShape);
+        const target = this.nodes.get(arrow.targetElement as FolkShape);
         return source !== undefined && target !== undefined ? { source, target } : null;
       })
-      .filter((l): l is { source: number; target: number } => l !== null);
-
-    this.graphSim.nodes(nodes).links(links).linkDistance(250).avoidOverlaps(true).handleDisconnected(true);
+      .filter((link): link is { source: number; target: number } => link !== null);
   }
 }
