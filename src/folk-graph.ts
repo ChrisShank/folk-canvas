@@ -29,8 +29,9 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
 
   override update(changedProperties: PropertyValues<this>) {
     super.update(changedProperties);
-    // TODO: we're recreating the graph every frame, need to.. not do that...
-    this.createGraph();
+    if (changedProperties.has('sourceElements')) {
+      this.createGraph();
+    }
   }
 
   tick() {
