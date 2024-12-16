@@ -15,7 +15,9 @@
     "@lit/reactive-element": "^2.0.4",
     "leaflet": "^1.9.4",
     "perfect-arrows": "^0.3.7",
-    "perfect-freehand": "^1.2.2"
+    "perfect-freehand": "^1.2.2",
+    "vite-plugin-wasm": "^3.3.0",
+    "webcola": "^3.4.0"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.14",
