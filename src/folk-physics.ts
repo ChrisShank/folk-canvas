@@ -1,8 +1,9 @@
 import { DOMRectTransform } from './common/DOMRectTransform.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
-import * as RAPIER from '@dimforge/rapier2d';
 import { FolkShape } from './folk-shape';
+import RAPIER, { init } from '@dimforge/rapier2d-compat';
+await init();
 
 export class FolkPhysics extends FolkBaseSet {
   static override tagName = 'folk-physics';

@@ -11,12 +11,11 @@
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",
-    "@dimforge/rapier2d": "^0.14.0",
+    "@dimforge/rapier2d-compat": "^0.14.0",
     "@lit/reactive-element": "^2.0.4",
     "leaflet": "^1.9.4",
     "perfect-arrows": "^0.3.7",
-    "perfect-freehand": "^1.2.2",
-    "vite-plugin-wasm": "^3.3.0"
+    "perfect-freehand": "^1.2.2"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.14",
