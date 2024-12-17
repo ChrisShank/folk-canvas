@@ -52,9 +52,12 @@ export class FolkBaseConnection extends FolkElement {
       if (vertex) {
         this.sourceRect = DOMRectReadOnly.fromRect(vertex);
       } else {
-        const [selector, iframeSelector] = parseDeepCSSSelector(this.source);
-        this.#sourceIframeSelector = iframeSelector;
-        this.sourceElement = document.querySelector(selector);
+        const [el] = parseDeepCSSSelector(this.source);
+
+        if (el !== undefined) {
+          this.sourceElement = el[0];
+          this.#sourceIframeSelector = el[1];
+        }
       }
     }
 
@@ -76,9 +79,12 @@ export class FolkBaseConnection extends FolkElement {
       if (vertex) {
         this.targetRect = DOMRectReadOnly.fromRect(vertex);
       } else {
-        const [selector, iframeSelector] = parseDeepCSSSelector(this.target);
-        this.#targetIframeSelector = iframeSelector;
-        this.targetElement = document.querySelector(selector);
+        const [el] = parseDeepCSSSelector(this.target);
+
+        if (el !== undefined) {
+          this.targetElement = el[0];
+          this.#targetIframeSelector = el[1];
+        }
       }
     }
 

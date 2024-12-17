@@ -233,6 +233,18 @@ export class FolkObserver {
   }
 }
 
-export function parseDeepCSSSelector(selector: string): string[] {
-  return selector.split('>>>').map((s) => s.trim());
+const regex = /(.*iframe.*)\s+(.*)/;
+
+export function parseDeepCSSSelector(selectorList: string): [Element, string | undefined][] {
+  const array: [Element, string | undefined][] = [];
+
+  for (const selector of selectorList.split(/,(?![^()]*\))/g)) {
+    const [, elementSelector, iframeSelector] = regex.exec(selector) || [undefined, selector, undefined];
+
+    document.querySelectorAll(elementSelector).forEach((el) => {
+      array.push([el, iframeSelector]);
+    });
+  }
+
+  return array;
 }
