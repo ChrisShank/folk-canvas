@@ -23,7 +23,7 @@
         border-radius: 2px;
       }
 
-      .key-helper {
+      key-helper {
         position: fixed;
         top: 20px;
         right: 20px;
@@ -36,14 +36,22 @@
         display: flex;
         flex-direction: column;
         gap: 5px;
-      }
 
-      .key-number {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 2px 8px;
-        border-radius: 3px;
-        margin-right: 10px;
+        button {
+          all: unset;
+
+          &[active] key-number {
+            background: rgba(255, 255, 255, 0.6);
+          }
+
+          key-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-right: 10px;
+          }
+        }
       }
 
       p {
@@ -57,17 +65,17 @@
     </style>
   </head>
   <body>
-    <div class="key-helper">
-      <div><span class="key-number">1</span> Smoke</div>
-      <div><span class="key-number">2</span> Water</div>
-      <div><span class="key-number">3</span> Lava</div>
-      <div><span class="key-number">4</span> Sand</div>
-      <div><span class="key-number">5</span> Plant</div>
-      <div><span class="key-number">6</span> Stone</div>
-      <div><span class="key-number">7</span> Wall</div>
-      <div><span class="key-number">8</span> Ice</div>
-      <div><span class="key-number">9</span> Fire</div>
-    </div>
+    <key-helper>
+      <button><key-number>1</key-number> Smoke</button>
+      <button><key-number>2</key-number> Water</button>
+      <button><key-number>3</key-number> Lava</button>
+      <button active><key-number>4</key-number> Sand</button>
+      <button><key-number>5</key-number> Plant</button>
+      <button><key-number>6</key-number> Stone</button>
+      <button><key-number>7</key-number> Wall</button>
+      <button><key-number>8</key-number> Ice</button>
+      <button><key-number>9</key-number> Fire</button>
+    </key-helper>
 
     <folk-sand>
       <p>Sanding</p>
@@ -84,22 +92,9 @@
       import '../src/standalone/folk-shape.ts';
       import '../src/standalone/folk-sand.ts';
 
-      const sandElement = document.querySelector('folk-sand');
-      const keyNumbers = document.querySelectorAll('.key-number');
-
-      // Reset all key styles
-      function resetKeyStyles() {
-        keyNumbers.forEach((key) => {
-          key.style.background = 'rgba(255, 255, 255, 0.2)';
-        });
-      }
-
-      sandElement.onMaterialChange = (materialNumber) => {
-        resetKeyStyles();
-        const activeKey = keyNumbers[materialNumber - 1];
-        if (activeKey) {
-          activeKey.style.background = 'rgba(255, 255, 255, 0.6)';
-        }
+      document.querySelector('folk-sand').onMaterialChange = (materialNumber) => {
+        document.querySelector('key-helper button[active]').removeAttribute('active');
+        document.querySelector(`key-helper button:nth-child(${materialNumber})`).setAttribute('active', '');
       };
     </script>
   </body>
