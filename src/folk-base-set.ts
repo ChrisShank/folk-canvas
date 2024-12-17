@@ -1,7 +1,7 @@
 import { property, state } from '@lit/reactive-element/decorators.js';
 import { ClientRectObserverEntry } from './common/client-rect-observer.ts';
 import { FolkElement } from './common/folk-element.ts';
-import { FolkObserver } from './common/folk-observer.ts';
+import { FolkObserver, parseDeepCSSSelector } from './common/folk-observer.ts';
 import { css, CSSResultGroup, PropertyValues } from '@lit/reactive-element';
 
 const folkObserver = new FolkObserver();
@@ -64,15 +64,16 @@ export class FolkBaseSet extends FolkElement {
 
   #observeSources() {
     const childElements = new Set(this.children);
-    const elements = this.sources ? document.querySelectorAll(this.sources) : [];
-    const sourceElements = new Set(elements).union(childElements);
+    const elements = this.sources ? parseDeepCSSSelector(this.sources) : [];
+    const elementsMap = new Map(elements);
+    const sourceElements = new Set(elements.map((el) => el[0])).union(childElements);
     const elementsToObserve = sourceElements.difference(this.sourceElements);
     const elementsToUnobserve = this.sourceElements.difference(sourceElements);
 
     this.unobserveSources(elementsToUnobserve);
 
     for (const el of elementsToObserve) {
-      folkObserver.observe(el, this.#sourcesCallback);
+      folkObserver.observe(el, this.#sourcesCallback, { iframeSelector: elementsMap.get(el) });
     }
 
     this.sourceElements = sourceElements;
