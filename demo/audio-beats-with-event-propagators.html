@@ -26,18 +26,6 @@
     </style>
   </head>
   <body>
-    <folk-shape x="100" y="100">
-      <folk-metronome bpm="120"></folk-metronome>
-    </folk-shape>
-
-    <folk-shape x="200" y="100">
-      <audio id="kick" src="/Kick_Bouncy.wav" controls></audio>
-    </folk-shape>
-
-    <folk-shape x="200" y="200">
-      <audio id="hat" src="/Hat_Closed.wav" controls></audio>
-    </folk-shape>
-
     <folk-event-propagator
       source="folk-metronome"
       target="#kick"
@@ -52,9 +40,20 @@
       expression="play(): from.beat % 3"
     ></folk-event-propagator>
 
+    <folk-shape x="100" y="100">
+      <folk-metronome bpm="120"></folk-metronome>
+    </folk-shape>
+
+    <folk-shape x="200" y="100">
+      <audio id="kick" src="/Kick_Bouncy.wav" controls></audio>
+    </folk-shape>
+
+    <folk-shape x="200" y="200">
+      <audio id="hat" src="/Hat_Closed.wav" controls></audio>
+    </folk-shape>
+
     <script type="module">
       import '../src/standalone/folk-shape.ts';
-      import '../src/standalone/folk-llm.ts';
       import './src/folk-metronome.ts';
       import '../src/standalone/folk-event-propagator.ts';
     </script>

@@ -8,16 +8,13 @@ const styles = css`
 
   :host {
     display: block;
+    position: relative;
   }
 
   .player {
     background-color: #d52831;
     width: 330px;
     height: 190px;
-    position: absolute;
-    transform: translate(-50%, -50%);
-    left: 50%;
-    top: 50%;
     border-radius: 10px;
     box-shadow: 0 8px 0 0 #be2728;
     margin-top: -4px;
@@ -244,7 +241,7 @@ export class RecordPlayer extends HTMLElement {
           <div class="control"></div>
         </div>
         <button class="btn"></button>
-        <input type="range" class="slider" min="0" max="1" step="0.05" value="0.5" />
+        <input type="range" class="slider" min="0" max="1" step="0.01" value="1" />
       </div>
       <slot></slot>`);
 
@@ -258,6 +255,11 @@ export class RecordPlayer extends HTMLElement {
 
   get volume() {
     return this.#audio.volume;
+  }
+
+  set volume(volume) {
+    this.#audio.volume = volume;
+    this.#volumeInput.valueAsNumber = volume;
   }
 
   #playTimeout: number = -1;

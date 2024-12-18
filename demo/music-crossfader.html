@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beats</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        border: 1px solid black;
+        border-radius: 4px;
+      }
+
+      cross-fader {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template:
+          'track1 track2'
+          'fader fader';
+        row-gap: 20px;
+
+        record-player:nth-child(1) {
+          grid-area: track1;
+        }
+
+        record-player:nth-child(2) {
+          grid-area: track2;
+          scale: -1 1;
+        }
+
+        input {
+          grid-area: fader;
+          justify-self: center;
+          margin: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape x="200" y="100">
+      <cross-fader>
+        <record-player id="track1">
+          <audio src="/Feather.mov"></audio>
+        </record-player>
+        <record-player id="track2">
+          <audio src="/Comanche (Heyoka Remix).wav"></audio>
+        </record-player>
+        <!-- Can also use any audio or video element -->
+        <!-- <audio id="track1" src="/Feather.mov" controls></audio>
+        <audio id="track2" src="/Comanche (Heyoka Remix).wav" controls></audio> -->
+        <input id="fader" type="range" min="-1" max="1" step="0.001" />
+      </cross-fader>
+    </folk-shape>
+
+    <folk-event-propagator
+      source="#fader"
+      target="#track1"
+      trigger="input"
+      expression="volume: Math.sqrt((1 - from.valueAsNumber) / 2)"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="#fader"
+      target="#track2"
+      trigger="input"
+      expression="volume: Math.sqrt((1 + from.valueAsNumber) / 2)"
+    ></folk-event-propagator>
+
+    <script type="module">
+      import './src/record-player.ts';
+      import '../src/standalone/folk-shape.ts';
+      import '../src/standalone/folk-event-propagator.ts';
+    </script>
+  </body>
+</html>
