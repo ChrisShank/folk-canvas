@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wiggly</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        background-color: black;
+        border-radius: 10%;
+      }
+
+      folk-rope[target='#box2'] {
+        --folk-rope-color: rebeccapurple;
+      }
+
+      button {
+        margin: 1rem;
+        background-color: black;
+        font-size: 2rem;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="300" y="105" width="30" height="30"></folk-shape>
+    <folk-shape id="box3" x="200" y="150" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="400" y="100" width="30" height="30"></folk-shape>
+
+    <folk-rope source="#box1" target="#box2"></folk-rope>
+    <folk-rope source="#box1" target="#box3"></folk-rope>
+    <folk-rope source="#box1" target="#box4"></folk-rope>
+
+    <script type="module">
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-rope.ts';
+    </script>
+  </body>
+</html>

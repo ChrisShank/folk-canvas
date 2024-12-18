@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proximity Maps</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-map,
+      geo-wiki {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      geo-wiki {
+        display: block;
+        background: white;
+        border: solid 2px black;
+        border-radius: 5px;
+
+        ul {
+          height: 100%;
+          overflow: auto;
+          margin: 0;
+          scroll-padding-block-end: 1rem;
+        }
+      }
+
+      folk-cluster {
+        display: block;
+        position: absolute;
+        inset: 0 0 0 0;
+      }
+
+      folk-weather {
+        display: block;
+        background: white;
+        border: solid 2px black;
+        border-radius: 5px;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-proximity>
+      <folk-shape id="g1" x="25" y="100" width="400" height="200">
+        <folk-map coordinates="40.76845173617708, -73.97983074188234" zoom="15"></folk-map>
+      </folk-shape>
+
+      <folk-shape id="g2" x="50" y="600" width="400" height="250">
+        <folk-map coordinates="51.50404120260676, -0.14007568359375003" zoom="13"></folk-map>
+      </folk-shape>
+
+      <folk-shape id="g3" x="475" y="500" width="500" height="300">
+        <geo-wiki></geo-wiki>
+      </folk-shape>
+
+      <folk-shape id="g4" x="450" y="100">
+        <folk-weather></folk-weather>
+      </folk-shape>
+    </folk-proximity>
+
+    <script type="module">
+      import { GeoWiki } from './src/geo-wiki.ts';
+      import { FolkWeather } from './src/folk-weather.ts';
+      import '../../lib/standalone/folk-shape.ts';
+      import { FolkMap } from '../../lib/standalone/folk-map.ts';
+      import { FolkCluster } from '../../lib/standalone/folk-proximity.ts';
+
+      FolkCluster.registerElement({
+        constructor: FolkMap,
+        events: {
+          recenter: (e) => ({
+            lat: e.target.coordinates.lat,
+            lng: e.target.coordinates.lng,
+          }),
+        },
+        onAdd: (element) => ({
+          lat: element.coordinates.lat,
+          lng: element.coordinates.lng,
+        }),
+      });
+
+      FolkCluster.registerElement({
+        constructor: FolkWeather,
+        onUpdate(element, data, changes) {
+          const lat = data.get('lat');
+          const lng = data.get('lng');
+
+          if (lat && lng) {
+            element.coordinates = [lat, lng];
+          }
+        },
+      });
+
+      FolkCluster.registerElement({
+        constructor: GeoWiki,
+        onUpdate(element, data, changes) {
+          const lat = data.get('lat');
+          const lng = data.get('lng');
+
+          if (lat && lng) {
+            element.coordinates = [lat, lng];
+          }
+        },
+      });
+    </script>
+  </body>
+</html>

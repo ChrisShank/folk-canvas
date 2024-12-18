@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      textarea {
+        resize: none;
+        field-sizing: content;
+      }
+
+      body:not([rope-mode]) folk-event-propagator {
+        display: none;
+      }
+
+      body > label {
+        display: block;
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body rope-mode>
+    <label>Rope Mode: <input type="checkbox" checked /></label>
+
+    <folk-shape x="275" y="25">
+      <textarea>https://folk-canvas.github.io/folk-canvas/</textarea>
+    </folk-shape>
+
+    <folk-shape x="300" y="75">
+      <label>Radius: <input type="range" min="0" max="0.5" step="0.05" value="0" /></label>
+    </folk-shape>
+
+    <folk-shape x="325" y="175">
+      <label>Color: <input type="color" /></label>
+    </folk-shape>
+
+    <folk-shape x="50" y="50">
+      <sl-qr-code size="200"></sl-qr-code>
+    </folk-shape>
+
+    <folk-event-propagator
+      source="textarea"
+      target="sl-qr-code"
+      trigger="input"
+      expression="value: from.value"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="input[type='range']"
+      target="sl-qr-code"
+      trigger="input"
+      expression="radius: from.value"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="input[type='color']"
+      target="sl-qr-code"
+      trigger="input"
+      expression="fill: from.value"
+    ></folk-event-propagator>
+
+    <script type="module">
+      import 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.18.0/cdn/components/qr-code/qr-code.js';
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-event-propagator.ts';
+
+      const ropeMode = document.querySelector('input[type="checkbox"]');
+
+      ropeMode.addEventListener('input', () => {
+        document.body.toggleAttribute('rope-mode');
+      });
+    </script>
+  </body>
+</html>

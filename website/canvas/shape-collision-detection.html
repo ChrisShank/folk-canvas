@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shapes - Collision</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        border: 2px solid black;
+      }
+
+      p {
+        border: 1px solid grey;
+        max-width: 30ch;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+      magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </p>
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+      magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </p>
+    <folk-shape x="400" y="100" width="50" height="50"></folk-shape>
+    <folk-shape x="400" y="150" width="50" height="50"></folk-shape>
+    <folk-shape x="400" y="200" width="50" height="50"></folk-shape>
+    <folk-shape x="400" y="275" width="50" height="50"></folk-shape>
+
+    <script type="module">
+      import { FolkShape } from '../../lib/standalone/folk-shape.ts';
+      import { aabbHitDetection } from '../../lib/common/collision.ts';
+
+      const shapes = Array.from(document.querySelectorAll('folk-shape, p'));
+
+      const getBoundingBox = (el) => (el instanceof FolkShape ? el.getTransformDOMRect() : el.getBoundingClientRect());
+
+      function handleCollision(e) {
+        for (const shape of shapes) {
+          if (shape === e.target) continue;
+
+          const hit = aabbHitDetection(getBoundingBox(e.target), getBoundingBox(shape));
+
+          if (hit === null) continue;
+
+          if (shape instanceof FolkShape) {
+            if (hit.delta.x !== 0) shape.x += hit.delta.x;
+            if (hit.delta.y !== 0) shape.y += hit.delta.y;
+          } else {
+            if (hit.delta.x !== 0) e.preventX();
+            if (hit.delta.y !== 0) e.preventY();
+          }
+        }
+      }
+
+      document.addEventListener('transform', handleCollision);
+    </script>
+  </body>
+</html>

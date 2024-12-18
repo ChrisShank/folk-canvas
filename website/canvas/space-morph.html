@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Folk Space Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+
+      folk-space {
+        width: 100%;
+        height: 100%;
+      }
+
+      folk-shape {
+        background: rgb(134, 37, 37);
+        border: 1px solid rgba(0, 0, 0, 0.5);
+      }
+
+      [slot='front'] folk-shape {
+        background: rgb(187, 178, 178);
+      }
+    </style>
+  </head>
+  <body>
+    <folk-space id="space">
+      <div slot="front">
+        <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+        <folk-shape x="200" y="200" width="75" height="75" rotation="90"></folk-shape>
+        <folk-shape x="50" y="250" width="25" height="25" rotation="180"></folk-shape>
+        <folk-shape x="350" y="50" width="100" height="100" rotation="270"></folk-shape>
+        <folk-shape x="500" y="500" width="150" height="150" rotation="360"></folk-shape>
+        <folk-shape x="600" y="600" width="200" height="200" rotation="450"></folk-shape>
+        <folk-shape x="700" y="700" width="250" height="250" rotation="540"></folk-shape>
+      </div>
+      <div slot="back">
+        <folk-shape x="150" y="150" width="50" height="50" rotation="45"></folk-shape>
+        <folk-shape x="300" y="400" width="150" height="50" rotation="45"></folk-shape>
+        <folk-shape x="250" y="350" width="100" height="100" rotation="135"></folk-shape>
+        <folk-shape x="400" y="200" width="75" height="75" rotation="225"></folk-shape>
+        <folk-shape x="200" y="450" width="50" height="50" rotation="315"></folk-shape>
+        <folk-shape x="600" y="600" width="200" height="200" rotation="405"></folk-shape>
+        <folk-shape x="700" y="700" width="250" height="250" rotation="495"></folk-shape>
+      </div>
+    </folk-space>
+
+    <script type="module">
+      import '../../lib/standalone/folk-space.ts';
+      import '../../lib/standalone/folk-shape.ts';
+
+      document.addEventListener('click', () => window.space.transition());
+    </script>
+  </body>
+</html>

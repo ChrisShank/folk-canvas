@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beats</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        border: 1px solid black;
+        border-radius: 4px;
+      }
+
+      folk-metronome {
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-event-propagator
+      source="folk-metronome"
+      target="#kick"
+      trigger="beat"
+      expression="play(): from.beat === 1"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="folk-metronome"
+      target="#hat"
+      trigger="beat"
+      expression="play(): from.beat % 3"
+    ></folk-event-propagator>
+
+    <folk-shape x="100" y="100">
+      <folk-metronome bpm="120"></folk-metronome>
+    </folk-shape>
+
+    <folk-shape x="200" y="100">
+      <audio id="kick" src="/Kick_Bouncy.wav" controls></audio>
+    </folk-shape>
+
+    <folk-shape x="200" y="200">
+      <audio id="hat" src="/Hat_Closed.wav" controls></audio>
+    </folk-shape>
+
+    <script type="module">
+      import './src/folk-metronome.ts';
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-event-propagator.ts';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Physics</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        inset: 0;
+        overscroll-behavior: none;
+      }
+
+      folk-shape {
+        position: absolute;
+        background-color: rgba(100, 100, 100, 0.5);
+        border: 2px solid rgba(0, 0, 0, 0.5);
+      }
+
+      folk-rope {
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-graph>
+      <folk-shape id="shape1" x="250" y="50" width="120" height="30" rotation="30"></folk-shape>
+      <folk-shape id="shape2" x="450" y="350" width="40" height="120" rotation="45"></folk-shape>
+      <folk-shape id="shape3" x="150" y="150" width="70" height="70" rotation="15"></folk-shape>
+      <folk-shape id="shape4" x="350" y="300" width="90" height="45" rotation="-20"></folk-shape>
+      <folk-shape id="shape5" x="550" y="200" width="35" height="85" rotation="60"></folk-shape>
+      <folk-shape id="shape6" x="180" y="250" width="65" height="55" rotation="-40"></folk-shape>
+      <folk-shape id="shape7" x="420" y="150" width="110" height="25" rotation="10"></folk-shape>
+      <folk-shape id="shape8" x="280" y="380" width="75" height="95" rotation="-50"></folk-shape>
+      <folk-rope source="#shape1" target="#shape2"></folk-rope>
+      <folk-rope source="#shape1" target="#shape3"></folk-rope>
+      <folk-rope source="#shape2" target="#shape3"></folk-rope>
+      <folk-rope source="#shape3" target="#shape4"></folk-rope>
+      <folk-rope source="#shape4" target="#shape8"></folk-rope>
+      <folk-rope source="#shape5" target="#shape8"></folk-rope>
+    </folk-graph>
+
+    <script type="module">
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-arrow.ts';
+      import '../../lib/standalone/folk-rope.ts';
+      import '../../lib/standalone/folk-graph.ts';
+    </script>
+  </body>
+</html>

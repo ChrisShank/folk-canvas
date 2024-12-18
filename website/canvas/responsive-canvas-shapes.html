@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semantic Zoom</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        font-family: monospace;
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        margin: 1rem;
+      }
+
+      folk-shape {
+        background: black;
+        border-radius: 5px;
+        color: white;
+        padding: 0.5rem;
+
+        section {
+          container: sec / inline-size;
+          height: 100%;
+          width: 100%;
+
+          h2 {
+            margin: 0;
+          }
+
+          p {
+            font-size: 0.75rem;
+            transition: opacity 0.3s ease-out;
+          }
+
+          @container sec (max-width: 20rem) {
+            p {
+              font-size: clamp(0.5rem, 5cqi, 0.75rem);
+            }
+          }
+
+          @container sec (max-width: 10rem) {
+            p {
+              opacity: 0;
+            }
+          }
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape id="box1" x="100" y="100" width="300" height="200">
+      <section>
+        <h2>Lorem ispum</h2>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+          est laborum.
+        </p>
+      </section>
+    </folk-shape>
+
+    <!-- <folk-shape id="box2" x="400" y="400">
+      <h2>Dolor sit amet</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat.
+      </p>
+    </folk-shape>
+
+    <folk-shape id="box3" x="150" y="600">
+      <h2>Consectetur elit</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+        magna aliqua.
+      </p>
+    </folk-shape> -->
+
+    <script type="module">
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-arrow.ts';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spreadsheet Propagator</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-map {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      folk-event-propagator {
+        z-index: calc(infinity);
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape x="600" y="50" width="300" height="300">
+      <folk-map id="map1" zoom="10" coordinates="48.86,2.35"></folk-map>
+    </folk-shape>
+
+    <folk-shape x="600" y="400" width="300" height="300">
+      <folk-map id="map2" zoom="10"></folk-map>
+    </folk-shape>
+
+    <folk-shape x="25" y="300" width="500">
+      <folk-spreadsheet>
+        <folk-cell row="1" column="A" expression="0"></folk-cell>
+        <folk-cell row="1" column="B"></folk-cell>
+        <folk-cell row="1" column="C"></folk-cell>
+        <folk-cell row="1" column="D"></folk-cell>
+        <folk-cell row="1" column="E"></folk-cell>
+        <folk-cell row="1" column="F"></folk-cell>
+        <folk-cell row="1" column="G"></folk-cell>
+        <folk-cell row="1" column="H"></folk-cell>
+        <folk-cell row="1" column="I"></folk-cell>
+        <folk-cell row="1" column="J"></folk-cell>
+        <folk-cell row="2" column="A" expression="0"></folk-cell>
+        <folk-cell row="2" column="B"></folk-cell>
+        <folk-cell row="2" column="C"></folk-cell>
+        <folk-cell row="2" column="D"></folk-cell>
+        <folk-cell row="2" column="E"></folk-cell>
+        <folk-cell row="2" column="F"></folk-cell>
+        <folk-cell row="2" column="G"></folk-cell>
+        <folk-cell row="2" column="H"></folk-cell>
+        <folk-cell row="2" column="I"></folk-cell>
+        <folk-cell row="2" column="J"></folk-cell>
+        <folk-cell row="3" column="A" expression="[$A1 + 0.25, $A2 - 0.25]"></folk-cell>
+        <folk-cell row="3" column="B"></folk-cell>
+        <folk-cell row="3" column="C"></folk-cell>
+        <folk-cell row="3" column="D"></folk-cell>
+        <folk-cell row="3" column="E"></folk-cell>
+        <folk-cell row="3" column="F"></folk-cell>
+        <folk-cell row="3" column="G"></folk-cell>
+        <folk-cell row="3" column="H"></folk-cell>
+        <folk-cell row="3" column="I"></folk-cell>
+        <folk-cell row="3" column="J"></folk-cell>
+        <folk-cell row="4" column="A"></folk-cell>
+        <folk-cell row="4" column="B"></folk-cell>
+        <folk-cell row="4" column="C"></folk-cell>
+        <folk-cell row="4" column="D"></folk-cell>
+        <folk-cell row="4" column="E"></folk-cell>
+        <folk-cell row="4" column="F"></folk-cell>
+        <folk-cell row="4" column="G"></folk-cell>
+        <folk-cell row="4" column="H"></folk-cell>
+        <folk-cell row="4" column="I"></folk-cell>
+        <folk-cell row="4" column="J"></folk-cell>
+        <folk-cell row="5" column="A"></folk-cell>
+        <folk-cell row="5" column="B"></folk-cell>
+        <folk-cell row="5" column="C"></folk-cell>
+        <folk-cell row="5" column="D"></folk-cell>
+        <folk-cell row="5" column="E"></folk-cell>
+        <folk-cell row="5" column="F"></folk-cell>
+        <folk-cell row="5" column="G"></folk-cell>
+        <folk-cell row="5" column="H"></folk-cell>
+        <folk-cell row="5" column="I"></folk-cell>
+        <folk-cell row="5" column="J"></folk-cell>
+        <folk-cell row="6" column="A"></folk-cell>
+        <folk-cell row="6" column="B"></folk-cell>
+        <folk-cell row="6" column="C"></folk-cell>
+        <folk-cell row="6" column="D"></folk-cell>
+        <folk-cell row="6" column="E"></folk-cell>
+        <folk-cell row="6" column="F"></folk-cell>
+        <folk-cell row="6" column="G"></folk-cell>
+        <folk-cell row="6" column="H"></folk-cell>
+        <folk-cell row="6" column="I"></folk-cell>
+        <folk-cell row="6" column="J"></folk-cell>
+        <folk-cell row="7" column="A"></folk-cell>
+        <folk-cell row="7" column="B"></folk-cell>
+        <folk-cell row="7" column="C"></folk-cell>
+        <folk-cell row="7" column="D"></folk-cell>
+        <folk-cell row="7" column="E"></folk-cell>
+        <folk-cell row="7" column="F"></folk-cell>
+        <folk-cell row="7" column="G"></folk-cell>
+        <folk-cell row="7" column="H"></folk-cell>
+        <folk-cell row="7" column="I"></folk-cell>
+        <folk-cell row="7" column="J"></folk-cell>
+        <folk-cell row="8" column="A"></folk-cell>
+        <folk-cell row="8" column="B"></folk-cell>
+        <folk-cell row="8" column="C"></folk-cell>
+        <folk-cell row="8" column="D"></folk-cell>
+        <folk-cell row="8" column="E"></folk-cell>
+        <folk-cell row="8" column="F"></folk-cell>
+        <folk-cell row="8" column="G"></folk-cell>
+        <folk-cell row="8" column="H"></folk-cell>
+        <folk-cell row="8" column="I"></folk-cell>
+        <folk-cell row="8" column="J"></folk-cell>
+        <folk-cell row="9" column="A"></folk-cell>
+        <folk-cell row="9" column="B"></folk-cell>
+        <folk-cell row="9" column="C"></folk-cell>
+        <folk-cell row="9" column="D"></folk-cell>
+        <folk-cell row="9" column="E"></folk-cell>
+        <folk-cell row="9" column="F"></folk-cell>
+        <folk-cell row="9" column="G"></folk-cell>
+        <folk-cell row="9" column="H"></folk-cell>
+        <folk-cell row="9" column="I"></folk-cell>
+        <folk-cell row="9" column="J"></folk-cell>
+        <folk-cell row="10" column="A"></folk-cell>
+        <folk-cell row="10" column="B"></folk-cell>
+        <folk-cell row="10" column="C"></folk-cell>
+        <folk-cell row="10" column="D"></folk-cell>
+        <folk-cell row="10" column="E"></folk-cell>
+        <folk-cell row="10" column="F"></folk-cell>
+        <folk-cell row="10" column="G"></folk-cell>
+        <folk-cell row="10" column="H"></folk-cell>
+        <folk-cell row="10" column="I"></folk-cell>
+        <folk-cell row="10" column="J"></folk-cell>
+      </folk-spreadsheet>
+    </folk-shape>
+
+    <folk-event-propagator
+      source="#map1"
+      target="folk-cell[column='A'][row='1']"
+      trigger="recenter"
+      expression="expression: from.coordinates.lat"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="#map1"
+      target="folk-cell[column='A'][row='2']"
+      trigger="recenter"
+      expression="expression: from.coordinates.lng"
+    ></folk-event-propagator>
+
+    <folk-event-propagator
+      source="folk-cell[column='A'][row='3']"
+      target="#map2"
+      trigger="propagate"
+      expression="coordinates: from.value"
+    ></folk-event-propagator>
+
+    <script type="module">
+      import '../../lib/standalone/folk-map.ts';
+      import '../../lib/standalone/folk-shape.ts';
+      import '../../lib/standalone/folk-event-propagator.ts';
+      import '../../lib/standalone/folk-spreadsheet.ts';
+    </script>
+  </body>
+</html>

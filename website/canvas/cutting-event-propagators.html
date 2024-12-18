@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Propagator w/ tools</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+      }
+
+      folk-shape {
+        background-color: black;
+        border-radius: 5px;
+        color: white;
+        padding: 0px 5px;
+        z-index: 10;
+      }
+
+      button {
+        font-size: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="cut">✂️</button>
+    <button id="mend">🪢</button>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
+    <folk-event-propagator
+      source="#box1"
+      target="#box2"
+      trigger="click"
+      expression="textContent: to.textContent + '!'"
+    ></folk-event-propagator>
+
+    <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
+    <folk-event-propagator
+      source="#box3"
+      target="#box4"
+      trigger="transform"
+      expression="y: from.x, 
+rotation: from.x/10"
+    ></folk-event-propagator>
+
+    <script type="module">
+      import '../../lib/standalone/folk-shape.ts';
+      import { FolkEventPropagator } from '../../lib/standalone/folk-event-propagator.ts';
+
+      class CutTool {
+        entry() {
+          document.addEventListener('pointerdown', this, { capture: true });
+        }
+        exit() {
+          document.removeEventListener('pointerdown', this, { capture: true });
+        }
+
+        handleEvent(event) {
+          // Stop the default focus and pointer capture of geometry elements
+          event.preventDefault();
+          event.stopPropagation();
+
+          switch (event.type) {
+            case 'pointerdown': {
+              document.addEventListener('pointermove', this);
+              document.addEventListener('pointerup', this);
+              return;
+            }
+            case 'pointermove': {
+              if (event.target instanceof FolkEventPropagator) {
+                const percent = event.target.getPercentageFromPoint({ x: event.clientX, y: event.clientY });
+                event.target.cut(percent);
+              }
+              return;
+            }
+            case 'pointerup': {
+              document.removeEventListener('pointermove', this);
+              document.removeEventListener('pointerup', this);
+              return;
+            }
+          }
+        }
+      }
+
+      class MendTool {
+        entry() {
+          document.addEventListener('pointerdown', this, { capture: true });
+        }
+        exit() {
+          document.removeEventListener('pointerdown', this, { capture: true });
+        }
+
+        handleEvent(event) {
+          // Stop the default focus and pointer capture of geometry elements
+          event.preventDefault();
+          event.stopPropagation();
+
+          switch (event.type) {
+            case 'pointerdown': {
+              document.addEventListener('pointermove', this, { capture: true });
+              document.addEventListener('pointerup', this, { capture: true });
+              return;
+            }
+            case 'pointermove': {
+              if (event.target instanceof FolkEventPropagator) {
+                event.target.mend();
+              }
+              return;
+            }
+            case 'pointerup': {
+              document.removeEventListener('pointermove', this, { capture: true });
+              document.removeEventListener('pointerup', this, { capture: true });
+              return;
+            }
+          }
+        }
+      }
+
+      const tools = new Map();
+
+      tools.set(window.cut, new CutTool());
+
+      tools.set(window.mend, new MendTool());
+
+      let activeTool = null;
+
+      document.addEventListener('click', (e) => {
+        const tool = tools.get(event.target);
+
+        if (tool === undefined) return;
+
+        activeTool?.exit();
+
+        if (tool === activeTool) {
+          activeTool === null;
+        } else {
+          activeTool = tool;
+          activeTool.entry();
+        }
+      });
+    </script>
+  </body>
+</html>

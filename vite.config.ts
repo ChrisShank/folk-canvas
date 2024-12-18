@@ -2,18 +2,18 @@ import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
-const websiteDir = resolve(__dirname, 'website');
+const canvasWebsiteDir = resolve(__dirname, 'website/canvas');
 
-function getFiles() {
-  return readdirSync(websiteDir).filter((file) => file.endsWith('.html'));
+function getCanvasFiles() {
+  return readdirSync(canvasWebsiteDir).filter((file) => file.endsWith('.html'));
 }
 
 const linkGenerator = (): Plugin => {
   return {
     name: 'link-generator',
     transformIndexHtml(html: string, ctx: IndexHtmlTransformContext) {
-      if (!ctx.filename.endsWith('index.html')) return;
-      const files = getFiles();
+      if (!ctx.filename.endsWith('canvas/index.html')) return;
+      const files = getCanvasFiles();
       // First, handle ungrouped files
       const ungroupedFiles = files.filter(
         (file) => !file.includes('index') && !file.startsWith('_') && !file.match(/^\[([^\]]+)\]/)
@@ -69,10 +69,13 @@ export default defineConfig({
   build: {
     target: 'esnext',
     rollupOptions: {
-      input: getFiles().reduce((acc, file) => {
-        acc[file.replace('.html', '')] = resolve(websiteDir, file);
-        return acc;
-      }, {} as Record<string, string>),
+      input: {
+        index: resolve(__dirname, 'website/index.html'),
+        ...getCanvasFiles().reduce((acc, file) => {
+          acc[`canvas/${file.replace('.html', '')}`] = resolve(canvasWebsiteDir, file);
+          return acc;
+        }, {} as Record<string, string>),
+      },
     },
     modulePreload: {
       polyfill: false,
