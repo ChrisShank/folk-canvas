@@ -3,7 +3,7 @@ import { ResizeObserverManager } from '@lib/resize-observer';
 import { Point } from '@lib/types';
 import { DOMRectTransform, DOMRectTransformReadonly } from '@lib/DOMRectTransform';
 import { Vector } from '@lib/Vector';
-import { getResizeCursorUrl, getRotateCursorUrl } from '@lib/cursors';
+import { getResizeCursorUrl, getRotateCursorUrl } from '@labs/utils/cursors';
 import { TransformEvent } from '@lib/TransformEvent';
 
 const resizeObserver = new ResizeObserverManager();

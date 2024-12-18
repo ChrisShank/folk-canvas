@@ -1,8 +1,10 @@
 import { FolkShape } from '../labs/folk-shape';
-import { ClientRectObserver, ClientRectObserverEntry } from './client-rect-observer';
+import {
+  ClientRectObserver,
+  ClientRectObserverEntry,
+  type ClientRectObserverEntryCallback,
+} from './client-rect-observer';
 import { TransformEvent } from './TransformEvent';
-
-export type ClientRectObserverEntryCallback = (entry: ClientRectObserverEntry) => void;
 
 export type FolkObserverOptions = {
   iframeSelector?: string;

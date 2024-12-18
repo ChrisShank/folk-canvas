@@ -16,8 +16,11 @@
     "types": ["@webgpu/types", "@types/node", "bun-types"],
     "baseUrl": ".",
     "paths": {
+      "@lib": ["lib"],
       "@lib/*": ["lib/*"],
+      "@labs": ["labs"],
       "@labs/*": ["labs/*"],
+      "@propagators": ["propagators"],
       "@propagators/*": ["propagators/*"]
     }
   },
