@@ -1,8 +1,8 @@
 import type { PropagatorFunction, PropagatorParser } from './types.ts';
 
 interface PropagatorOptions {
-  source?: Element | null;
-  target?: Element | null;
+  source?: EventTarget | null;
+  target?: EventTarget | null;
   sourceEvent?: string | null;
   targetEvent?: string | null;
   sourceHandler?: PropagatorFunction | string | null;
@@ -16,9 +16,9 @@ interface PropagatorOptions {
  * A propagator takes a source and target element and listens for events on both.
  * When an event is detected on one, it will execute a handler and update the other element.
  */
-export class BiPropagator {
-  #source: Element | null = null;
-  #target: Element | null = null;
+export class BidirectionalPropagator {
+  #source: EventTarget | null = null;
+  #target: EventTarget | null = null;
   #sourceEventName: string | null = null;
   #targetEventName: string | null = null;
   #sourceHandler: PropagatorFunction | null = null;
@@ -62,11 +62,11 @@ export class BiPropagator {
    * The source element that emits events.
    * Setting a new source will automatically update event listeners.
    */
-  get source(): Element | null {
+  get source() {
     return this.#source;
   }
 
-  set source(element: Element | null) {
+  set source(element) {
     // Remove listener from old source
     if (this.#source && this.#sourceEventName) {
       this.#source.removeEventListener(this.#sourceEventName, this.#handleSourceEvent);
@@ -84,11 +84,11 @@ export class BiPropagator {
    * The target element that receives propagated changes.
    * Setting a new target will automatically update event listeners.
    */
-  get target(): Element | null {
+  get target() {
     return this.#target;
   }
 
-  set target(element: Element | null) {
+  set target(element) {
     // Remove listener from old target
     if (this.#target && this.#targetEventName) {
       this.#target.removeEventListener(this.#targetEventName, this.#handleTargetEvent);
