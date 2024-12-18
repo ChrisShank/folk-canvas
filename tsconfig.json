@@ -21,5 +21,5 @@
       "@propagators/*": ["propagators/*"]
     }
   },
-  "include": ["lib/**/*.ts", "website/**/*.ts", "vite.config.ts"]
+  "include": ["**/*.ts", "vite.config.ts"]
 }

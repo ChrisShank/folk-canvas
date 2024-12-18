@@ -1,7 +1,7 @@
 import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkRope } from './folk-rope.ts';
 import { property } from '@lit/reactive-element/decorators.js';
-import { Propagator } from './common/Propagator.ts';
+import { Propagator } from '@propagators/index.ts';
 
 export class FolkEventPropagator extends FolkRope {
   static override tagName = 'folk-event-propagator';
