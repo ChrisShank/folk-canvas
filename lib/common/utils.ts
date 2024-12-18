@@ -1,4 +1,4 @@
-// Adopted from: https://github.com/pshihn/bezier-points/blob/master/src/index.ts
+// Adopted from: https://github.com/pshihn/bezier-points/blob/master/lib/index.ts
 
 import type { Point } from './types.ts';
 import { Vector } from './Vector.ts';

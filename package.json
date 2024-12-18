@@ -6,8 +6,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "tsc --noEmit && vite build && vite preview",
+    "test": "bun test",
     "types": "tsc --noEmit",
-    "bench": "bun run src/__tests__/bench.ts"
+    "bench": "bun run lib/__tests__/bench.ts"
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",

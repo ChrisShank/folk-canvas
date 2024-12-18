@@ -14,7 +14,7 @@ if (typeof customElements !== 'undefined') {
   console.log('importing folk-shape');
   // this also won't work
   // maybe just simply build and bundle it all up, this is probl easiest.
-  // import('../src/folk-shape').then((m) => m.FolkShape.define());
+  // import('../lib/folk-shape').then((m) => m.FolkShape.define());
 } else {
   console.warn('CUSTOM ELEMENTS NOT DEFINED');
 }

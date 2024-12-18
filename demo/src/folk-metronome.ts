@@ -1,4 +1,4 @@
-import { FolkElement } from '../../src/common/folk-element';
+import { FolkElement } from '../../lib/common/folk-element';
 
 declare global {
   interface HTMLElementTagNameMap {
