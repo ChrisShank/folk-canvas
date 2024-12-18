@@ -2,9 +2,9 @@ import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
 import { Layout } from 'webcola';
 import { FolkShape } from './folk-shape.ts';
-import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
+import { AnimationFrameController, AnimationFrameControllerHost } from '@lib/animation-frame-controller.ts';
 import { FolkBaseConnection } from './folk-base-connection';
-import { TransformIntegrator } from './common/EffectIntegrator.ts';
+import { TransformIntegrator } from '@lib/EffectIntegrator.ts';
 
 export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHost {
   static override tagName = 'folk-graph';

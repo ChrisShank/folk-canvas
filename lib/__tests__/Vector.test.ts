@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'bun:test';
-import { Vector } from '../common/Vector';
+import { Vector } from '../Vector';
 
 describe('Vector', () => {
   describe('basic operations', () => {

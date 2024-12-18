@@ -1,5 +1,5 @@
 // Ported from https://github.com/bitu467/record-player
-import { css, html } from '@lib/common/tags';
+import { css, html } from '@lib/tags';
 
 const styles = css`
   ::slotted(*) {

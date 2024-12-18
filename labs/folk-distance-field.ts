@@ -1,7 +1,7 @@
-import { DOMRectTransform } from './common/DOMRectTransform.ts';
-import { Point } from './common/types.ts';
-import { glsl } from './common/tags.ts';
-import { WebGLUtils } from './common/webgl.ts';
+import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
+import { Point } from '@lib/types.ts';
+import { glsl } from '@lib/tags.ts';
+import { WebGLUtils } from '@lib/webgl.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
 

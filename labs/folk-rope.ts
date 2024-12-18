@@ -1,11 +1,11 @@
 // This is a rewrite of https://github.com/guerrillacontra/html5-es6-physics-rope
 
-import { Vector } from './common/Vector.ts';
-import type { Point } from './common/types.ts';
-import { DOMRectTransform } from './common/DOMRectTransform.ts';
+import { Vector } from '@lib/Vector.ts';
+import type { Point } from '@lib/types.ts';
+import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
 import { FolkBaseConnection } from './folk-base-connection.ts';
 import { css, PropertyValues } from '@lit/reactive-element';
-import { AnimationFrameController, AnimationFrameControllerHost } from './common/animation-frame-controller.ts';
+import { AnimationFrameController, AnimationFrameControllerHost } from '@lib/animation-frame-controller.ts';
 import { property } from '@lit/reactive-element/decorators.js';
 
 // Each rope part is one of these uses a high precision variant of Störmer–Verlet integration to keep the simulation consistent otherwise it would "explode"!

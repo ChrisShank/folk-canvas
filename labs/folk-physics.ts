@@ -1,9 +1,9 @@
-import { DOMRectTransform } from './common/DOMRectTransform.ts';
+import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { PropertyValues } from '@lit/reactive-element';
 import { FolkShape } from './folk-shape';
 import RAPIER, { init } from '@dimforge/rapier2d-compat';
-import { TransformIntegrator } from './common/EffectIntegrator.ts';
+import { TransformIntegrator } from '@lib/EffectIntegrator.ts';
 await init();
 
 export class FolkPhysics extends FolkBaseSet {

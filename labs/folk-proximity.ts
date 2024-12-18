@@ -1,5 +1,5 @@
-import { aabbIntersection } from './common/collision.ts';
-import { TransformEvent } from './common/TransformEvent.ts';
+import { aabbIntersection } from '@lib/collision.ts';
+import { TransformEvent } from '@lib/TransformEvent.ts';
 import { FolkHull } from './folk-hull';
 import { FolkShape } from './folk-shape.ts';
 

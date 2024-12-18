@@ -1,5 +1,5 @@
-import { FolkShape } from '../../../lib/folk-shape.ts';
-import { FolkArrow } from '../../../lib/folk-arrow.ts';
+import { FolkShape } from '../../../labs/folk-shape.ts';
+import { FolkArrow } from '../../../labs/folk-arrow.ts';
 import { FileSaver } from '../src/file-system.ts';
 
 declare global {

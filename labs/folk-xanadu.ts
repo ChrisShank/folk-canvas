@@ -1,6 +1,6 @@
 import { FolkBaseConnection } from './folk-base-connection.js';
-import { verticesToPolygon } from './common/utils.js';
-import type { Point } from './common/types.js';
+import { verticesToPolygon } from '@lib/utils.js';
+import type { Point } from '@lib/types.js';
 import { PropertyValues } from '@lit/reactive-element';
 export class FolkXanadu extends FolkBaseConnection {
   static override tagName = 'folk-xanadu';

@@ -1,4 +1,4 @@
-import { css, html } from './common/tags';
+import { css, html } from '@lib/tags';
 
 // hardcoded column and row numbers
 const styles = css`

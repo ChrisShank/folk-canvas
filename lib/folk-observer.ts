@@ -1,4 +1,4 @@
-import { FolkShape } from '../folk-shape';
+import { FolkShape } from '../labs/folk-shape';
 import { ClientRectObserver, ClientRectObserverEntry } from './client-rect-observer';
 import { TransformEvent } from './TransformEvent';
 

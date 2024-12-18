@@ -3,7 +3,7 @@ import { LatLng, LatLngExpression, LeafletEvent, map, Map, tileLayer } from 'lea
 // @ts-ignore
 // Vite specific import :(
 import leafletCSS from 'leaflet/dist/leaflet.css?inline';
-import { FolkElement } from './common/folk-element';
+import { FolkElement } from '@lib/folk-element';
 import { css, PropertyValues, unsafeCSS } from '@lit/reactive-element';
 
 export class RecenterEvent extends Event {

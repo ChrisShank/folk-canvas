@@ -1,6 +1,6 @@
 import { getBoxToBoxArrow } from 'perfect-arrows';
 import { FolkBaseConnection } from './folk-base-connection.ts';
-import { getSvgPathFromStroke, pointsOnBezierCurves } from './common/utils.ts';
+import { getSvgPathFromStroke, pointsOnBezierCurves } from '@lib/utils.ts';
 import { getStroke, StrokeOptions } from 'perfect-freehand';
 import { PropertyValues } from '@lit/reactive-element';
 

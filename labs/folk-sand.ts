@@ -1,4 +1,4 @@
-import { WebGLUtils } from './common/webgl';
+import { WebGLUtils } from '@lib/webgl.ts';
 import {
   collisionFragmentShader,
   collisionVertexShader,
@@ -8,10 +8,10 @@ import {
   visualizationShader,
   vertexShader,
 } from './folk-sand.glsl.ts';
-import { requestAnimationFrame } from './common/rAF.ts';
+import { requestAnimationFrame } from '@lib/rAF.ts';
 import { FolkBaseSet } from './folk-base-set.ts';
 import { css, PropertyValues } from '@lit/reactive-element';
-import { DOMRectTransform } from './common/DOMRectTransform.ts';
+import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
 
 export class FolkSand extends FolkBaseSet {
   static override tagName = 'folk-sand';

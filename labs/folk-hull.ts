@@ -1,6 +1,6 @@
 import { FolkBaseSet } from './folk-base-set';
-import { verticesToPolygon } from './common/utils';
-import type { Point } from './common/types';
+import { verticesToPolygon } from '@lib/utils';
+import type { Point } from '@lib/types';
 import { PropertyValues, css } from '@lit/reactive-element';
 
 declare global {

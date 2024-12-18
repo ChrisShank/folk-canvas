@@ -1,10 +1,10 @@
-import { css, html } from './common/tags';
-import { ResizeObserverManager } from './common/resize-observer';
-import { Point } from './common/types';
-import { DOMRectTransform, DOMRectTransformReadonly } from './common/DOMRectTransform';
-import { Vector } from './common/Vector';
-import { getResizeCursorUrl, getRotateCursorUrl } from './common/cursors';
-import { TransformEvent } from './common/TransformEvent';
+import { css, html } from '@lib/tags';
+import { ResizeObserverManager } from '@lib/resize-observer';
+import { Point } from '@lib/types';
+import { DOMRectTransform, DOMRectTransformReadonly } from '@lib/DOMRectTransform';
+import { Vector } from '@lib/Vector';
+import { getResizeCursorUrl, getRotateCursorUrl } from '@lib/cursors';
+import { TransformEvent } from '@lib/TransformEvent';
 
 const resizeObserver = new ResizeObserverManager();
 

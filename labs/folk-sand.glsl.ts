@@ -1,4 +1,4 @@
-import { glsl } from './common/tags.ts';
+import { glsl } from '@lib/tags.ts';
 
 /** Falling sand shaders using block cellular automata with Margolus offsets.
  * Based on "Probabilistic Cellular Automata for Granular Media in Video Games" (https://arxiv.org/abs/2008.06341)

@@ -2,7 +2,7 @@ import { css, PropertyValues } from '@lit/reactive-element';
 import { FolkBaseSet } from './folk-base-set';
 import { FolkShape } from './folk-shape';
 import { CellTemplate, FolkSpreadsheet, FolkSpreadSheetCell, templateCells } from './folk-spreadsheet';
-import { DOMRectTransform } from './common/DOMRectTransform';
+import { DOMRectTransform } from '@lib/DOMRectTransform';
 
 FolkShape.define();
 FolkSpreadsheet.define();
