@@ -21,5 +21,6 @@
       "@propagators/*": ["propagators/*"]
     }
   },
-  "include": ["**/*.ts", "vite.config.ts"]
+  "include": ["**/*.ts", "vite.config.ts"],
+  "exclude": ["node_modules/**/*"]
 }
