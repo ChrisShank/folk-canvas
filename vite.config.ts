@@ -2,10 +2,10 @@ import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
-const demoDir = resolve(__dirname, 'demo');
+const websiteDir = resolve(__dirname, 'website');
 
 function getFiles() {
-  return readdirSync(demoDir).filter((file) => file.endsWith('.html'));
+  return readdirSync(websiteDir).filter((file) => file.endsWith('.html'));
 }
 
 const linkGenerator = (): Plugin => {
@@ -64,13 +64,13 @@ const linkGenerator = (): Plugin => {
 };
 
 export default defineConfig({
-  root: 'demo',
+  root: 'website',
   plugins: [linkGenerator()],
   build: {
     target: 'esnext',
     rollupOptions: {
       input: getFiles().reduce((acc, file) => {
-        acc[file.replace('.html', '')] = resolve(demoDir, file);
+        acc[file.replace('.html', '')] = resolve(websiteDir, file);
         return acc;
       }, {} as Record<string, string>),
     },
