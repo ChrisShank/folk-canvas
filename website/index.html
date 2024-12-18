@@ -19,15 +19,28 @@
       }
 
       folk-shape {
-        background: rgb(187, 178, 178);
+        view-transition-name: shape;
+
+        span {
+          font-size: 15rem;
+        }
       }
     </style>
   </head>
   <body>
-    <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+    <folk-shape x="0" y="0" style="visibility: hidden"><span>🝡</span></folk-shape>
 
     <script type="module">
       import '../lib/standalone/folk-shape.ts';
+
+      const shape = document.querySelector('folk-shape');
+
+      // stop gap until shape has auto x/y
+      setTimeout(() => {
+        shape.style.visibility = '';
+        shape.x = (window.innerWidth - shape.width) / 2;
+        shape.y = (window.innerHeight - shape.height) / 2;
+      }, 100);
     </script>
   </body>
 </html>
