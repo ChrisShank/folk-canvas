@@ -1,4 +1,4 @@
-import { html } from '../../../lib/common/tags';
+import { html } from '@lib/common/tags';
 
 interface Weather {
   temperature: string;

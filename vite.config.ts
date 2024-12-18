@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
 
-const canvasWebsiteDir = resolve(__dirname, 'website/canvas');
+const canvasWebsiteDir = resolve(__dirname, './website/canvas');
 
 function getCanvasFiles() {
   return readdirSync(canvasWebsiteDir).filter((file) => file.endsWith('.html'));
@@ -65,12 +65,19 @@ const linkGenerator = (): Plugin => {
 
 export default defineConfig({
   root: 'website',
+  resolve: {
+    alias: {
+      '@lib': resolve(__dirname, './lib'),
+      '@labs': resolve(__dirname, './labs'),
+      '@propagators': resolve(__dirname, './labs'),
+    },
+  },
   plugins: [linkGenerator()],
   build: {
     target: 'esnext',
     rollupOptions: {
       input: {
-        index: resolve(__dirname, 'website/index.html'),
+        index: resolve(__dirname, './website/index.html'),
         ...getCanvasFiles().reduce((acc, file) => {
           acc[`canvas/${file.replace('.html', '')}`] = resolve(canvasWebsiteDir, file);
           return acc;
