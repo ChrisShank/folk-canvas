@@ -30,10 +30,13 @@
     </style>
   </head>
   <body>
-    <folk-shape x="0" y="0" style="visibility: hidden"><span>🝡</span></folk-shape>
+    <folk-space-radial>
+      <folk-shape style="visibility: hidden"><span>🝡</span></folk-shape>
+    </folk-space-radial>
 
     <script type="module">
       import '../lib/standalone/folk-shape.ts';
+      import '../lib/standalone/folk-space-radial.ts';
 
       const shape = document.querySelector('folk-shape');
 
