@@ -1,5 +1,5 @@
-import { Point } from './types';
 import { Matrix } from './Matrix';
+import { Point } from './types';
 
 interface DOMRectTransformInit {
   height?: number;

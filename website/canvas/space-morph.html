@@ -35,7 +35,7 @@
     <folk-rope id="rope"></folk-rope>
     <folk-space id="space">
       <div slot="front">
-        <folk-shape id="source" x="100" y="100" width="50" height="50"></folk-shape>
+        <folk-shape id="source" x="250" y="100" width="50" height="50"></folk-shape>
         <folk-shape x="200" y="200" width="75" height="75" rotation="90"></folk-shape>
         <folk-shape x="50" y="250" width="25" height="25" rotation="180"></folk-shape>
         <folk-shape x="350" y="50" width="100" height="100" rotation="270"></folk-shape>
@@ -44,7 +44,7 @@
         <folk-shape x="700" y="700" width="250" height="250" rotation="540"></folk-shape>
       </div>
       <div slot="back">
-        <folk-shape id="target" x="150" y="150" width="50" height="50" rotation="45"></folk-shape>
+        <folk-shape id="target" x="550" y="150" width="50" height="50" rotation="45"></folk-shape>
         <folk-shape x="300" y="400" width="150" height="50" rotation="45"></folk-shape>
         <folk-shape x="250" y="350" width="100" height="100" rotation="135"></folk-shape>
         <folk-shape x="400" y="200" width="75" height="75" rotation="225"></folk-shape>
@@ -64,35 +64,18 @@
       const source = document.getElementById('source');
       const target = document.getElementById('target');
 
-      // Update rope connection points
       function updateRopePoints() {
         if (!source || !target) return;
 
-        // Get the shapes' transforms
-        const sourceTransform = source.getTransformDOMRect();
-        const targetTransform = target.getTransformDOMRect();
+        const sourceRect = space.getElementScreenRect(source);
+        const targetRect = space.getElementScreenRect(target);
 
-        // Get center points in local space
-        const sourceCenter = {
-          x: sourceTransform.x + sourceTransform.width / 2,
-          y: sourceTransform.y + sourceTransform.height / 2,
-        };
-
-        const targetCenter = {
-          x: targetTransform.x + targetTransform.width / 2,
-          y: targetTransform.y + targetTransform.height / 2,
-        };
-
-        // Convert to screen space
-        const sourcePoint = space.localToScreen(sourceCenter, 'front');
-        const targetPoint = space.localToScreen(targetCenter, 'back');
-
-        // Update rope
-        rope.sourceRect = { x: sourcePoint.x, y: sourcePoint.y, width: 0, height: 0 };
-        rope.targetRect = { x: targetPoint.x, y: targetPoint.y, width: 0, height: 0 };
+        if (sourceRect && targetRect) {
+          rope.sourceRect = sourceRect;
+          rope.targetRect = targetRect;
+        }
       }
 
-      // Update on animation frame
       function animate() {
         updateRopePoints();
         requestAnimationFrame(animate);

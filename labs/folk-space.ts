@@ -4,10 +4,11 @@ import { html } from '@lib/tags';
 import { Point } from '@lib/types';
 import { css } from '@lit/reactive-element';
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'folk-space': FolkSpace;
-  }
+interface TransformRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export class FolkSpace extends FolkElement {
@@ -35,18 +36,37 @@ export class FolkSpace extends FolkElement {
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      transition: transform 0.6s linear;
-    }
-
-    .back {
-      transform: rotateX(90deg);
     }
   `;
 
-  #frontMatrix = new DOMMatrix();
-  #backMatrix = new DOMMatrix().rotate(90, 0, 0);
+  #perspective = 1000;
   #isRotated = false;
   #transitionProgress = 0;
+
+  // Create base matrices
+  #frontMatrix = new DOMMatrix();
+  #backMatrix = new DOMMatrix().rotateAxisAngle(1, 0, 0, 90);
+  // Update matrices and DOM
+  #updateTransforms() {
+    const rotation = this.#isRotated ? -90 * this.#transitionProgress : -90 * (1 - this.#transitionProgress);
+
+    const backRotation = this.#isRotated ? 90 * (1 - this.#transitionProgress) : 90 * this.#transitionProgress;
+
+    // Update matrices
+    this.#frontMatrix = new DOMMatrix().rotateAxisAngle(1, 0, 0, rotation);
+    this.#backMatrix = new DOMMatrix().rotateAxisAngle(1, 0, 0, backRotation);
+
+    // Update DOM
+    const frontFace = this.shadowRoot?.querySelector('.front');
+    const backFace = this.shadowRoot?.querySelector('.back');
+
+    if (frontFace instanceof HTMLElement) {
+      frontFace.style.transform = this.#frontMatrix.toString();
+    }
+    if (backFace instanceof HTMLElement) {
+      backFace.style.transform = this.#backMatrix.toString();
+    }
+  }
 
   override createRenderRoot() {
     const root = super.createRenderRoot() as ShadowRoot;
@@ -62,8 +82,6 @@ export class FolkSpace extends FolkElement {
       </div>
     `);
 
-    this.transition();
-
     return root;
   }
 
@@ -71,27 +89,18 @@ export class FolkSpace extends FolkElement {
     const spaceRect = this.getBoundingClientRect();
     const centerX = spaceRect.width / 2;
     const centerY = spaceRect.height / 2;
-    const perspective = 1000;
 
-    let rotation = 0;
-    if (face === 'front') {
-      rotation = this.#isRotated ? -90 * this.#transitionProgress : -90 * (1 - this.#transitionProgress);
-    } else {
-      rotation = this.#isRotated ? 90 * (1 - this.#transitionProgress) : 90 * this.#transitionProgress;
-    }
-
-    // Create perspective matrix
+    // Use the same matrix we're using for CSS
     const matrix = new DOMMatrix()
       .translate(centerX, centerY)
-      .multiply(new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1 / perspective, 0, 0, 0, 1]))
+      .multiply(new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1 / this.#perspective, 0, 0, 0, 1]))
       .translate(-centerX, -centerY)
       .translate(centerX, centerY)
-      .rotate(rotation, 0, 0)
+      .multiply(face === 'front' ? this.#frontMatrix : this.#backMatrix)
       .translate(-centerX, -centerY);
 
     const transformedPoint = matrix.transformPoint(new DOMPoint(point.x, point.y, 0, 1));
 
-    // Perform perspective division
     const w = transformedPoint.w || 1;
     return {
       x: transformedPoint.x / w,
@@ -101,17 +110,16 @@ export class FolkSpace extends FolkElement {
 
   transition() {
     this.#isRotated = !this.#isRotated;
-
-    // Reset transition progress
     this.#transitionProgress = 0;
 
-    // Track transition
     const startTime = performance.now();
-    const duration = 600; // Match CSS transition duration (0.6s)
+    const duration = 600;
 
     const animate = () => {
       const elapsed = performance.now() - startTime;
       this.#transitionProgress = Math.min(elapsed / duration, 1);
+
+      this.#updateTransforms();
 
       if (this.#transitionProgress < 1) {
         requestAnimationFrame(animate);
@@ -119,15 +127,58 @@ export class FolkSpace extends FolkElement {
     };
 
     requestAnimationFrame(animate);
+  }
 
-    // Update DOM
-    const frontFace = this.shadowRoot?.querySelector('.front');
-    const backFace = this.shadowRoot?.querySelector('.back');
-    if (frontFace instanceof HTMLElement) {
-      frontFace.style.transform = this.#isRotated ? 'rotateX(-90deg)' : 'rotateX(0deg)';
+  /**
+   * Transforms a rect from an element in either face to screen coordinates
+   */
+  transformRect(rect: TransformRect, face: 'front' | 'back'): TransformRect {
+    // Get center point
+    const center = {
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+    };
+
+    // Transform center point
+    const transformedCenter = this.localToScreen(center, face);
+
+    return {
+      x: transformedCenter.x - rect.width / 2,
+      y: transformedCenter.y - rect.height / 2,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
+
+  /**
+   * Gets the screen coordinates for any element slotted into either face
+   */
+  getElementScreenRect(element: Element): TransformRect | null {
+    // Find which slot the element belongs to
+    const slot = element.closest('[slot]');
+    if (!slot) return null;
+
+    const face = slot.getAttribute('slot') as 'front' | 'back';
+    if (face !== 'front' && face !== 'back') return null;
+
+    // Get the element's transform
+    if ('getTransformDOMRect' in element) {
+      const rect = (element as any).getTransformDOMRect();
+      return this.transformRect(rect, face);
     }
-    if (backFace instanceof HTMLElement) {
-      backFace.style.transform = this.#isRotated ? 'rotateX(0deg)' : 'rotateX(90deg)';
-    }
+
+    // Fallback to getBoundingClientRect
+    const rect = element.getBoundingClientRect();
+    const spaceRect = this.getBoundingClientRect();
+
+    return this.transformRect(
+      {
+        x: rect.x - spaceRect.x,
+        y: rect.y - spaceRect.y,
+        width: rect.width,
+        height: rect.height,
+      },
+      face,
+    );
   }
 }
