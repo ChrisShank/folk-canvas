@@ -1,6 +1,6 @@
-import { css, PropertyValues } from '@lit/reactive-element';
-import { FolkElement } from '@lib/folk-element';
+import { FolkElement } from '@lib';
 import { html } from '@lib/tags';
+import { css } from '@lit/reactive-element';
 
 declare global {
   interface HTMLElementTagNameMap {

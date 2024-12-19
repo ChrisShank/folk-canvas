@@ -1,9 +1,7 @@
-import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
-import { Point } from '@lib/types.ts';
-import { glsl } from '@lib/tags.ts';
-import { WebGLUtils } from '@lib/webgl.ts';
-import { FolkBaseSet } from './folk-base-set.ts';
+import { DOMRectTransform, Point, WebGLUtils } from '@lib';
+import { glsl } from '@lib/tags';
 import { PropertyValues } from '@lit/reactive-element';
+import { FolkBaseSet } from './folk-base-set.ts';
 
 /**
  * The DistanceField class calculates a distance field using the Jump Flooding Algorithm (JFA) in WebGL.
@@ -296,7 +294,7 @@ export class FolkDistanceField extends FolkBaseSet {
       this.renderSeedPointsForGroup(
         this.groups[groupName].shapeVAO,
         this.groups[groupName].textures[this.groups[groupName].isPingTexture ? 0 : 1],
-        vertexCount
+        vertexCount,
       );
     }
   }
@@ -462,7 +460,7 @@ export class FolkDistanceField extends FolkBaseSet {
       gl.FLOAT, // type
       false, // normalize
       0, // stride
-      0 // offset
+      0, // offset
     );
 
     gl.bindVertexArray(null);

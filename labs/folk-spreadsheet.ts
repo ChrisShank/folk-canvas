@@ -1,4 +1,4 @@
-import { css, html } from '@lib/tags';
+import { css } from '@lib/tags';
 
 // hardcoded column and row numbers
 const styles = css`
@@ -155,7 +155,7 @@ export function templateCells(numberOfRows: number, numberOfColumns: number, cel
           tabindex="0" 
           ${expression ? `expression="${expression}"` : ''}
           ${readonly ? 'readonly' : ''}
-        ></folk-cell>`
+        ></folk-cell>`,
       );
     }
   }
@@ -229,7 +229,7 @@ export class FolkSpreadsheet extends HTMLElement {
     const rows = Array.from({ length: rowNames.size }).map((_, i) => i + 1);
 
     this.#columns.setHTMLUnsafe(
-      columns.map((column) => `<s-header column="${column}">${column}</s-header>`).join('\n')
+      columns.map((column) => `<s-header column="${column}">${column}</s-header>`).join('\n'),
     );
 
     this.#rows.setHTMLUnsafe(rows.map((row) => `<s-header row="${row}">${row}</s-header>`).join('\n'));
@@ -245,7 +245,7 @@ export class FolkSpreadsheet extends HTMLElement {
           (column) =>
             `s-header[column="${column}"], ::slotted(folk-cell[column="${column}"]) { grid-column: ${
               getColumnIndex(column) + 1
-            }; }`
+            }; }`,
         )
         .join('\n')}
 
@@ -485,7 +485,7 @@ export class FolkSpreadSheetCell extends HTMLElement {
           const [, column, row] = dep.split(/([A-Z]+)(\d+)/s);
           return this.#getCell(column, row);
         })
-        .filter((cell) => cell !== null)
+        .filter((cell) => cell !== null),
     );
 
     this.#dependencies.forEach((dep) => dep.addEventListener('propagate', this));

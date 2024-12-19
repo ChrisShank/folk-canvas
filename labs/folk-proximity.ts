@@ -1,5 +1,4 @@
-import { aabbIntersection } from '@lib/collision.ts';
-import { TransformEvent } from '@lib/TransformEvent.ts';
+import { aabbIntersection, TransformEvent } from '@lib';
 import { FolkHull } from './folk-hull';
 import { FolkShape } from './folk-shape.ts';
 
@@ -178,7 +177,7 @@ export class FolkProximity extends HTMLElement {
       const isInCluster = Array.from(cluster.sourceElements)
         .filter((element) => el !== element)
         .some((element) =>
-          aabbIntersection(el.getTransformDOMRect(), (element as FolkShape).getTransformDOMRect(), PROXIMITY)
+          aabbIntersection(el.getTransformDOMRect(), (element as FolkShape).getTransformDOMRect(), PROXIMITY),
         );
 
       if (!isInCluster) {

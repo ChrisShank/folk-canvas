@@ -1,5 +1,9 @@
 {
   "singleQuote": true,
   "printWidth": 120,
-  "htmlWhitespaceSensitivity": "strict"
+  "htmlWhitespaceSensitivity": "strict",
+  "plugins": [
+    "prettier-plugin-organize-imports"
+  ],
+  "organizeImportsSkipDestructiveCodeActions": true
 }

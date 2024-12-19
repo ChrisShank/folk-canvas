@@ -1,8 +1,8 @@
-import { getBoxToBoxArrow } from 'perfect-arrows';
-import { FolkBaseConnection } from './folk-base-connection.ts';
-import { getSvgPathFromStroke, pointsOnBezierCurves } from '@lib/utils.ts';
-import { getStroke, StrokeOptions } from 'perfect-freehand';
+import { getSvgPathFromStroke, pointsOnBezierCurves } from '@lib/utils';
 import { PropertyValues } from '@lit/reactive-element';
+import { getBoxToBoxArrow } from 'perfect-arrows';
+import { getStroke, StrokeOptions } from 'perfect-freehand';
+import { FolkBaseConnection } from './folk-base-connection.ts';
 
 export type Arrow = [
   /** The x position of the (padded) starting point. */
@@ -22,7 +22,7 @@ export type Arrow = [
   /** The angle (in radians) for a starting arrowhead. */
   as: number,
   /** The angle (in radians) for a center arrowhead. */
-  ac: number
+  ac: number,
 ];
 
 declare global {
@@ -75,7 +75,7 @@ export class FolkArrow extends FolkBaseConnection {
       targetRect.x,
       targetRect.y,
       targetRect.width,
-      targetRect.height
+      targetRect.height,
     ) as Arrow;
 
     const points = pointsOnBezierCurves([

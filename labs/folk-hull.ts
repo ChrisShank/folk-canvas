@@ -1,7 +1,7 @@
-import { FolkBaseSet } from './folk-base-set';
+import type { Point } from '@lib';
 import { verticesToPolygon } from '@lib/utils';
-import type { Point } from '@lib/types';
 import { PropertyValues, css } from '@lit/reactive-element';
+import { FolkBaseSet } from './folk-base-set';
 
 declare global {
   interface HTMLElementTagNameMap {

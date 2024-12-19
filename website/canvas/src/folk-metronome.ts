@@ -1,4 +1,4 @@
-import { FolkElement } from '@lib/folk-element';
+import { FolkElement } from '@lib';
 
 declare global {
   interface HTMLElementTagNameMap {

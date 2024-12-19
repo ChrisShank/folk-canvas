@@ -1,9 +1,7 @@
-import { parseVertex } from '@lib/utils.ts';
-import { ClientRectObserverEntry } from '@lib/client-rect-observer.ts';
-import { FolkObserver, parseDeepCSSSelector } from '@lib/folk-observer.ts';
-import { FolkElement } from '@lib/folk-element.ts';
-import { property, state } from '@lit/reactive-element/decorators.js';
+import { ClientRectObserverEntry, FolkElement, FolkObserver, parseDeepCSSSelector } from '@lib';
+import { parseVertex } from '@lib/utils';
 import { css, CSSResultGroup, PropertyValues } from '@lit/reactive-element';
+import { property, state } from '@lit/reactive-element/decorators.js';
 
 const folkObserver = new FolkObserver();
 

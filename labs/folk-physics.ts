@@ -1,9 +1,9 @@
-import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
-import { FolkBaseSet } from './folk-base-set.ts';
-import { PropertyValues } from '@lit/reactive-element';
-import { FolkShape } from './folk-shape';
 import RAPIER, { init } from '@dimforge/rapier2d-compat';
-import { TransformIntegrator } from '@lib/EffectIntegrator.ts';
+import { DOMRectTransform, TransformIntegrator } from '@lib';
+import { PropertyValues } from '@lit/reactive-element';
+import { FolkBaseSet } from './folk-base-set.ts';
+import { FolkShape } from './folk-shape';
+
 await init();
 
 export class FolkPhysics extends FolkBaseSet {
@@ -72,7 +72,7 @@ export class FolkPhysics extends FolkBaseSet {
         const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
           .setTranslation(
             (rect.x + rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
-            (rect.y + rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+            (rect.y + rect.height / 2) * FolkPhysics.PHYSICS_SCALE,
           )
           .setRotation(rect.rotation);
 
@@ -81,7 +81,7 @@ export class FolkPhysics extends FolkBaseSet {
         // Scale down the collider size
         const colliderDesc = RAPIER.ColliderDesc.cuboid(
           (rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
-          (rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+          (rect.height / 2) * FolkPhysics.PHYSICS_SCALE,
         ).setTranslation(0, 0);
 
         this.world!.createCollider(colliderDesc, body);
@@ -101,7 +101,7 @@ export class FolkPhysics extends FolkBaseSet {
             x: (rect.x + rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
             y: (rect.y + rect.height / 2) * FolkPhysics.PHYSICS_SCALE,
           },
-          true
+          true,
         );
         body.setRotation(rect.rotation, true);
       } else if (body.bodyType() === RAPIER.RigidBodyType.KinematicPositionBased) {
@@ -111,7 +111,7 @@ export class FolkPhysics extends FolkBaseSet {
           this.world!.removeCollider(collider, true);
           const newColliderDesc = RAPIER.ColliderDesc.cuboid(
             (rect.width / 2) * FolkPhysics.PHYSICS_SCALE,
-            (rect.height / 2) * FolkPhysics.PHYSICS_SCALE
+            (rect.height / 2) * FolkPhysics.PHYSICS_SCALE,
           ).setTranslation(0, 0);
           this.world!.createCollider(newColliderDesc, body);
         }
@@ -151,7 +151,7 @@ export class FolkPhysics extends FolkBaseSet {
                 x: (result.x + result.width / 2) * FolkPhysics.PHYSICS_SCALE,
                 y: (result.y + result.height / 2) * FolkPhysics.PHYSICS_SCALE,
               },
-              true
+              true,
             );
             body.setRotation(result.rotation, true);
           }

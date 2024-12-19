@@ -1,5 +1,4 @@
-import type { DOMRectTransform } from '@lib/DOMRectTransform';
-import { Vector } from '@lib/Vector';
+import { Vector } from '@lib';
 import { FolkEventPropagator } from './folk-event-propagator';
 import { FolkShape } from './folk-shape';
 

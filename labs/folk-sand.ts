@@ -1,17 +1,15 @@
-import { WebGLUtils } from '@lib/webgl.ts';
+import { DOMRectTransform, WebGLUtils } from '@lib';
+import { css, PropertyValues } from '@lit/reactive-element';
+import { FolkBaseSet } from './folk-base-set.ts';
 import {
   collisionFragmentShader,
   collisionVertexShader,
-  simulationShader,
   distanceFieldInitShader,
   distanceFieldPropagationShader,
-  visualizationShader,
+  simulationShader,
   vertexShader,
+  visualizationShader,
 } from './folk-sand.glsl.ts';
-import { requestAnimationFrame } from '@lib/rAF.ts';
-import { FolkBaseSet } from './folk-base-set.ts';
-import { css, PropertyValues } from '@lit/reactive-element';
-import { DOMRectTransform } from '@lib/DOMRectTransform.ts';
 
 export class FolkSand extends FolkBaseSet {
   static override tagName = 'folk-sand';

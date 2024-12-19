@@ -1,11 +1,7 @@
-import { DOMRectTransform } from '@lib/DOMRectTransform';
+import { DOMRectTransform, Experimental, TransformEvent, Vector } from '@lib';
 import { css, type PropertyValues } from '@lit/reactive-element';
-import { TransformEvent } from '@lib/TransformEvent';
-import { FolkShape } from './folk-shape';
-import { Experimental } from '@lib/Experimental';
 import { FolkBaseSet } from './folk-base-set';
-import { Vector } from '@lib/Vector';
-import type { Point } from '@lib/types';
+import { FolkShape } from './folk-shape';
 
 export class FolkSpaceRadial extends FolkBaseSet {
   static override tagName = 'folk-space-radial';

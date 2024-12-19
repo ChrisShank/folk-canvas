@@ -1,4 +1,4 @@
-import { DOMRectTransform } from '@lib/DOMRectTransform';
+import { DOMRectTransform } from '@lib';
 import { FolkShape } from './folk-shape';
 
 declare global {

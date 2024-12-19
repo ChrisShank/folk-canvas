@@ -1,10 +1,9 @@
-import { LatLng, LatLngExpression, LeafletEvent, map, Map, tileLayer } from 'leaflet';
-
+import { FolkElement } from '@lib';
+import { css, unsafeCSS } from '@lit/reactive-element';
+import { LatLng, LatLngExpression, LeafletEvent, map, tileLayer } from 'leaflet';
 // @ts-ignore
 // Vite specific import :(
 import leafletCSS from 'leaflet/dist/leaflet.css?inline';
-import { FolkElement } from '@lib/folk-element';
-import { css, PropertyValues, unsafeCSS } from '@lit/reactive-element';
 
 export class RecenterEvent extends Event {
   constructor() {
@@ -39,12 +38,12 @@ export class FolkMap extends FolkElement {
       tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      })
+      }),
     );
 
     this.#map.setView(
       (this.getAttribute('coordinates') || '0, 0').split(',').map(Number) as LatLngExpression,
-      Number(this.getAttribute('zoom') || 13)
+      Number(this.getAttribute('zoom') || 13),
     );
 
     return root;

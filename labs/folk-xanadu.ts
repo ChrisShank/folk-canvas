@@ -1,7 +1,7 @@
-import { FolkBaseConnection } from './folk-base-connection.js';
-import { verticesToPolygon } from '@lib/utils.js';
-import type { Point } from '@lib/types.js';
+import type { Point } from '@lib';
+import { verticesToPolygon } from '@lib/utils';
 import { PropertyValues } from '@lit/reactive-element';
+import { FolkBaseConnection } from './folk-base-connection.js';
 export class FolkXanadu extends FolkBaseConnection {
   static override tagName = 'folk-xanadu';
 
@@ -37,15 +37,15 @@ export class FolkXanadu extends FolkBaseConnection {
     // To trace the link we need to rotate the vertices of the source to start on the bottom right corner.
     const maxRightCoordinate = Math.max.apply(
       null,
-      sourceVertices.map((vertex) => vertex.x)
+      sourceVertices.map((vertex) => vertex.x),
     );
     const maxBottomCoordinate = Math.max.apply(
       null,
-      sourceVertices.filter((vertex) => vertex.x === maxRightCoordinate).map((vertex) => vertex.y)
+      sourceVertices.filter((vertex) => vertex.x === maxRightCoordinate).map((vertex) => vertex.y),
     );
 
     const index = sourceVertices.findIndex(
-      (vertex) => vertex.x === maxRightCoordinate && vertex.y === maxBottomCoordinate
+      (vertex) => vertex.x === maxRightCoordinate && vertex.y === maxBottomCoordinate,
     );
 
     sourceVertices = sourceVertices.slice(index).concat(sourceVertices.slice(0, index));
@@ -62,7 +62,7 @@ function computeInlineVertices(rects: DOMRect[]): Point[] {
       width: Math.round(rect.width),
       x: Math.round(rect.x),
       y: Math.round(rect.y),
-    })
+    }),
   );
 
   if (rects.length === 0) return [];
@@ -86,11 +86,11 @@ function computeInlineVertices(rects: DOMRect[]): Point[] {
 
   const maxRightCoordinate = Math.max.apply(
     null,
-    rects.map((rect) => rect.right)
+    rects.map((rect) => rect.right),
   );
   const maxBottomCoordinate = Math.max.apply(
     null,
-    rects.filter((rect) => rect.right === maxRightCoordinate).map((rect) => rect.bottom)
+    rects.filter((rect) => rect.right === maxRightCoordinate).map((rect) => rect.bottom),
   );
 
   vertices.push({

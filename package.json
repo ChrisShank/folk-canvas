@@ -21,6 +21,7 @@
     "webcola": "^3.4.0"
   },
   "devDependencies": {
+    "prettier-plugin-organize-imports": "^4.1.0",
     "@types/leaflet": "^1.9.14",
     "@types/node": "^22.10.1",
     "@webgpu/types": "^0.1.51",
