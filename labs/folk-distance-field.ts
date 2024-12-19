@@ -13,21 +13,20 @@ export class FolkDistanceField extends FolkBaseSet {
 
   static readonly MAX_DISTANCE = 99999.0;
 
-  private canvas!: HTMLCanvasElement;
-  private glContext!: WebGL2RenderingContext;
-  private framebuffer!: WebGLFramebuffer;
-  private fullscreenQuadVAO!: WebGLVertexArrayObject;
-
-  private jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
-  private renderProgram!: WebGLProgram; // Shader program for final rendering
-  private seedProgram!: WebGLProgram; // Shader program for rendering seed points
+  #canvas!: HTMLCanvasElement;
+  #glContext!: WebGL2RenderingContext;
+  #framebuffer!: WebGLFramebuffer;
+  #fullscreenQuadVAO!: WebGLVertexArrayObject;
+  #jfaProgram!: WebGLProgram; // Shader program for the Jump Flooding Algorithm
+  #renderProgram!: WebGLProgram; // Shader program for final rendering
+  #seedProgram!: WebGLProgram; // Shader program for rendering seed points
 
   /**
    * Groups data for handling different sets of shapes.
    * 'mergeA' and 'mergeB' shapes will have their distance fields merged in rendering,
    * while 'others' will be processed separately.
    */
-  private groups: {
+  #groups: {
     [groupName: string]: {
       textures: WebGLTexture[];
       isPingTexture: boolean;
@@ -37,7 +36,7 @@ export class FolkDistanceField extends FolkBaseSet {
   } = {};
 
   // Add class property to store Float32Arrays
-  private groupBuffers: {
+  #groupBuffers: {
     [groupName: string]: Float32Array;
   } = {};
 
@@ -45,7 +44,7 @@ export class FolkDistanceField extends FolkBaseSet {
     super.connectedCallback();
 
     // Initialize groups for 'mergeA', 'mergeB', and 'others'
-    this.groups = {
+    this.#groups = {
       mergeA: {
         textures: [],
         isPingTexture: true,
@@ -66,35 +65,35 @@ export class FolkDistanceField extends FolkBaseSet {
       },
     };
 
-    this.initWebGL();
-    this.initShaders();
-    this.initPingPongTextures();
+    this.#initWebGL();
+    this.#initShaders();
+    this.#initPingPongTextures();
 
-    window.addEventListener('resize', this.handleResize);
+    window.addEventListener('resize', this.#handleResize);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
 
-    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('resize', this.#handleResize);
 
-    this.cleanupWebGLResources();
+    this.#cleanupWebGLResources();
   }
 
-  private initWebGL() {
+  #initWebGL() {
     const { gl, canvas } = WebGLUtils.createWebGLCanvas(this.clientWidth, this.clientHeight);
 
     if (!gl || !canvas) {
       throw new Error('Failed to initialize WebGL context.');
     }
 
-    this.canvas = canvas;
+    this.#canvas = canvas;
     this.renderRoot.prepend(canvas);
-    this.glContext = gl;
+    this.#glContext = gl;
 
     // Create framebuffer object
-    this.framebuffer = gl.createFramebuffer();
-    if (!this.framebuffer) {
+    this.#framebuffer = gl.createFramebuffer()!;
+    if (!this.#framebuffer) {
       throw new Error('Failed to create framebuffer.');
     }
   }
@@ -107,38 +106,38 @@ export class FolkDistanceField extends FolkBaseSet {
 
     if (this.sourcesMap.size !== this.sourceElements.size) return;
 
-    this.populateSeedPoints();
-    this.runJumpFloodingAlgorithm();
+    this.#populateSeedPoints();
+    this.#runJumpFloodingAlgorithm();
   }
 
   /**
    * Initializes all shader programs used in rendering.
    */
-  private initShaders() {
-    this.jfaProgram = WebGLUtils.createShaderProgram(this.glContext, commonVertShader, jfaFragShader);
-    this.renderProgram = WebGLUtils.createShaderProgram(this.glContext, commonVertShader, renderFragShader);
-    this.seedProgram = WebGLUtils.createShaderProgram(this.glContext, seedVertShader, seedFragShader);
+  #initShaders() {
+    this.#jfaProgram = WebGLUtils.createShaderProgram(this.#glContext, commonVertShader, jfaFragShader);
+    this.#renderProgram = WebGLUtils.createShaderProgram(this.#glContext, commonVertShader, renderFragShader);
+    this.#seedProgram = WebGLUtils.createShaderProgram(this.#glContext, seedVertShader, seedFragShader);
   }
 
   /**
    * Initializes textures and framebuffer for ping-pong rendering.
    * Supports separate textures for 'mergeA', 'mergeB', and 'others' groups.
    */
-  private initPingPongTextures() {
+  #initPingPongTextures() {
     // Initialize textures for each group
-    for (const groupName in this.groups) {
-      this.groups[groupName].textures = this.createPingPongTextures();
-      this.groups[groupName].isPingTexture = true;
+    for (const groupName in this.#groups) {
+      this.#groups[groupName].textures = this.#createPingPongTextures();
+      this.#groups[groupName].isPingTexture = true;
     }
   }
 
   /**
    * Utility method to create ping-pong textures.
    */
-  private createPingPongTextures(): WebGLTexture[] {
-    const gl = this.glContext;
-    const width = this.canvas.width;
-    const height = this.canvas.height;
+  #createPingPongTextures(): WebGLTexture[] {
+    const gl = this.#glContext;
+    const width = this.#canvas.width;
+    const height = this.#canvas.height;
     const textures: WebGLTexture[] = [];
 
     // Enable the EXT_color_buffer_half_float extension for high-precision floating-point textures
@@ -171,8 +170,8 @@ export class FolkDistanceField extends FolkBaseSet {
    * Populates seed points and assigns shapes to 'mergeA', 'mergeB', or 'others' groups.
    * Shapes with index 0 and 1 are assigned to 'mergeA' and 'mergeB' respectively.
    */
-  private populateSeedPoints() {
-    const gl = this.glContext;
+  #populateSeedPoints() {
+    const gl = this.#glContext;
     const groupPositions: { [groupName: string]: number[] } = {
       mergeA: [],
       mergeB: [],
@@ -252,7 +251,7 @@ export class FolkDistanceField extends FolkBaseSet {
     // Initialize buffers and VAOs for each group
     for (const groupName in groupPositions) {
       const positions = groupPositions[groupName];
-      const group = this.groups[groupName];
+      const group = this.#groups[groupName];
 
       if (!group.shapeVAO) {
         // First time initialization
@@ -261,23 +260,23 @@ export class FolkDistanceField extends FolkBaseSet {
         group.positionBuffer = gl.createBuffer()!;
 
         // Create and store the Float32Array
-        this.groupBuffers[groupName] = new Float32Array(positions);
+        this.#groupBuffers[groupName] = new Float32Array(positions);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.groupBuffers[groupName], gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.#groupBuffers[groupName], gl.DYNAMIC_DRAW);
 
-        const positionLocation = gl.getAttribLocation(this.seedProgram, 'a_position');
+        const positionLocation = gl.getAttribLocation(this.#seedProgram, 'a_position');
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.bindVertexArray(null);
       } else {
         // Reuse existing Float32Array if size hasn't changed
-        const existingArray = this.groupBuffers[groupName];
+        const existingArray = this.#groupBuffers[groupName];
         if (positions.length !== existingArray.length) {
           // Only create new array if size changed
-          this.groupBuffers[groupName] = new Float32Array(positions);
+          this.#groupBuffers[groupName] = new Float32Array(positions);
           gl.bindBuffer(gl.ARRAY_BUFFER, group.positionBuffer!);
-          gl.bufferData(gl.ARRAY_BUFFER, this.groupBuffers[groupName], gl.DYNAMIC_DRAW);
+          gl.bufferData(gl.ARRAY_BUFFER, this.#groupBuffers[groupName], gl.DYNAMIC_DRAW);
         } else {
           // Reuse existing array
           existingArray.set(positions);
@@ -291,9 +290,9 @@ export class FolkDistanceField extends FolkBaseSet {
     for (const groupName in groupPositions) {
       const positions = groupPositions[groupName];
       const vertexCount = positions.length / 3;
-      this.renderSeedPointsForGroup(
-        this.groups[groupName].shapeVAO,
-        this.groups[groupName].textures[this.groups[groupName].isPingTexture ? 0 : 1],
+      this.#renderSeedPointsForGroup(
+        this.#groups[groupName].shapeVAO,
+        this.#groups[groupName].textures[this.#groups[groupName].isPingTexture ? 0 : 1],
         vertexCount,
       );
     }
@@ -302,24 +301,24 @@ export class FolkDistanceField extends FolkBaseSet {
   /**
    * Utility method to render seed points for a given group.
    */
-  private renderSeedPointsForGroup(vao: WebGLVertexArrayObject, seedTexture: WebGLTexture, vertexCount: number) {
-    const gl = this.glContext;
+  #renderSeedPointsForGroup(vao: WebGLVertexArrayObject, seedTexture: WebGLTexture, vertexCount: number) {
+    const gl = this.#glContext;
 
     // Bind framebuffer to render to the seed texture
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, seedTexture, 0);
 
     // Clear the texture with a large initial distance
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, FolkDistanceField.MAX_DISTANCE);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Use the seed shader program
-    gl.useProgram(this.seedProgram);
+    gl.useProgram(this.#seedProgram);
 
     // Set the canvas size uniform
-    const canvasSizeLocation = gl.getUniformLocation(this.seedProgram, 'u_canvasSize');
-    gl.uniform2f(canvasSizeLocation, this.canvas.width, this.canvas.height);
+    const canvasSizeLocation = gl.getUniformLocation(this.#seedProgram, 'u_canvasSize');
+    gl.uniform2f(canvasSizeLocation, this.#canvas.width, this.#canvas.height);
 
     // Bind VAO and draw shapes
     gl.bindVertexArray(vao);
@@ -334,18 +333,18 @@ export class FolkDistanceField extends FolkBaseSet {
    * Executes the Jump Flooding Algorithm (JFA) for each group separately.
    * 'mergeA' and 'mergeB' groups will have their distance fields merged in rendering.
    */
-  private runJumpFloodingAlgorithm() {
+  #runJumpFloodingAlgorithm() {
     // Compute initial step size
-    let stepSize = 1 << Math.floor(Math.log2(Math.max(this.canvas.width, this.canvas.height)));
+    let stepSize = 1 << Math.floor(Math.log2(Math.max(this.#canvas.width, this.#canvas.height)));
 
     // Perform passes with decreasing step sizes for each group
-    for (const groupName in this.groups) {
-      const group = this.groups[groupName];
+    for (const groupName in this.#groups) {
+      const group = this.#groups[groupName];
       const textures = group.textures;
       let isPingTexture = group.isPingTexture;
 
       for (let size = stepSize; size >= 1; size >>= 1) {
-        this.renderPass(size, textures, isPingTexture);
+        this.#renderPass(size, textures, isPingTexture);
         isPingTexture = !isPingTexture;
       }
 
@@ -353,38 +352,38 @@ export class FolkDistanceField extends FolkBaseSet {
     }
 
     // Render the final result to the screen
-    this.renderToScreen();
+    this.#renderToScreen();
   }
 
   /**
    * Performs a single pass of the Jump Flooding Algorithm with a given step size for a specific distance field.
    */
-  private renderPass(stepSize: number, textures: WebGLTexture[], isPingTexture: boolean) {
-    const gl = this.glContext;
+  #renderPass(stepSize: number, textures: WebGLTexture[], isPingTexture: boolean) {
+    const gl = this.#glContext;
 
     // Swap textures for ping-pong rendering
     const inputTexture = isPingTexture ? textures[0] : textures[1];
     const outputTexture = isPingTexture ? textures[1] : textures[0];
 
     // Bind framebuffer to output texture
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.#framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
 
     // Use the JFA shader program
-    gl.useProgram(this.jfaProgram);
+    gl.useProgram(this.#jfaProgram);
 
     // Compute and set the offsets uniform for neighboring pixels
-    const offsets = this.computeOffsets(stepSize);
-    const offsetsLocation = gl.getUniformLocation(this.jfaProgram, 'u_offsets');
+    const offsets = this.#computeOffsets(stepSize);
+    const offsetsLocation = gl.getUniformLocation(this.#jfaProgram, 'u_offsets');
     gl.uniform2fv(offsetsLocation, offsets);
 
     // Bind input texture containing the previous step's results
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, inputTexture);
-    gl.uniform1i(gl.getUniformLocation(this.jfaProgram, 'u_previousTexture'), 0);
+    gl.uniform1i(gl.getUniformLocation(this.#jfaProgram, 'u_previousTexture'), 0);
 
     // Draw a fullscreen quad to process all pixels
-    this.drawFullscreenQuad();
+    this.#drawFullscreenQuad();
 
     // Unbind framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -394,44 +393,44 @@ export class FolkDistanceField extends FolkBaseSet {
    * Renders the final distance field to the screen using the render shader program.
    * Merges 'mergeA' and 'mergeB' distance fields during rendering, while 'others' are not merged.
    */
-  private renderToScreen() {
-    const gl = this.glContext;
+  #renderToScreen() {
+    const gl = this.#glContext;
 
     // Unbind framebuffer to render directly to the canvas
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
     // Use the render shader program
-    gl.useProgram(this.renderProgram);
+    gl.useProgram(this.#renderProgram);
 
     // Bind the final textures from each group
     let textureUnit = 0;
-    for (const groupName in this.groups) {
-      const group = this.groups[groupName];
+    for (const groupName in this.#groups) {
+      const group = this.#groups[groupName];
       const finalTexture = group.textures[group.isPingTexture ? 0 : 1];
       gl.activeTexture(gl.TEXTURE0 + textureUnit);
       gl.bindTexture(gl.TEXTURE_2D, finalTexture);
-      gl.uniform1i(gl.getUniformLocation(this.renderProgram, `u_texture_${groupName}`), textureUnit);
+      gl.uniform1i(gl.getUniformLocation(this.#renderProgram, `u_texture_${groupName}`), textureUnit);
       textureUnit++;
     }
 
     // Draw a fullscreen quad to display the result
-    this.drawFullscreenQuad();
+    this.#drawFullscreenQuad();
   }
 
   /**
    * Draws a fullscreen quad to cover the entire canvas.
    * This is used in shader passes where every pixel needs to be processed.
    */
-  private drawFullscreenQuad() {
-    const gl = this.glContext;
+  #drawFullscreenQuad() {
+    const gl = this.#glContext;
 
     // Initialize the quad geometry if it hasn't been done yet
-    if (!this.fullscreenQuadVAO) {
-      this.initFullscreenQuad();
+    if (!this.#fullscreenQuadVAO) {
+      this.#initFullscreenQuad();
     }
 
-    gl.bindVertexArray(this.fullscreenQuadVAO);
+    gl.bindVertexArray(this.#fullscreenQuadVAO);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.bindVertexArray(null);
   }
@@ -439,20 +438,20 @@ export class FolkDistanceField extends FolkBaseSet {
   /**
    * Initializes the geometry and buffers for the fullscreen quad.
    */
-  private initFullscreenQuad() {
-    const gl = this.glContext;
+  #initFullscreenQuad() {
+    const gl = this.#glContext;
 
     // Define positions for a quad covering the entire screen
     const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
 
-    this.fullscreenQuadVAO = gl.createVertexArray()!;
-    gl.bindVertexArray(this.fullscreenQuadVAO);
+    this.#fullscreenQuadVAO = gl.createVertexArray()!;
+    gl.bindVertexArray(this.#fullscreenQuadVAO);
 
     const positionBuffer = gl.createBuffer()!;
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    const positionAttributeLocation = gl.getAttribLocation(this.jfaProgram, 'a_position');
+    const positionAttributeLocation = gl.getAttribLocation(this.#jfaProgram, 'a_position');
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.vertexAttribPointer(
       positionAttributeLocation,
@@ -470,24 +469,24 @@ export class FolkDistanceField extends FolkBaseSet {
    * Handles window resize events by updating canvas size, re-initializing textures and seed points,
    * and rerunning the Jump Flooding Algorithm.
    */
-  private handleResize = () => {
-    const gl = this.glContext;
+  #handleResize = () => {
+    const gl = this.#glContext;
 
     // Update canvas size to match the container instead of window
-    this.canvas.width = this.clientWidth;
-    this.canvas.height = this.clientHeight;
+    this.#canvas.width = this.clientWidth;
+    this.#canvas.height = this.clientHeight;
 
     // Update the viewport
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
     // Re-initialize textures with the new dimensions
-    this.initPingPongTextures();
+    this.#initPingPongTextures();
 
     // Re-initialize seed point rendering to update positions
-    this.populateSeedPoints();
+    this.#populateSeedPoints();
 
     // Rerun the Jump Flooding Algorithm with the new sizes
-    this.runJumpFloodingAlgorithm();
+    this.#runJumpFloodingAlgorithm();
   };
 
   /**
@@ -496,13 +495,13 @@ export class FolkDistanceField extends FolkBaseSet {
    * @param stepSize The current step size for neighbor sampling.
    * @returns A Float32Array of offsets.
    */
-  private computeOffsets(stepSize: number): Float32Array {
-    const aspectRatio = this.canvas.width / this.canvas.height;
+  #computeOffsets(stepSize: number): Float32Array {
+    const aspectRatio = this.#canvas.width / this.#canvas.height;
     const offsets: number[] = [];
     for (let y = -1; y <= 1; y++) {
       for (let x = -1; x <= 1; x++) {
         // Adjust x offset by aspect ratio to maintain uniform distances
-        offsets.push((x * stepSize * aspectRatio) / this.canvas.width, (y * stepSize) / this.canvas.height);
+        offsets.push((x * stepSize * aspectRatio) / this.#canvas.width, (y * stepSize) / this.#canvas.height);
       }
     }
     return new Float32Array(offsets);
@@ -512,12 +511,12 @@ export class FolkDistanceField extends FolkBaseSet {
    * Cleans up WebGL resources to prevent memory leaks.
    * This is called when the element is disconnected from the DOM.
    */
-  private cleanupWebGLResources() {
-    const gl = this.glContext;
+  #cleanupWebGLResources() {
+    const gl = this.#glContext;
 
     // Delete resources for each group
-    for (const groupName in this.groups) {
-      const group = this.groups[groupName];
+    for (const groupName in this.#groups) {
+      const group = this.#groups[groupName];
 
       // Delete textures
       group.textures.forEach((texture) => gl.deleteTexture(texture));
@@ -535,27 +534,27 @@ export class FolkDistanceField extends FolkBaseSet {
     }
 
     // Delete framebuffer
-    if (this.framebuffer) {
-      gl.deleteFramebuffer(this.framebuffer);
+    if (this.#framebuffer) {
+      gl.deleteFramebuffer(this.#framebuffer);
     }
 
     // Delete fullscreen quad VAO
-    if (this.fullscreenQuadVAO) {
-      gl.deleteVertexArray(this.fullscreenQuadVAO);
+    if (this.#fullscreenQuadVAO) {
+      gl.deleteVertexArray(this.#fullscreenQuadVAO);
     }
 
     // Delete shader programs
-    if (this.jfaProgram) {
-      gl.deleteProgram(this.jfaProgram);
+    if (this.#jfaProgram) {
+      gl.deleteProgram(this.#jfaProgram);
     }
-    if (this.renderProgram) {
-      gl.deleteProgram(this.renderProgram);
+    if (this.#renderProgram) {
+      gl.deleteProgram(this.#renderProgram);
     }
-    if (this.seedProgram) {
-      gl.deleteProgram(this.seedProgram);
+    if (this.#seedProgram) {
+      gl.deleteProgram(this.#seedProgram);
     }
 
-    this.groupBuffers = {};
+    this.#groupBuffers = {};
   }
 }
 
