@@ -1,9 +1,9 @@
-import { FolkBaseSet } from './folk-base-set.ts';
+import { AnimationFrameController, AnimationFrameControllerHost, TransformIntegrator } from '@lib';
 import { PropertyValues } from '@lit/reactive-element';
 import { Layout } from 'webcola';
-import { FolkShape } from './folk-shape.ts';
-import { AnimationFrameController, AnimationFrameControllerHost, TransformIntegrator } from '@lib';
 import { FolkBaseConnection } from './folk-base-connection';
+import { FolkBaseSet } from './folk-base-set.ts';
+import { FolkShape } from './folk-shape.ts';
 
 export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHost {
   static override tagName = 'folk-graph';
@@ -71,7 +71,7 @@ export class FolkGraph extends FolkBaseSet implements AnimationFrameControllerHo
 
     console.log(colaNodes, colaLinks);
 
-    this.graphSim.nodes(colaNodes).links(colaLinks).linkDistance(150).avoidOverlaps(true).handleDisconnected(true);
+    this.graphSim.nodes(colaNodes).links(colaLinks).linkDistance(250).avoidOverlaps(true).handleDisconnected(true);
   }
 
   private createNodes() {

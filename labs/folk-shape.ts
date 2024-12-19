@@ -1,5 +1,6 @@
 import { getResizeCursorUrl, getRotateCursorUrl } from '@labs/utils/cursors';
-import { DOMRectTransform, DOMRectTransformReadonly, Point, ResizeObserverManager, TransformEvent, Vector } from '@lib';
+import { DOMRectTransform, DOMRectTransformReadonly, Point, TransformEvent, Vector } from '@lib';
+import { ResizeObserverManager } from '@lib/resize-observer';
 import { css, html } from '@lib/tags';
 
 const resizeObserver = new ResizeObserverManager();

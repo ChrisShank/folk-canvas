@@ -121,7 +121,7 @@ class IframeObserver {
       callback({
         target: this.#iframe,
         contentRect,
-      })
+      }),
     );
   }
 
@@ -165,7 +165,7 @@ export class FolkObserver {
   observe(
     target: Element,
     callback: ClientRectObserverEntryCallback,
-    { iframeSelector }: FolkObserverOptions = {}
+    { iframeSelector }: FolkObserverOptions = {},
   ): void {
     if (target instanceof HTMLIFrameElement && iframeSelector) {
       let iframeObserver = this.#iframeMap.get(target);
@@ -202,7 +202,7 @@ export class FolkObserver {
   unobserve(
     target: Element,
     callback: ClientRectObserverEntryCallback,
-    { iframeSelector }: FolkObserverOptions = {}
+    { iframeSelector }: FolkObserverOptions = {},
   ): void {
     if (target instanceof HTMLIFrameElement && iframeSelector) {
       let iframeObserver = this.#iframeMap.get(target);

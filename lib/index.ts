@@ -1,6 +1,7 @@
-// Animation and timing
-export * from './animation-frame-controller';
-export * from './rAF';
+// Observers (move these to the top since they're dependencies)
+export * from './client-rect-observer';
+export * from './folk-observer';
+export * from './resize-observer';
 
 // Core utilities and types
 export * from './Matrix';
@@ -12,10 +13,9 @@ export * from '../labs/utils/cursors';
 export * from './DOMRectTransform';
 export * from './TransformEvent';
 
-// Observers
-export * from './client-rect-observer';
-export * from './folk-observer';
-export * from './resize-observer';
+// Animation and timing
+export * from './animation-frame-controller';
+export * from './rAF';
 
 // Integration and effects
 export * from './collision';
