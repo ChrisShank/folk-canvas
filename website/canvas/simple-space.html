@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simple Space Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      simple-space {
+        width: 100%;
+        height: 100%;
+      }
+      folk-shape {
+        background: rgb(134, 37, 37);
+        border: 1px solid rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <simple-space id="space">
+      <folk-shape x="250" y="100" width="50" height="50"></folk-shape>
+      <folk-shape x="200" y="200" width="75" height="75" rotation="90"></folk-shape>
+      <folk-shape x="50" y="250" width="25" height="25" rotation="180"></folk-shape>
+      <folk-shape x="350" y="50" width="100" height="100" rotation="270"></folk-shape>
+      <folk-shape x="500" y="500" width="150" height="150" rotation="360"></folk-shape>
+    </simple-space>
+
+    <script type="module">
+      import '@labs/standalone/simple-space.ts';
+      import '@labs/standalone/folk-shape.ts';
+
+      const space = document.getElementById('space');
+      document.addEventListener('click', () => {
+        // Random rotation between 30 and 75 degrees
+        const randomRotation = Math.random() * 45 + 30;
+        space.rotate(randomRotation);
+      });
+    </script>
+  </body>
+</html>

@@ -477,6 +477,7 @@ export class FolkShape extends HTMLElement {
 
   #dispatchTransformEvent() {
     const emmittedRect = new DOMRectTransform(this.#rect);
+    console.log('emit X', this.#rect.x);
     const event = new TransformEvent(emmittedRect, this.#previousRect);
     this.dispatchEvent(event);
 
@@ -496,6 +497,7 @@ export class FolkShape extends HTMLElement {
       emmittedRect.rotation = this.#previousRect.rotation;
     }
 
+    console.log('applied X', emmittedRect.x);
     this.style.transform = emmittedRect.toCssString();
     this.style.width = this.#attrWidth === 'auto' ? '' : `${emmittedRect.width}px`;
     this.style.height = this.#attrHeight === 'auto' ? '' : `${emmittedRect.height}px`;
