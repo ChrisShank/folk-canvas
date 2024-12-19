@@ -2,9 +2,10 @@ import { FolkShape } from '../labs/folk-shape';
 import {
   ClientRectObserver,
   ClientRectObserverEntry,
-  type ClientRectObserverEntryCallback,
 } from './client-rect-observer';
 import { TransformEvent } from './TransformEvent';
+
+export type FolkObserverEntry = (entry: ClientRectObserverEntry) => void;
 
 export type FolkObserverOptions = {
   iframeSelector?: string;
@@ -12,7 +13,7 @@ export type FolkObserverOptions = {
 
 interface IframeChild {
   rect: DOMRectReadOnly | null;
-  callbacks: Set<ClientRectObserverEntryCallback>;
+  callbacks: Set<FolkObserverEntry>;
 }
 
 type PostMessageSendEvent =
@@ -38,7 +39,7 @@ class IframeObserver {
     window.addEventListener('message', this.#onPostmessage);
   }
 
-  observeChild(selector: string, callback: ClientRectObserverEntryCallback) {
+  observeChild(selector: string, callback: FolkObserverEntry) {
     let child = this.#iframeChildren.get(selector);
 
     if (child === undefined) {
@@ -55,7 +56,7 @@ class IframeObserver {
     child.callbacks.add(callback);
   }
 
-  unobserveChild(selector: string, callback: ClientRectObserverEntryCallback) {
+  unobserveChild(selector: string, callback: FolkObserverEntry) {
     let child = this.#iframeChildren.get(selector);
 
     if (child === undefined) return;
@@ -141,7 +142,7 @@ export class FolkObserver {
     return FolkObserver.#instance;
   }
 
-  #elementMap = new WeakMap<Element, Set<ClientRectObserverEntryCallback>>();
+  #elementMap = new WeakMap<Element, Set<FolkObserverEntry>>();
   #iframeMap = new WeakMap<HTMLIFrameElement, IframeObserver>();
 
   #vo = new ClientRectObserver((entries) => {
@@ -164,7 +165,7 @@ export class FolkObserver {
 
   observe(
     target: Element,
-    callback: ClientRectObserverEntryCallback,
+    callback: FolkObserverEntry,
     { iframeSelector }: FolkObserverOptions = {},
   ): void {
     if (target instanceof HTMLIFrameElement && iframeSelector) {
@@ -201,7 +202,7 @@ export class FolkObserver {
 
   unobserve(
     target: Element,
-    callback: ClientRectObserverEntryCallback,
+    callback: FolkObserverEntry,
     { iframeSelector }: FolkObserverOptions = {},
   ): void {
     if (target instanceof HTMLIFrameElement && iframeSelector) {
