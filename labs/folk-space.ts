@@ -16,7 +16,7 @@ export class FolkSpace extends FolkElement {
   static styles = css`
     :host {
       display: block;
-      // perspective: 1000px;
+      perspective: 1000px;
       position: relative;
       width: 100%;
       height: 100%;
@@ -30,20 +30,12 @@ export class FolkSpace extends FolkElement {
       transform-origin: center;
     }
 
-    .space.rotate {
-      transform: rotateX(-90deg);
-    }
-
     .face {
       position: absolute;
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
       transition: transform 0.6s linear;
-    }
-
-    .front {
-      transform: rotateX(0deg);
     }
 
     .back {
@@ -70,32 +62,40 @@ export class FolkSpace extends FolkElement {
       </div>
     `);
 
+    this.transition();
+
     return root;
   }
 
   localToScreen(point: Point, face: 'front' | 'back'): Point {
     const spaceRect = this.getBoundingClientRect();
+    const centerX = spaceRect.width / 2;
     const centerY = spaceRect.height / 2;
+    const perspective = 1000;
 
-    // Calculate transition rotation
     let rotation = 0;
     if (face === 'front') {
-      // When rotating to back, go from 0 to -90
-      // When rotating to front, go from -90 to 0
       rotation = this.#isRotated ? -90 * this.#transitionProgress : -90 * (1 - this.#transitionProgress);
     } else {
-      // When rotating to back, go from 90 to 0
-      // When rotating to front, go from 0 to 90
       rotation = this.#isRotated ? 90 * (1 - this.#transitionProgress) : 90 * this.#transitionProgress;
     }
 
-    const matrix = new DOMMatrix().translate(0, centerY).rotate(rotation, 0, 0).translate(0, -centerY);
+    // Create perspective matrix
+    const matrix = new DOMMatrix()
+      .translate(centerX, centerY)
+      .multiply(new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1 / perspective, 0, 0, 0, 1]))
+      .translate(-centerX, -centerY)
+      .translate(centerX, centerY)
+      .rotate(rotation, 0, 0)
+      .translate(-centerX, -centerY);
 
-    const transformedPoint = matrix.transformPoint(new DOMPoint(point.x, point.y));
+    const transformedPoint = matrix.transformPoint(new DOMPoint(point.x, point.y, 0, 1));
 
+    // Perform perspective division
+    const w = transformedPoint.w || 1;
     return {
-      x: transformedPoint.x,
-      y: transformedPoint.y,
+      x: transformedPoint.x / w,
+      y: transformedPoint.y / w,
     };
   }
 
