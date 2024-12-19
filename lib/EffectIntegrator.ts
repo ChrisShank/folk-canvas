@@ -5,47 +5,47 @@ import type { FolkShape } from '../labs/folk-shape';
  * Systems register, yield effects, and await integration when all systems are ready.
  */
 export class EffectIntegrator<E extends Element, T> {
-  private pending = new Map<E, T[] | T>();
-  private systems = new Set<string>();
-  private waiting = new Set<string>();
-  private resolvers: ((value: Map<E, T>) => void)[] = [];
+  #pending = new Map<E, T[] | T>();
+  #systems = new Set<string>();
+  #waiting = new Set<string>();
+  #resolvers: ((value: Map<E, T>) => void)[] = [];
 
   /** Register a system to participate in effect integration */
   register(id: string) {
-    this.systems.add(id);
+    this.#systems.add(id);
     return {
       yield: (element: E, effect: T) => {
-        if (!this.pending.has(element)) {
-          this.pending.set(element, []);
+        if (!this.#pending.has(element)) {
+          this.#pending.set(element, []);
         }
-        (this.pending.get(element)! as T[]).push(effect);
+        (this.#pending.get(element)! as T[]).push(effect);
       },
 
       /** Wait for all systems to submit effects, then receive integrated results */
       integrate: async (): Promise<Map<E, T>> => {
-        this.waiting.add(id);
+        this.#waiting.add(id);
 
-        if (this.waiting.size === this.systems.size) {
+        if (this.#waiting.size === this.#systems.size) {
           // Last system to call integrate - do integration
-          for (const [element, effects] of this.pending) {
-            this.pending.set(element, (this.constructor as typeof EffectIntegrator).integrate(element, effects as T[]));
+          for (const [element, effects] of this.#pending) {
+            this.#pending.set(element, (this.constructor as typeof EffectIntegrator).integrate(element, effects as T[]));
           }
-          const results = this.pending as Map<E, T>;
+          const results = this.#pending as Map<E, T>;
 
           // Reset for next frame
-          this.pending = new Map();
-          this.waiting.clear();
+          this.#pending = new Map();
+          this.#waiting.clear();
 
           // Resolve all waiting systems
-          this.resolvers.forEach((resolve) => resolve(results));
-          this.resolvers = [];
+          this.#resolvers.forEach((resolve) => resolve(results));
+          this.#resolvers = [];
 
           return results;
         }
 
         // Not all systems ready - wait for integration
         return new Promise((resolve) => {
-          this.resolvers.push(resolve);
+          this.#resolvers.push(resolve);
         });
       },
     };
@@ -67,13 +67,13 @@ interface TransformEffect {
 }
 
 export class TransformIntegrator extends EffectIntegrator<FolkShape, TransformEffect> {
-  private static instance: TransformIntegrator;
+  static #instance: TransformIntegrator;
 
   static register(id: string) {
-    if (!TransformIntegrator.instance) {
-      TransformIntegrator.instance = new TransformIntegrator();
+    if (!TransformIntegrator.#instance) {
+      TransformIntegrator.#instance = new TransformIntegrator();
     }
-    return TransformIntegrator.instance.register(id);
+    return TransformIntegrator.#instance.register(id);
   }
 
   /** If the element is focused, return the elements rect, otherwise average the effects */
