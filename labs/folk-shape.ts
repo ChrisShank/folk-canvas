@@ -1,9 +1,9 @@
 import { getResizeCursorUrl, getRotateCursorUrl } from '@labs/utils/cursors';
 import { DOMRectTransform, DOMRectTransformReadonly, Point, TransformEvent, Vector } from '@lib';
-import { ResizeObserverManager } from '@lib/resize-observer';
+import { ResizeManager } from '@lib/resize-manger';
 import { css, html } from '@lib/tags';
 
-const resizeObserver = new ResizeObserverManager();
+const resizeManager = new ResizeManager();
 
 type ResizeHandle = 'resize-top-left' | 'resize-top-right' | 'resize-bottom-right' | 'resize-bottom-left';
 type RotateHandle = 'rotation-top-left' | 'rotation-top-right' | 'rotation-bottom-right' | 'rotation-bottom-left';
@@ -211,10 +211,10 @@ export class FolkShape extends HTMLElement {
 
   set width(width: Dimension) {
     if (width === 'auto') {
-      resizeObserver.observe(this, this.#onAutoResize);
+      resizeManager.observe(this, this.#onAutoResize);
     } else {
       if (this.#attrWidth === 'auto' && this.#attrHeight !== 'auto') {
-        resizeObserver.unobserve(this, this.#onAutoResize);
+        resizeManager.unobserve(this, this.#onAutoResize);
       }
       this.#previousRect.width = this.#rect.width;
       this.#rect.width = width;
@@ -229,10 +229,10 @@ export class FolkShape extends HTMLElement {
 
   set height(height: Dimension) {
     if (height === 'auto') {
-      resizeObserver.observe(this, this.#onAutoResize);
+      resizeManager.observe(this, this.#onAutoResize);
     } else {
       if (this.#attrHeight === 'auto' && this.#attrWidth !== 'auto') {
-        resizeObserver.unobserve(this, this.#onAutoResize);
+        resizeManager.unobserve(this, this.#onAutoResize);
       }
       this.#previousRect.height = this.#rect.height;
       this.#rect.height = height;

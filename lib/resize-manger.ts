@@ -1,7 +1,8 @@
-export type ResizeObserverEntryCallback = (entry: ResizeObserverEntry) => void;
+export type ResizeManagerEntryCallback = (entry: ResizeObserverEntry) => void;
 
-export class ResizeObserverManager {
-  #elementMap = new WeakMap<Element, Set<ResizeObserverEntryCallback>>();
+/** A more composition interface to use `ResizeObserver`, allowing the same element to have multiple observers. */
+export class ResizeManager {
+  #elementMap = new WeakMap<Element, Set<ResizeManagerEntryCallback>>();
   #elementEntry = new WeakMap<Element, ResizeObserverEntry>();
 
   #vo = new ResizeObserver((entries) => {
@@ -11,7 +12,8 @@ export class ResizeObserverManager {
     }
   });
 
-  observe(target: Element, callback: ResizeObserverEntryCallback): void {
+  /** Observe the `target` element with `callback`. */
+  observe(target: Element, callback: ResizeManagerEntryCallback): void {
     let callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) {
@@ -27,7 +29,8 @@ export class ResizeObserverManager {
     callbacks.add(callback);
   }
 
-  unobserve(target: Element, callback: ResizeObserverEntryCallback): void {
+  /** Unobserve the `target` element with `callback`. */
+  unobserve(target: Element, callback: ResizeManagerEntryCallback): void {
     const callbacks = this.#elementMap.get(target);
 
     if (callbacks === undefined) return;
