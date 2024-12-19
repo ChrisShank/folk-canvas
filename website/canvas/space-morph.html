@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -23,12 +23,19 @@
       [slot='front'] folk-shape {
         background: rgb(187, 178, 178);
       }
+
+      folk-rope {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
+    <folk-rope id="rope"></folk-rope>
     <folk-space id="space">
       <div slot="front">
-        <folk-shape x="100" y="100" width="50" height="50"></folk-shape>
+        <folk-shape id="source" x="100" y="100" width="50" height="50"></folk-shape>
         <folk-shape x="200" y="200" width="75" height="75" rotation="90"></folk-shape>
         <folk-shape x="50" y="250" width="25" height="25" rotation="180"></folk-shape>
         <folk-shape x="350" y="50" width="100" height="100" rotation="270"></folk-shape>
@@ -37,7 +44,7 @@
         <folk-shape x="700" y="700" width="250" height="250" rotation="540"></folk-shape>
       </div>
       <div slot="back">
-        <folk-shape x="150" y="150" width="50" height="50" rotation="45"></folk-shape>
+        <folk-shape id="target" x="150" y="150" width="50" height="50" rotation="45"></folk-shape>
         <folk-shape x="300" y="400" width="150" height="50" rotation="45"></folk-shape>
         <folk-shape x="250" y="350" width="100" height="100" rotation="135"></folk-shape>
         <folk-shape x="400" y="200" width="75" height="75" rotation="225"></folk-shape>
@@ -50,8 +57,50 @@
     <script type="module">
       import '@labs/standalone/folk-space.ts';
       import '@labs/standalone/folk-shape.ts';
+      import '@labs/standalone/folk-rope.ts';
 
-      document.addEventListener('click', () => window.space.transition());
+      const space = document.getElementById('space');
+      const rope = document.getElementById('rope');
+      const source = document.getElementById('source');
+      const target = document.getElementById('target');
+
+      // Update rope connection points
+      function updateRopePoints() {
+        if (!source || !target) return;
+
+        // Get the shapes' transforms
+        const sourceTransform = source.getTransformDOMRect();
+        const targetTransform = target.getTransformDOMRect();
+
+        // Get center points in local space
+        const sourceCenter = {
+          x: sourceTransform.x + sourceTransform.width / 2,
+          y: sourceTransform.y + sourceTransform.height / 2,
+        };
+
+        const targetCenter = {
+          x: targetTransform.x + targetTransform.width / 2,
+          y: targetTransform.y + targetTransform.height / 2,
+        };
+
+        // Convert to screen space
+        const sourcePoint = space.localToScreen(sourceCenter, 'front');
+        const targetPoint = space.localToScreen(targetCenter, 'back');
+
+        // Update rope
+        rope.sourceRect = { x: sourcePoint.x, y: sourcePoint.y, width: 0, height: 0 };
+        rope.targetRect = { x: targetPoint.x, y: targetPoint.y, width: 0, height: 0 };
+      }
+
+      // Update on animation frame
+      function animate() {
+        updateRopePoints();
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Handle transition
+      document.addEventListener('click', () => space.transition());
     </script>
   </body>
 </html>

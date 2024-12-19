@@ -1,10 +1,11 @@
-import { Matrix } from './Matrix';
 import { Point } from './types';
 
 interface DOMTransformInit {
   x?: number;
   y?: number;
-  rotation?: number;
+  rotationX?: number;
+  rotationY?: number;
+  rotationZ?: number;
 }
 
 /**
@@ -15,20 +16,24 @@ export class DOMTransform {
   // Private properties for position and rotation
   #x: number;
   #y: number;
-  #rotation: number;
+  #rotationX: number;
+  #rotationY: number;
+  #rotationZ: number;
 
   // Internal transformation matrices
-  #transformMatrix: Matrix;
-  #inverseMatrix: Matrix;
+  #transformMatrix: DOMMatrix;
+  #inverseMatrix: DOMMatrix;
 
   constructor(init: DOMTransformInit = {}) {
     this.#x = init.x ?? 0;
     this.#y = init.y ?? 0;
-    this.#rotation = init.rotation ?? 0;
+    this.#rotationX = init.rotationX ?? 0;
+    this.#rotationY = init.rotationY ?? 0;
+    this.#rotationZ = init.rotationZ ?? 0;
 
-    // Initialize transformation matrices
-    this.#transformMatrix = Matrix.Identity();
-    this.#inverseMatrix = Matrix.Identity();
+    // Initialize with identity matrices
+    this.#transformMatrix = new DOMMatrix();
+    this.#inverseMatrix = new DOMMatrix();
 
     this.#updateMatrices();
   }
@@ -49,41 +54,74 @@ export class DOMTransform {
     this.#updateMatrices();
   }
 
+  get rotationX(): number {
+    return this.#rotationX;
+  }
+  set rotationX(value: number) {
+    this.#rotationX = value;
+    this.#updateMatrices();
+  }
+
+  get rotationY(): number {
+    return this.#rotationY;
+  }
+  set rotationY(value: number) {
+    this.#rotationY = value;
+    this.#updateMatrices();
+  }
+
+  get rotationZ(): number {
+    return this.#rotationZ;
+  }
+  set rotationZ(value: number) {
+    this.#rotationZ = value;
+    this.#updateMatrices();
+  }
+
   get rotation(): number {
-    return this.#rotation;
+    return this.#rotationZ;
   }
   set rotation(value: number) {
-    this.#rotation = value;
+    this.#rotationZ = value;
     this.#updateMatrices();
   }
 
   // Matrix accessors
-  get matrix(): Matrix {
+  get matrix(): DOMMatrix {
     return this.#transformMatrix;
   }
-  get inverse(): Matrix {
+  get inverse(): DOMMatrix {
     return this.#inverseMatrix;
   }
 
   /**
-   * Converts a point from **parent space** to **local space**.
+   * Converts a point from parent space to local space.
    */
   toPoint(point: Point): Point {
-    return this.#inverseMatrix.applyToPoint(point);
+    // Transform using DOMMatrix directly without DOMPoint
+    const { a, b, c, d, e, f } = this.#inverseMatrix;
+    return {
+      x: point.x * a + point.y * c + e,
+      y: point.x * b + point.y * d + f,
+    };
   }
 
   /**
-   * Converts a point from **local space** to **parent space**.
+   * Converts a point from local space to parent space.
    */
   toInversePoint(point: Point): Point {
-    return this.#transformMatrix.applyToPoint(point);
+    const { a, b, c, d, e, f } = this.#transformMatrix;
+    return {
+      x: point.x * a + point.y * c + e,
+      y: point.x * b + point.y * d + f,
+    };
   }
 
   /**
    * Generates a CSS transform string representing the transformation.
    */
   toCssString(): string {
-    return this.#transformMatrix.toCssString();
+    return this.#transformMatrix.toString();
   }
 
   /**
@@ -93,7 +131,9 @@ export class DOMTransform {
     return {
       x: this.x,
       y: this.y,
-      rotation: this.rotation,
+      rotationX: this.rotationX,
+      rotationY: this.rotationY,
+      rotationZ: this.rotationZ,
     };
   }
 
@@ -101,8 +141,14 @@ export class DOMTransform {
    * Updates the transformation matrices based on the current position and rotation.
    */
   #updateMatrices() {
-    this.#transformMatrix.identity().translate(this.#x, this.#y).rotate(this.#rotation);
+    // Create a fresh identity matrix
+    this.#transformMatrix = new DOMMatrix()
+      .translate(this.#x, this.#y)
+      .rotate(0, 0, this.#rotationZ)
+      .rotate(0, this.#rotationY, 0)
+      .rotate(this.#rotationX, 0, 0);
 
-    this.#inverseMatrix = this.#transformMatrix.clone().invert();
+    // DOMMatrix has built-in inverse calculation
+    this.#inverseMatrix = this.#transformMatrix.inverse();
   }
 }
