@@ -1,7 +1,6 @@
 import type { Point } from './types';
 
-// TODO: find right value for precision
-const roundToDomPrecision = (value: number) => Math.round(value * 100000) / 100000;
+export const toDOMPrecision = (value: number) => Math.round(value * 1e4) / 1e4;
 
 const PI2 = Math.PI * 2;
 const TAU = Math.PI / 2;
@@ -276,9 +275,9 @@ export class Matrix implements IMatrix {
   }
 
   static ToCssString(m: MatrixInit) {
-    return `matrix(${roundToDomPrecision(m.a)}, ${roundToDomPrecision(m.b)}, ${roundToDomPrecision(
+    return `matrix(${toDOMPrecision(m.a)}, ${toDOMPrecision(m.b)}, ${toDOMPrecision(
       m.c
-    )}, ${roundToDomPrecision(m.d)}, ${roundToDomPrecision(m.e)}, ${roundToDomPrecision(m.f)})`;
+    )}, ${toDOMPrecision(m.d)}, ${toDOMPrecision(m.e)}, ${toDOMPrecision(m.f)})`;
   }
 }
 
