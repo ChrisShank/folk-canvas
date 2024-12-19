@@ -33,8 +33,6 @@ export class DOMTransform {
     this.#updateMatrices();
   }
 
-  // Getters and setters for properties
-
   get x(): number {
     return this.#x;
   }
@@ -57,15 +55,6 @@ export class DOMTransform {
   set rotation(value: number) {
     this.#rotation = value;
     this.#updateMatrices();
-  }
-
-  /**
-   * Updates the transformation matrices based on the current position and rotation.
-   */
-  #updateMatrices() {
-    this.#transformMatrix.identity().translate(this.#x, this.#y).rotate(this.#rotation);
-
-    this.#inverseMatrix = this.#transformMatrix.clone().invert();
   }
 
   // Matrix accessors
@@ -106,5 +95,14 @@ export class DOMTransform {
       y: this.y,
       rotation: this.rotation,
     };
+  }
+
+  /**
+   * Updates the transformation matrices based on the current position and rotation.
+   */
+  #updateMatrices() {
+    this.#transformMatrix.identity().translate(this.#x, this.#y).rotate(this.#rotation);
+
+    this.#inverseMatrix = this.#transformMatrix.clone().invert();
   }
 }
