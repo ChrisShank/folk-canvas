@@ -1,3 +1,5 @@
+// this needs to move to the web extension once that's set up.
+
 import { ClientRectObserverEntry } from './client-rect-observer.ts';
 import { FolkObserver } from './folk-observer.ts';
 

@@ -81,7 +81,7 @@
 
       function updateFlowerProximity(flower) {
         const alreadyIntersection = proximitySet.has(flower);
-        // TODO: refactor this hack once resizing and the vertices API are figured out
+
         const isNowIntersecting = aabbIntersection(
           recordPlayerGeometry.getTransformDOMRect(),
           flower.getTransformDOMRect(),

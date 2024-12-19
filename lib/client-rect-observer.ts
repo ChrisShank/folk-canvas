@@ -21,7 +21,6 @@ export class ClientRectObserver {
   #rootRect = this.#root.getBoundingClientRect();
 
   #entries: ClientRectObserverEntry[] = [];
-  #rafId = -1;
 
   #callback: ClientRectObserverCallback;
 
