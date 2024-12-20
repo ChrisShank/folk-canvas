@@ -9,10 +9,6 @@
         margin: 0;
         height: 100%;
       }
-      folk-transformed-space {
-        width: 100%;
-        height: 100%;
-      }
       folk-shape {
         background: rgb(134, 37, 37);
         border: 1px solid rgba(0, 0, 0, 0.5);
@@ -37,40 +33,31 @@
 
       const space = document.querySelector('folk-transformed-space');
 
-      // Track pointer state
       let isPointerDown = false;
-      let lastPoint = null;
 
       document.addEventListener('pointerdown', (event) => {
         isPointerDown = true;
-        lastPoint = { x: event.clientX, y: event.clientY };
       });
 
       document.addEventListener('pointermove', (event) => {
-        if (!isPointerDown || !lastPoint) return;
+        if (!isPointerDown) return;
 
-        const rect = {
-          x: lastPoint.x,
-          y: lastPoint.y,
-          width: 1,
-          height: 1,
+        const point = {
+          x: event.clientX,
+          y: event.clientY,
         };
 
-        const transformedRect = FolkTransformedSpace.transformRect(rect, space);
-
-        lastPoint = { x: event.clientX, y: event.clientY };
+        const transformedPoint = FolkTransformedSpace.projectPoint(point, space);
       });
 
       document.addEventListener('pointerup', () => {
         isPointerDown = false;
-        lastPoint = null;
       });
 
-      // Keep existing click handler for rotation
       document.addEventListener('click', (event) => {
         if (event.target !== space) return;
-        const min = 20;
-        const max = 70;
+        const min = -50;
+        const max = 50;
         const randomRotation = Math.random() * (max - min) + min;
         space.rotate(randomRotation);
       });

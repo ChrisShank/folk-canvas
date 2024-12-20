@@ -4,13 +4,6 @@ import { html } from '@lib/tags';
 import { TransformEvent } from '@lib/TransformEvent';
 import { css } from '@lit/reactive-element';
 
-interface TransformRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export class FolkTransformedSpace extends FolkElement {
   static override tagName = 'folk-transformed-space';
 
@@ -29,8 +22,7 @@ export class FolkTransformedSpace extends FolkElement {
       position: absolute;
       width: 100%;
       height: 100%;
-      transform-style: preserve-3d;
-      transform-origin: center;
+      transform-origin: 0 0;
       backface-visibility: hidden;
     }
   `;
@@ -46,9 +38,6 @@ export class FolkTransformedSpace extends FolkElement {
       </div>
     `);
 
-    // Listen for transform events from shapes
-    this.addEventListener('transform', this.#handleTransform);
-
     return root;
   }
 
@@ -63,93 +52,19 @@ export class FolkTransformedSpace extends FolkElement {
     Gizmos.clear();
   }
 
-  #handleTransform = (event: TransformEvent) => {
-    const previous = this.transformRect(event.previous);
-    const current = this.transformRect(event.current);
+  static projectPoint(point: Point, space: FolkTransformedSpace): Point {
+    // Visualize the click location in screen space
+    Gizmos.point(point, { color: 'red', size: 2 });
 
-    Gizmos.rect(event.current, {
-      color: 'rgba(0, 0, 255, 0.1)',
-      width: 2,
-      layer: 'default',
-    });
+    // Get the inverse of the current transform matrix
+    const inverseMatrix = space.#matrix.inverse();
 
-    Gizmos.line(event.current, current, {
-      color: 'gray',
-      width: 2,
-      layer: 'transformed',
-    });
-    Gizmos.point(event.current, {
-      color: 'blue',
-      size: 3,
-      layer: 'transformed',
-    });
-    Gizmos.point(current, {
-      color: 'red',
-      size: 3,
-      layer: 'transformed',
-    });
+    // Transform the screen point back to find where it should be placed on the transformed plane
+    const pointOnTransformedSpace = inverseMatrix.transformPoint(point);
 
-    const delta = {
-      x: current.x - previous.x,
-      y: current.y - previous.y,
-    };
+    // Visualize where we'll place the point on the transformed plane
+    Gizmos.point(pointOnTransformedSpace, { color: 'blue', size: 4, layer: 'transformed' });
 
-    event.current.x += delta.x;
-    event.current.y += delta.y;
-  };
-
-  localToScreen(point: Point): Point {
-    const spaceRect = this.getBoundingClientRect();
-    const centerX = spaceRect.width / 2;
-    const centerY = spaceRect.height / 2;
-
-    // Use the same matrix we're using for CSS
-    const matrix = new DOMMatrix().translate(centerX, centerY).multiply(this.#matrix).translate(-centerX, -centerY);
-
-    const transformedPoint = matrix.transformPoint(new DOMPoint(point.x, point.y, 0, 1));
-
-    const w = transformedPoint.w || 1;
-    return {
-      x: transformedPoint.x / w,
-      y: transformedPoint.y / w,
-    };
-  }
-
-  /**
-   * Transforms a rect from an element in either face to screen coordinates
-   */
-  transformRect(rect: TransformRect): TransformRect {
-    // Get center point
-    const center = {
-      x: rect.x,
-      y: rect.y,
-    };
-
-    // Transform center point
-    const transformedCenter = this.localToScreen(center);
-
-    return {
-      x: transformedCenter.x,
-      y: transformedCenter.y,
-      width: rect.width,
-      height: rect.height,
-    };
-  }
-
-  /**
-   * Transforms a rect using an instance of FolkTransformedSpace if it exists in the DOM
-   * @param rect The rectangle to transform
-   * @param element Any element that might be within a FolkTransformedSpace
-   * @returns The transformed rect, or the original rect if no FolkTransformedSpace is found
-   */
-  static transformRect(rect: TransformRect, element: Element): TransformRect {
-    const space = element.closest(this.tagName);
-    if (space instanceof FolkTransformedSpace) {
-      Gizmos.point(rect, { color: 'red', size: 2 });
-      const transformed = space.transformRect(rect);
-      Gizmos.point(transformed, { color: 'blue', layer: 'transformed' });
-      return transformed;
-    }
-    return rect;
+    return pointOnTransformedSpace;
   }
 }
