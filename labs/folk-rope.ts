@@ -48,7 +48,8 @@ export class FolkRope extends FolkBaseConnection implements AnimationFrameContro
     `,
   ];
 
-  #rAF = new AnimationFrameController(this);
+  // TODO: stop simulation when energy approaches 0 
+  #rAF = new AnimationFrameController(this, 10000);
 
   #svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   #path = document.createElementNS('http://www.w3.org/2000/svg', 'path');

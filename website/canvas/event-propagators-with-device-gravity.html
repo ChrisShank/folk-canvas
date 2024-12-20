@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Propagator w/ device gravity</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        overscroll-behavior: none;
+
+      }
+
+      folk-shape {
+        background-color: black;
+        border-radius: 5px;
+        color: white;
+        padding: 0px 5px;
+        z-index: 10;
+      }
+
+      button {
+        margin: 1rem;
+        background-color: black;
+        font-size: 2rem;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
+    <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
+    <folk-event-propagator
+      source="#box1"
+      target="#box2"
+      trigger="click"
+      expression="textContent: to.textContent + '!'"
+    ></folk-event-propagator>
+
+    <!-- <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
+    <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
+    <folk-event-propagator
+      source="#box3"
+      target="#box4"
+      trigger="transform"
+      expression="y: from.x, 
+rotation: from.x"
+    ></folk-event-propagator> -->
+
+    <script type="module">
+      import '@labs/standalone/folk-shape.ts';
+      import '@labs/standalone/folk-event-propagator.ts';
+
+      
+      document.addEventListener('touchmove', event => { event.preventDefault() }, { passive: false })
+
+      const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
+
+      DeviceOrientationEvent?.requestPermission();
+
+      window.addEventListener("deviceorientation", (event) => {
+        console.log(event);
+        // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
+      });
+    </script>
+  </body>
+</html>
