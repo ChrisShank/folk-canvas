@@ -28,7 +28,6 @@
       button {
         margin: 1rem;
         background-color: black;
-        font-size: 2rem;
         border-radius: 5px;
         color: white;
       }
@@ -39,6 +38,8 @@
     <p>Alpha: <span id="alpha">0</span></p>
     <p>Beta: <span id="beta">0</span></p>
     <p>Gamma: <span id="gamma">0</span></p>
+    <p>Gravity: <span id="gravity">0, 3000</span></p>
+
     <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
     <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
     <folk-event-propagator
@@ -59,6 +60,7 @@ rotation: from.x"
     ></folk-event-propagator> -->
 
     <script type="module">
+      import {requestAnimationFrame} from '@lib'
       import '@labs/standalone/folk-shape.ts';
       import '@labs/standalone/folk-event-propagator.ts';
 
@@ -67,15 +69,30 @@ rotation: from.x"
 
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
 
-      function onDeviceOrientation(e) {
-        console.log(event.alpha, event.beta, event.gamma)
-        window.alpha.textContent = event.alpha;
-        window.beta.textContent = event.beta;
-        window.gamma.textContent = event.gamma;
+      let orientationEvent;
+
+      /**
+       * 
+       * 0 -> 0, 3000
+       * 270 -> 3000, 0
+      */
+      function tick() {
+        if (orientationEvent === undefined) return;
+
+        window.alpha.textContent = orientationEvent.alpha.toFixed(2);
+        window.beta.textContent = orientationEvent.beta.toFixed(2);
+        window.gamma.textContent = orientationEvent.gamma.toFixed(2);
 
         // if (event.alpha) {
         //   // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
         // }
+        requestAnimationFrame(tick);
+      }
+
+      tick();
+
+      function onDeviceOrientation(e) {
+        orientationEvent = e;
       }
 
       window.enableGravity = async function enableGravity() {

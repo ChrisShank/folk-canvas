@@ -1,3 +1,7 @@
+// Base elements and components
+// Due to a circular dependency between folk element and folk observer this should be exported first
+export * from './folk-element';
+
 // Observers (move these to the top since they're dependencies)
 export * from './client-rect-observer';
 export * from './folk-observer';
@@ -20,9 +24,6 @@ export * from './rAF';
 // Integration and effects
 export * from './collision';
 export * from './EffectIntegrator';
-
-// Base elements and components
-export * from './folk-element';
 
 // WebGL utilities
 export * from './webgl';
