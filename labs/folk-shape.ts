@@ -2,6 +2,7 @@ import { getResizeCursorUrl, getRotateCursorUrl } from '@labs/utils/cursors';
 import { DOMRectTransform, DOMRectTransformReadonly, FolkElement, Point, TransformEvent, Vector } from '@lib';
 import { ResizeManager } from '@lib/resize-manger';
 import { html } from '@lib/tags';
+import { MAX_Z_INDEX } from '@lib/utils';
 import { css, PropertyValues } from '@lit/reactive-element';
 
 const resizeManager = new ResizeManager();
@@ -70,7 +71,7 @@ const styles = css`
 
   :host(:focus-within),
   :host(:focus-visible) {
-    z-index: calc(infinity - 1);
+    z-index: calc(${MAX_Z_INDEX} - 1);
     outline: solid 1px hsl(214, 84%, 56%);
   }
 
@@ -92,7 +93,7 @@ const styles = css`
     aspect-ratio: 1;
     display: none;
     position: absolute;
-    z-index: calc(infinity);
+    z-index: calc(${MAX_Z_INDEX} - 1);
     padding: 0;
   }
 
