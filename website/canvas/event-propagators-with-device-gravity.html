@@ -34,6 +34,7 @@
     </style>
   </head>
   <body>
+    <button onclick="enableGravity">Enable Gravity</button>
     <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
     <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
     <folk-event-propagator
@@ -62,12 +63,24 @@ rotation: from.x"
 
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
 
-      DeviceOrientationEvent?.requestPermission();
-
-      window.addEventListener("deviceorientation", (event) => {
+      function onDeviceOrientation(e) {
         console.log(event);
-        // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
-      });
+            // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
+      }
+
+      async function enableGravity() {
+        if (DeviceOrientationEvent.requestPermission) {
+          const permission = await DeviceOrientationEvent.requestPermission();
+  
+          if (permission === "granted") {
+            window.addEventListener("deviceorientation", onDeviceOrientation);
+          } else {
+            console.warn('Permission for device orientation rejected', permission)
+          }
+        } else {
+          window.addEventListener("deviceorientation", onDeviceOrientation);
+        }
+      }
     </script>
   </body>
 </html>
