@@ -9,7 +9,7 @@
         margin: 0;
         height: 100%;
       }
-      simple-space {
+      folk-transformed-space {
         width: 100%;
         height: 100%;
       }
@@ -20,22 +20,21 @@
     </style>
   </head>
   <body>
-    <simple-space id="space">
+    <folk-transformed-space>
       <folk-shape x="250" y="100" width="50" height="50"></folk-shape>
       <folk-shape x="200" y="200" width="75" height="75" rotation="90"></folk-shape>
       <folk-shape x="50" y="250" width="25" height="25" rotation="180"></folk-shape>
       <folk-shape x="350" y="50" width="100" height="100" rotation="270"></folk-shape>
       <folk-shape x="500" y="500" width="150" height="150" rotation="360"></folk-shape>
-    </simple-space>
+    </folk-transformed-space>
 
     <script type="module">
-      import '@labs/standalone/simple-space.ts';
+      import '@labs/standalone/folk-transformed-space.ts';
       import '@labs/standalone/folk-shape.ts';
 
-      const space = document.getElementById('space');
+      const space = document.querySelector('folk-transformed-space');
       document.addEventListener('click', (event) => {
         if (event.target !== space) return;
-        // Random rotation between 30 and 75 degrees
         const min = 20;
         const max = 70;
         const randomRotation = Math.random() * (max - min) + min;

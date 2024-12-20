@@ -3,8 +3,8 @@ import { html } from '@lib/tags';
 import { TransformEvent } from '@lib/TransformEvent';
 import { css } from '@lit/reactive-element';
 
-export class SimpleSpace extends FolkElement {
-  static override tagName = 'simple-space';
+export class FolkTransformedSpace extends FolkElement {
+  static override tagName = 'folk-transformed-space';
 
   static styles = css`
     :host {
