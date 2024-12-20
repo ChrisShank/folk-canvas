@@ -7,12 +7,9 @@ import { css } from '@lit/reactive-element';
 export class FolkTransformedSpace extends FolkElement {
   static override tagName = 'folk-transformed-space';
 
-  static #perspective = 1000;
-
   static styles = css`
     :host {
       display: block;
-      perspective: ${this.#perspective}px;
       position: relative;
       width: 100%;
       height: 100%;
