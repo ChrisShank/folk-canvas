@@ -70,14 +70,19 @@ rotation: from.x"
       }
 
       window.enableGravity = async function enableGravity() {
+        console.log('requesting')
         if (DeviceOrientationEvent.requestPermission) {
-          const permission = await DeviceOrientationEvent.requestPermission();
-          console.log(permission)
-          if (permission === "granted") {
-            window.addEventListener("deviceorientation", onDeviceOrientation);
-            console.log('registered')
-          } else {
-            console.warn('Permission for device orientation rejected', permission)
+          try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            console.log('permission', permission)
+            if (permission === "granted") {
+              window.addEventListener("deviceorientation", onDeviceOrientation);
+              console.log('registered')
+            } else {
+              console.warn('Permission for device orientation rejected', permission)
+            }
+          } catch (e) {
+            console.error(e);
           }
         } else {
           window.addEventListener("deviceorientation", onDeviceOrientation);
