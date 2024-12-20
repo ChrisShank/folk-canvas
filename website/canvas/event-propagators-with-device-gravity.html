@@ -80,13 +80,15 @@ rotation: from.x"
         requestAnimationFrame(tick);
         if (orientationEvent === undefined) return;
 
-        window.alpha.textContent = orientationEvent.alpha.toFixed(2);
-        window.beta.textContent = orientationEvent.beta.toFixed(2);
-        window.gamma.textContent = orientationEvent.gamma.toFixed(2);
+        window.alpha.textContent = Math.round(orientationEvent.alpha);
+        window.beta.textContent = Math.round(orientationEvent.beta);
+        window.gamma.textContent = Math.round(orientationEvent.gamma);
+        // Max out the gravity at around 3000
+        const gravity = { x: orientationEvent.gamma * 40, y: orientationEvent.beta * 20};
 
-        // if (event.alpha) {
-        //   // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
-        // }
+        window.gravity.textContent = `${Math.round(gravity.x)}, ${Math.round(gravity.y)}`;
+
+        ropes.forEach(rope => { rope.gravity =  gravity});
       }
 
       tick();
@@ -96,23 +98,17 @@ rotation: from.x"
       }
 
       window.enableGravity = async function enableGravity() {
-        console.log('requesting')
         if (DeviceOrientationEvent.requestPermission) {
-          try {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            console.log('permission', permission)
-            if (permission === "granted") {
-              window.addEventListener("deviceorientation", onDeviceOrientation);
-              console.log('registered')
-            } else {
-              console.warn('Permission for device orientation rejected', permission)
-            }
-          } catch (e) {
-            console.error(e);
+          const permission = await DeviceOrientationEvent.requestPermission();
+
+          if (permission === "granted") {
+            console.info('Permission granted')
+          } else {
+            console.warn('Permission for device orientation rejected', permission)
           }
-        } else {
-          window.addEventListener("deviceorientation", onDeviceOrientation);
         }
+
+        window.addEventListener("deviceorientation", onDeviceOrientation);
       }
     </script>
   </body>
