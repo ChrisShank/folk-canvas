@@ -60,20 +60,34 @@
       import '@labs/standalone/folk-rope.ts';
 
       const space = document.getElementById('space');
-      const rope = document.getElementById('rope');
-      const source = document.getElementById('source');
-      const target = document.getElementById('target');
+
+      // Create multiple ropes
+      const ropes = Array.from({ length: 10 }, () => {
+        const rope = document.createElement('folk-rope');
+        document.body.appendChild(rope);
+        return rope;
+      });
+
+      // Get all shapes from both front and back
+      const frontShapes = Array.from(document.querySelectorAll('[slot="front"] folk-shape'));
+      const backShapes = Array.from(document.querySelectorAll('[slot="back"] folk-shape'));
 
       function updateRopePoints() {
-        if (!source || !target) return;
+        // Connect shapes in various patterns
+        ropes.forEach((rope, index) => {
+          const sourceShape = frontShapes[index % frontShapes.length];
+          const targetShape = backShapes[index % backShapes.length];
 
-        const sourceRect = space.getElementScreenRect(source);
-        const targetRect = space.getElementScreenRect(target);
+          if (sourceShape && targetShape) {
+            const sourceRect = space.getElementScreenRect(sourceShape);
+            const targetRect = space.getElementScreenRect(targetShape);
 
-        if (sourceRect && targetRect) {
-          rope.sourceRect = sourceRect;
-          rope.targetRect = targetRect;
-        }
+            if (sourceRect && targetRect) {
+              rope.sourceRect = sourceRect;
+              rope.targetRect = targetRect;
+            }
+          }
+        });
       }
 
       function animate() {

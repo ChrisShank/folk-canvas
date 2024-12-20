@@ -135,4 +135,21 @@ export class FolkTransformedSpace extends FolkElement {
       height: rect.height,
     };
   }
+
+  /**
+   * Transforms a rect using an instance of FolkTransformedSpace if it exists in the DOM
+   * @param rect The rectangle to transform
+   * @param element Any element that might be within a FolkTransformedSpace
+   * @returns The transformed rect, or the original rect if no FolkTransformedSpace is found
+   */
+  static transformRect(rect: TransformRect, element: Element): TransformRect {
+    const space = element.closest(this.tagName);
+    if (space instanceof FolkTransformedSpace) {
+      Gizmos.point(rect, { color: 'red', size: 2 });
+      const transformed = space.transformRect(rect);
+      Gizmos.point(transformed, { color: 'blue', layer: 'transformed' });
+      return transformed;
+    }
+    return rect;
+  }
 }
