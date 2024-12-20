@@ -68,9 +68,9 @@ rotation: from.x"
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
 
       function onDeviceOrientation(e) {
-        window.alpha = event.alpha;
-        window.beta = event.beta;
-        window.gamma = event.gamma;
+        window.alpha.textContent = event.alpha;
+        window.beta.textContent = event.beta;
+        window.gamma.textContent = event.gamma;
 
         // if (event.alpha) {
         //   // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
