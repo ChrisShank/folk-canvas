@@ -3,6 +3,8 @@
 import type { Point } from './types.ts';
 import { Vector } from './Vector.ts';
 
+export const MAX_Z_INDEX = 2147483647;
+
 // Distance squared from a point p to the line segment vw
 function distanceToSegmentSq(p: Point, v: Point, w: Point): number {
   const l2 = Vector.distanceSquared(v, w);
@@ -49,7 +51,7 @@ function getPointsOnBezierCurveWithSplitting(
   points: readonly Point[],
   offset: number,
   tolerance: number,
-  newPoints?: Point[]
+  newPoints?: Point[],
 ): Point[] {
   const outPoints = newPoints || [];
   if (flatness(points, offset) < tolerance) {
@@ -97,7 +99,7 @@ export function simplifyPoints(
   start: number,
   end: number,
   epsilon: number,
-  newPoints?: Point[]
+  newPoints?: Point[],
 ): Point[] {
   const outPoints = newPoints || [];
 
@@ -155,7 +157,7 @@ export function getSvgPathFromStroke(stroke: number[][]): string {
       acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
       return acc;
     },
-    ['M', ...stroke[0], 'Q']
+    ['M', ...stroke[0], 'Q'],
   );
 
   d.push('Z');

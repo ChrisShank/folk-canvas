@@ -1,5 +1,4 @@
 import { FolkElement } from '@lib';
-import { DOMTransform } from '@lib/DOMTransform';
 import { html } from '@lib/tags';
 import { Point } from '@lib/types';
 import { css } from '@lit/reactive-element';
@@ -94,8 +93,6 @@ export class FolkSpace extends FolkElement {
     const matrix = new DOMMatrix()
       .translate(centerX, centerY)
       .multiply(new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1 / this.#perspective, 0, 0, 0, 1]))
-      .translate(-centerX, -centerY)
-      .translate(centerX, centerY)
       .multiply(face === 'front' ? this.#frontMatrix : this.#backMatrix)
       .translate(-centerX, -centerY);
 
@@ -139,7 +136,6 @@ export class FolkSpace extends FolkElement {
       y: rect.y + rect.height / 2,
     };
 
-    // Transform center point
     const transformedCenter = this.localToScreen(center, face);
 
     return {
@@ -167,18 +163,6 @@ export class FolkSpace extends FolkElement {
       return this.transformRect(rect, face);
     }
 
-    // Fallback to getBoundingClientRect
-    const rect = element.getBoundingClientRect();
-    const spaceRect = this.getBoundingClientRect();
-
-    return this.transformRect(
-      {
-        x: rect.x - spaceRect.x,
-        y: rect.y - spaceRect.y,
-        width: rect.width,
-        height: rect.height,
-      },
-      face,
-    );
+    return null;
   }
 }
