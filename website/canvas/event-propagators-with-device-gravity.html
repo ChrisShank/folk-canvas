@@ -66,15 +66,16 @@ rotation: from.x"
 
       function onDeviceOrientation(e) {
         console.log(event);
-            // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
+        // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
       }
 
       window.enableGravity = async function enableGravity() {
         if (DeviceOrientationEvent.requestPermission) {
           const permission = await DeviceOrientationEvent.requestPermission();
-  
+          console.log(permission)
           if (permission === "granted") {
             window.addEventListener("deviceorientation", onDeviceOrientation);
+            console.log('registered')
           } else {
             console.warn('Permission for device orientation rejected', permission)
           }
