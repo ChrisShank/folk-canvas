@@ -441,9 +441,9 @@ export class FolkShape extends FolkElement {
   }
 
   protected override update(changedProperties: PropertyValues): void {
-    super.update(changedProperties);
-
     this.#dispatchTransformEvent();
+    
+    super.update(changedProperties);
   }
 
   #dispatchTransformEvent() {
