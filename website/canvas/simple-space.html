@@ -33,9 +33,12 @@
       import '@labs/standalone/folk-shape.ts';
 
       const space = document.getElementById('space');
-      document.addEventListener('click', () => {
+      document.addEventListener('click', (event) => {
+        if (event.target !== space) return;
         // Random rotation between 30 and 75 degrees
-        const randomRotation = Math.random() * 45 + 30;
+        const min = 20;
+        const max = 70;
+        const randomRotation = Math.random() * (max - min) + min;
         space.rotate(randomRotation);
       });
     </script>
