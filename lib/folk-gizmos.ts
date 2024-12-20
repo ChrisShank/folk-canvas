@@ -19,6 +19,10 @@ interface RectOptions extends LineOptions {
   fill?: string;
 }
 
+interface VectorOptions extends LineOptions {
+  size?: number;
+}
+
 /**
  * Visual debugging system that renders canvas overlays in DOM containers.
  *
@@ -35,6 +39,7 @@ interface RectOptions extends LineOptions {
  * Gizmos.point({x, y});
  * Gizmos.line(start, end, { color: 'red' });
  * Gizmos.rect(domRect, { fill: 'blue' });
+ * Gizmos.vector(origin, vector, { color: 'blue', width: 2, size: 10 });
  * ```
  */
 export class Gizmos extends FolkElement {
@@ -148,6 +153,41 @@ export class Gizmos extends FolkElement {
       ctx.fill();
     }
     ctx.stroke();
+  }
+
+  /** Draws a vector with an arrow head */
+  static vector(
+    origin: Point,
+    vector: Point,
+    { color = 'blue', width = 2, size = 10, layer = Gizmos.#defaultLayer }: VectorOptions = {},
+  ) {
+    const ctx = Gizmos.#getContext(layer);
+    if (!ctx) return;
+
+    // Calculate angle and length
+    const angle = Math.atan2(vector.y - origin.y, vector.x - origin.x);
+    const arrowAngle = Math.PI / 6; // 30 degrees
+
+    // Calculate where the line should end (where arrow head begins)
+    const lineEndX = vector.x - size * Math.cos(angle);
+    const lineEndY = vector.y - size * Math.sin(angle);
+
+    // Draw the main line
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.moveTo(origin.x, origin.y);
+    ctx.lineTo(lineEndX, lineEndY);
+    ctx.stroke();
+
+    // Draw arrow head as a connected triangle
+    ctx.beginPath();
+    ctx.moveTo(vector.x, vector.y); // Tip of the arrow
+    ctx.lineTo(vector.x - size * Math.cos(angle - arrowAngle), vector.y - size * Math.sin(angle - arrowAngle));
+    ctx.lineTo(vector.x - size * Math.cos(angle + arrowAngle), vector.y - size * Math.sin(angle + arrowAngle));
+    ctx.lineTo(vector.x, vector.y); // Back to the tip
+    ctx.fillStyle = color;
+    ctx.fill();
   }
 
   /** Clears drawings from a specific layer or all layers if no layer specified */

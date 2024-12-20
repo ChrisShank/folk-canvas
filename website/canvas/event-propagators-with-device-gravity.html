@@ -34,6 +34,11 @@
   </head>
   <body>
     <button onclick="enableGravity()">Enable Gravity</button>
+    <div>
+      <label for="gravityScale">Gravity Scale:</label>
+      <input type="range" id="gravityScale" min="0" max="6000" value="3000" step="100" />
+      <span id="gravityScaleValue">3000</span>
+    </div>
     <p>Alpha: <span id="alpha">0</span></p>
     <p>Beta: <span id="beta">0</span></p>
     <p>Gamma: <span id="gamma">0</span></p>
@@ -58,11 +63,14 @@
 rotation: from.x"
     ></folk-event-propagator> -->
 
+    <folk-gizmos></folk-gizmos>
+
     <script type="module">
       import { requestAnimationFrame } from '@lib';
       import { Vector } from '@lib/Vector';
       import '@labs/standalone/folk-shape.ts';
       import '@labs/standalone/folk-event-propagator.ts';
+      import { Gizmos } from '@lib/folk-gizmos';
 
       document.addEventListener(
         'touchmove',
@@ -74,6 +82,15 @@ rotation: from.x"
 
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
       let orientationEvent;
+
+      let gravityScale = 3000;
+      const gravitySlider = document.getElementById('gravityScale');
+      const gravityScaleValue = document.getElementById('gravityScaleValue');
+
+      gravitySlider.addEventListener('input', (e) => {
+        gravityScale = parseInt(e.target.value);
+        gravityScaleValue.textContent = gravityScale;
+      });
 
       function tick() {
         requestAnimationFrame(tick);
@@ -95,10 +112,25 @@ rotation: from.x"
         const direction = Vector.normalized(downwardVector);
 
         // Scale the vector by gravity constant
-        const gravityScale = 3000;
         const gravity = Vector.scale(direction, magnitude * gravityScale);
 
         window.gravity.textContent = `${Math.round(gravity.x)}, ${Math.round(gravity.y)}`;
+
+        // Draw the gravity vector
+        const center = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        };
+
+        Gizmos.vector(
+          center,
+          {
+            x: center.x + gravity.x / 100 + 50,
+            y: center.y + gravity.y / 100 + 50,
+          },
+          { color: 'grey', width: 3, size: 15 },
+        );
+
         ropes.forEach((rope) => {
           rope.gravity = gravity;
         });
