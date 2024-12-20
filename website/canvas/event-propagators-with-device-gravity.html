@@ -87,6 +87,10 @@ rotation: from.x"
       const gravitySlider = document.getElementById('gravityScale');
       const gravityScaleValue = document.getElementById('gravityScaleValue');
 
+      // Initialize gravity scale from slider's initial value
+      gravityScale = parseInt(gravitySlider.value);
+      gravityScaleValue.textContent = gravityScale;
+
       gravitySlider.addEventListener('input', (e) => {
         gravityScale = parseInt(e.target.value);
         gravityScaleValue.textContent = gravityScale;
@@ -126,8 +130,8 @@ rotation: from.x"
         Gizmos.vector(
           center,
           {
-            x: center.x + gravity.x / 100,
-            y: center.y + gravity.y / 100,
+            x: center.x + gravity.x / 10,
+            y: center.y + gravity.y / 10,
           },
           { color: 'grey', width: 3, size: 15 },
         );
