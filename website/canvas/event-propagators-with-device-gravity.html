@@ -36,6 +36,9 @@
   </head>
   <body>
     <button onclick="enableGravity()">Enable Gravity</button>
+    <p>Alpha: <span id="alpha">0</span></p>
+    <p>Beta: <span id="beta">0</span></p>
+    <p>Gamma: <span id="gamma">0</span></p>
     <folk-shape id="box1" x="100" y="100" width="30" height="30"></folk-shape>
     <folk-shape id="box2" x="200" y="350">Hello World</folk-shape>
     <folk-event-propagator
@@ -65,8 +68,13 @@ rotation: from.x"
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
 
       function onDeviceOrientation(e) {
-        console.log(event);
-        // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
+        window.alpha = event.alpha;
+        window.beta = event.beta;
+        window.gamma = event.gamma;
+
+        // if (event.alpha) {
+        //   // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
+        // }
       }
 
       window.enableGravity = async function enableGravity() {
