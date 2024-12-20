@@ -38,8 +38,6 @@ export class FolkBaseConnection extends FolkElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
-    super.willUpdate(changedProperties);
-
     if (changedProperties.has('source')) {
       this.#unobserveSource();
 

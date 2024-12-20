@@ -1,7 +1,8 @@
 import { getResizeCursorUrl, getRotateCursorUrl } from '@labs/utils/cursors';
-import { DOMRectTransform, DOMRectTransformReadonly, Point, TransformEvent, Vector } from '@lib';
+import { DOMRectTransform, DOMRectTransformReadonly, FolkElement, Point, TransformEvent, Vector } from '@lib';
 import { ResizeManager } from '@lib/resize-manger';
-import { css, html } from '@lib/tags';
+import { html } from '@lib/tags';
+import { css, PropertyValues } from '@lit/reactive-element';
 
 const resizeManager = new ResizeManager();
 
@@ -163,15 +164,11 @@ declare global {
   }
 }
 
-export class FolkShape extends HTMLElement {
+export class FolkShape extends FolkElement {
   static tagName = 'folk-shape';
 
-  static define() {
-    if (customElements.get(this.tagName)) return;
-    customElements.define(this.tagName, this);
-  }
+  static styles = styles;
 
-  #shadow = this.attachShadow({ mode: 'open' });
   #internals = this.attachInternals();
 
   #attrWidth: Dimension = 0;
@@ -181,7 +178,7 @@ export class FolkShape extends HTMLElement {
   #previousRect = new DOMRectTransform();
   #readonlyRect = new DOMRectTransformReadonly();
 
-  #handles: Record<ResizeHandle | RotateHandle, HTMLElement>;
+  #handles!: Record<ResizeHandle | RotateHandle, HTMLElement>;
 
   #startAngle = 0;
 
@@ -192,7 +189,7 @@ export class FolkShape extends HTMLElement {
   set x(x) {
     this.#previousRect.x = this.#rect.x;
     this.#rect.x = x;
-    this.#requestUpdate();
+    this.requestUpdate('x');
   }
 
   get y() {
@@ -202,7 +199,7 @@ export class FolkShape extends HTMLElement {
   set y(y) {
     this.#previousRect.y = this.#rect.y;
     this.#rect.y = y;
-    this.#requestUpdate();
+    this.requestUpdate('x');
   }
 
   get width(): number {
@@ -220,7 +217,7 @@ export class FolkShape extends HTMLElement {
       this.#rect.width = width;
     }
     this.#attrWidth = width;
-    this.#requestUpdate();
+    this.requestUpdate('width');
   }
 
   get height(): number {
@@ -239,7 +236,7 @@ export class FolkShape extends HTMLElement {
     }
 
     this.#attrHeight = height;
-    this.#requestUpdate();
+    this.requestUpdate('height');
   }
 
   get rotation(): number {
@@ -249,7 +246,7 @@ export class FolkShape extends HTMLElement {
   set rotation(rotation: number) {
     this.#previousRect.rotation = this.#rect.rotation;
     this.#rect.rotation = rotation;
-    this.#requestUpdate();
+    this.requestUpdate('rotation');
   }
 
   #highlighted = false;
@@ -264,17 +261,16 @@ export class FolkShape extends HTMLElement {
     highlighted ? this.#internals.states.add('highlighted') : this.#internals.states.delete('highlighted');
   }
 
-  constructor() {
-    super();
+  override createRenderRoot() {
+    const root = super.createRenderRoot();
 
     this.addEventListener('pointerdown', this);
     this.addEventListener('keydown', this);
 
-    this.#shadow.adoptedStyleSheets.push(styles);
     // Ideally we would creating these lazily on first focus, but the resize handlers need to be around for delegate focus to work.
     // Maybe can add the first resize handler here, and lazily instantiate the rest when needed?
     // I can see it becoming important at scale
-    this.#shadow.setHTMLUnsafe(
+    (root as ShadowRoot).setHTMLUnsafe(
       html` <button part="rotation-top-left" tabindex="-1"></button>
         <button part="rotation-top-right" tabindex="-1"></button>
         <button part="rotation-bottom-right" tabindex="-1"></button>
@@ -287,7 +283,7 @@ export class FolkShape extends HTMLElement {
     );
 
     this.#handles = Object.fromEntries(
-      Array.from(this.#shadow.querySelectorAll('[part]')).map((el) => [
+      Array.from(root.querySelectorAll('[part]')).map((el) => [
         el.getAttribute('part') as ResizeHandle | RotateHandle,
         el as HTMLElement,
       ]),
@@ -305,14 +301,10 @@ export class FolkShape extends HTMLElement {
     this.#rect.rotateOrigin = { x: 0.5, y: 0.5 };
 
     this.#previousRect = new DOMRectTransform(this.#rect);
-  }
 
-  #isConnected = false;
-
-  connectedCallback() {
     this.setAttribute('tabindex', '0');
-    this.#isConnected = true;
-    this.#update();
+
+    return root;
   }
 
   // todo: rename to `getDOMRectTransform`
@@ -320,18 +312,8 @@ export class FolkShape extends HTMLElement {
     return this.#readonlyRect;
   }
 
-  // Similar to `Element.getClientBoundingRect()`, but returns an SVG path that precisely outlines the shape.
-  getBoundingPath(): string {
-    return '';
-  }
-
-  // We might also want some kind of utility function that maps a path into an approximate set of vertices.
-  getBoundingVertices() {
-    return [];
-  }
-
   handleEvent(event: PointerEvent | KeyboardEvent) {
-    const focusedElement = this.#shadow.activeElement as HTMLElement | null;
+    const focusedElement = (this.renderRoot as ShadowRoot).activeElement as HTMLElement | null;
     const target = event.composedPath()[0] as HTMLElement;
     let handle: Handle | null = null;
     if (target) {
@@ -457,52 +439,38 @@ export class FolkShape extends HTMLElement {
     }
   }
 
-  #isUpdating = false;
+  protected override update(changedProperties: PropertyValues): void {
+    super.update(changedProperties);
 
-  async #requestUpdate() {
-    if (!this.#isConnected) return;
-
-    if (this.#isUpdating) return;
-
-    this.#isUpdating = true;
-    await true;
-    this.#isUpdating = false;
-    this.#update();
-  }
-
-  // Any updates that should be batched should happen here like updating the DOM or emitting events should be executed here.
-  #update() {
     this.#dispatchTransformEvent();
   }
 
   #dispatchTransformEvent() {
-    const emmittedRect = new DOMRectTransform(this.#rect);
-    console.log('emit X', this.#rect.x);
-    const event = new TransformEvent(emmittedRect, this.#previousRect);
+    const emittedRect = new DOMRectTransform(this.#rect);
+    const event = new TransformEvent(emittedRect, this.#previousRect);
     this.dispatchEvent(event);
 
     if (event.xPrevented) {
-      emmittedRect.x = this.#previousRect.x;
+      emittedRect.x = this.#previousRect.x;
     }
     if (event.yPrevented) {
-      emmittedRect.y = this.#previousRect.y;
+      emittedRect.y = this.#previousRect.y;
     }
     if (event.widthPrevented) {
-      emmittedRect.width = this.#previousRect.width;
+      emittedRect.width = this.#previousRect.width;
     }
     if (event.heightPrevented) {
-      emmittedRect.height = this.#previousRect.height;
+      emittedRect.height = this.#previousRect.height;
     }
     if (event.rotatePrevented) {
-      emmittedRect.rotation = this.#previousRect.rotation;
+      emittedRect.rotation = this.#previousRect.rotation;
     }
 
-    console.log('applied X', emmittedRect.x);
-    this.style.transform = emmittedRect.toCssString();
-    this.style.width = this.#attrWidth === 'auto' ? '' : `${emmittedRect.width}px`;
-    this.style.height = this.#attrHeight === 'auto' ? '' : `${emmittedRect.height}px`;
+    this.style.transform = emittedRect.toCssString();
+    this.style.width = this.#attrWidth === 'auto' ? '' : `${emittedRect.width}px`;
+    this.style.height = this.#attrHeight === 'auto' ? '' : `${emittedRect.height}px`;
 
-    this.#readonlyRect = new DOMRectTransformReadonly(emmittedRect);
+    this.#readonlyRect = new DOMRectTransformReadonly(emittedRect);
   }
 
   #onAutoResize = (entry: ResizeObserverEntry) => {
@@ -561,7 +529,7 @@ export class FolkShape extends HTMLElement {
       nextHandle = flipYHandleMap[handle];
     }
 
-    const newTarget = this.#shadow.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
+    const newTarget = this.renderRoot.querySelector(`[part="${nextHandle}"]`) as HTMLElement;
 
     if (newTarget) {
       // Update focus for keyboard events
@@ -587,6 +555,6 @@ export class FolkShape extends HTMLElement {
       }
     }
 
-    this.#requestUpdate();
+    this.requestUpdate();
   }
 }

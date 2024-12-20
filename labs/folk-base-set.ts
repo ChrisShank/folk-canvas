@@ -45,8 +45,6 @@ export class FolkBaseSet extends FolkElement {
   }
 
   override willUpdate(changedProperties: PropertyValues<this>) {
-    super.willUpdate(changedProperties);
-
     if (changedProperties.has('sources')) {
       this.#observeSources();
     }
