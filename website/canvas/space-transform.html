@@ -33,8 +33,40 @@
     <script type="module">
       import '@labs/standalone/folk-transformed-space.ts';
       import '@labs/standalone/folk-shape.ts';
+      import { FolkTransformedSpace } from '@labs/folk-transformed-space';
 
       const space = document.querySelector('folk-transformed-space');
+
+      // Track pointer state
+      let isPointerDown = false;
+      let lastPoint = null;
+
+      document.addEventListener('pointerdown', (event) => {
+        isPointerDown = true;
+        lastPoint = { x: event.clientX, y: event.clientY };
+      });
+
+      document.addEventListener('pointermove', (event) => {
+        if (!isPointerDown || !lastPoint) return;
+
+        const rect = {
+          x: lastPoint.x,
+          y: lastPoint.y,
+          width: 1,
+          height: 1,
+        };
+
+        const transformedRect = FolkTransformedSpace.transformRect(rect, space);
+
+        lastPoint = { x: event.clientX, y: event.clientY };
+      });
+
+      document.addEventListener('pointerup', () => {
+        isPointerDown = false;
+        lastPoint = null;
+      });
+
+      // Keep existing click handler for rotation
       document.addEventListener('click', (event) => {
         if (event.target !== space) return;
         const min = 20;
