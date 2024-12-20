@@ -21,13 +21,14 @@
     "webcola": "^3.4.0"
   },
   "devDependencies": {
-    "prettier-plugin-organize-imports": "^4.1.0",
     "@types/leaflet": "^1.9.14",
     "@types/node": "^22.10.1",
     "@webgpu/types": "^0.1.51",
     "bun-types": "^1.1.38",
     "mitata": "^1.0.20",
+    "prettier-plugin-organize-imports": "^4.1.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "vite-plugin-mkcert": "^1.17.6"
   }
 }

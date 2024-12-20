@@ -1,6 +1,7 @@
-import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, IndexHtmlTransformContext, Plugin } from 'vite';
+import mkcert from 'vite-plugin-mkcert';
 
 const canvasWebsiteDir = resolve(__dirname, './website/canvas');
 
@@ -16,19 +17,22 @@ const linkGenerator = (): Plugin => {
       const files = getCanvasFiles();
       // First, handle ungrouped files
       const ungroupedFiles = files.filter(
-        (file) => !file.includes('index') && !file.startsWith('_') && !file.match(/^\[([^\]]+)\]/)
+        (file) => !file.includes('index') && !file.startsWith('_') && !file.match(/^\[([^\]]+)\]/),
       );
 
       // Then handle grouped files
       const groups = files
         .filter((file) => !file.includes('index') && file.match(/^\[([^\]]+)\]/))
-        .reduce((acc, file) => {
-          const match = file.match(/^\[([^\]]+)\](.+)\.html$/);
-          const group = match![1];
-          if (!acc[group]) acc[group] = [];
-          acc[group].push(file);
-          return acc;
-        }, {} as Record<string, string[]>);
+        .reduce(
+          (acc, file) => {
+            const match = file.match(/^\[([^\]]+)\](.+)\.html$/);
+            const group = match![1];
+            if (!acc[group]) acc[group] = [];
+            acc[group].push(file);
+            return acc;
+          },
+          {} as Record<string, string[]>,
+        );
 
       // Generate ungrouped HTML first
       const ungroupedHtml = ungroupedFiles
@@ -72,16 +76,19 @@ export default defineConfig({
       '@propagators': resolve(__dirname, './propagators'),
     },
   },
-  plugins: [linkGenerator()],
+  plugins: [linkGenerator(), mkcert()],
   build: {
     target: 'esnext',
     rollupOptions: {
       input: {
         index: resolve(__dirname, './website/index.html'),
-        ...getCanvasFiles().reduce((acc, file) => {
-          acc[`canvas/${file.replace('.html', '')}`] = resolve(canvasWebsiteDir, file);
-          return acc;
-        }, {} as Record<string, string>),
+        ...getCanvasFiles().reduce(
+          (acc, file) => {
+            acc[`canvas/${file.replace('.html', '')}`] = resolve(canvasWebsiteDir, file);
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
       },
     },
     modulePreload: {

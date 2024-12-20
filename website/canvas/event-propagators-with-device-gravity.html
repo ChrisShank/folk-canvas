@@ -53,7 +53,7 @@
       expression="textContent: to.textContent + '!'"
     ></folk-event-propagator>
 
-    <!-- <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
+    <folk-shape id="box3" x="350" y="200" width="30" height="30"></folk-shape>
     <folk-shape id="box4" x="500" y="250" width="30" height="30"></folk-shape>
     <folk-event-propagator
       source="#box3"
@@ -61,13 +61,14 @@
       trigger="transform"
       expression="y: from.x, 
 rotation: from.x"
-    ></folk-event-propagator> -->
+    ></folk-event-propagator>
 
     <folk-gizmos></folk-gizmos>
 
     <script type="module">
       import { requestAnimationFrame } from '@lib';
       import { Vector } from '@lib/Vector';
+
       import '@labs/standalone/folk-shape.ts';
       import '@labs/standalone/folk-event-propagator.ts';
       import { Gizmos } from '@lib/folk-gizmos';
@@ -83,7 +84,6 @@ rotation: from.x"
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
       let orientationEvent;
 
-      let gravityScale = 3000;
       const gravitySlider = document.getElementById('gravityScale');
       const gravityScaleValue = document.getElementById('gravityScaleValue');
 
@@ -92,12 +92,12 @@ rotation: from.x"
       gravityScaleValue.textContent = gravityScale;
 
       gravitySlider.addEventListener('input', (e) => {
-        gravityScale = parseInt(e.target.value);
-        gravityScaleValue.textContent = gravityScale;
+        gravityScaleValue.textContent = gravitySlider.value;
       });
 
       function tick() {
         requestAnimationFrame(tick);
+
         if (orientationEvent === undefined) return;
 
         window.alpha.textContent = Math.round(orientationEvent.alpha);
@@ -116,7 +116,7 @@ rotation: from.x"
         const direction = Vector.normalized(downwardVector);
 
         // Scale the vector by gravity constant
-        const gravity = Vector.scale(direction, magnitude * gravityScale);
+        const gravity = Vector.scale(direction, magnitude * gravitySlider.valueAsNumber);
 
         window.gravity.textContent = `${Math.round(gravity.x)}, ${Math.round(gravity.y)}`;
 
