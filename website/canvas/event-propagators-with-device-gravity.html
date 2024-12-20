@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -14,7 +14,6 @@
         position: relative;
         margin: 0;
         overscroll-behavior: none;
-
       }
 
       folk-shape {
@@ -60,22 +59,22 @@ rotation: from.x"
     ></folk-event-propagator> -->
 
     <script type="module">
-      import {requestAnimationFrame} from '@lib'
+      import { requestAnimationFrame } from '@lib';
+      import { Vector } from '@lib/Vector';
       import '@labs/standalone/folk-shape.ts';
       import '@labs/standalone/folk-event-propagator.ts';
 
-      
-      document.addEventListener('touchmove', event => { event.preventDefault() }, { passive: false })
+      document.addEventListener(
+        'touchmove',
+        (event) => {
+          event.preventDefault();
+        },
+        { passive: false },
+      );
 
       const ropes = Array.from(document.querySelectorAll('folk-event-propagator'));
-
       let orientationEvent;
 
-      /**
-       * 
-       * 0 -> 0, 3000
-       * 270 -> 3000, 0
-      */
       function tick() {
         requestAnimationFrame(tick);
         if (orientationEvent === undefined) return;
@@ -83,12 +82,26 @@ rotation: from.x"
         window.alpha.textContent = Math.round(orientationEvent.alpha);
         window.beta.textContent = Math.round(orientationEvent.beta);
         window.gamma.textContent = Math.round(orientationEvent.gamma);
-        // Max out the gravity at around 3000
-        const gravity = { x: orientationEvent.gamma * 40, y: orientationEvent.beta * 20};
+
+        // Convert angles to radians
+        const beta = orientationEvent.beta * (Math.PI / 180); // Pitch (x-axis)
+        const gamma = orientationEvent.gamma * (Math.PI / 180); // Roll (y-axis)
+
+        // Calculate the downward vector on the screen plane
+        const downwardVector = { x: Math.sin(gamma), y: Math.sin(beta) };
+
+        // Compute magnitude and normalized direction
+        const magnitude = Vector.mag(downwardVector);
+        const direction = Vector.normalized(downwardVector);
+
+        // Scale the vector by gravity constant
+        const gravityScale = 3000;
+        const gravity = Vector.scale(direction, magnitude * gravityScale);
 
         window.gravity.textContent = `${Math.round(gravity.x)}, ${Math.round(gravity.y)}`;
-
-        ropes.forEach(rope => { rope.gravity =  gravity});
+        ropes.forEach((rope) => {
+          rope.gravity = gravity;
+        });
       }
 
       tick();
@@ -101,15 +114,15 @@ rotation: from.x"
         if (DeviceOrientationEvent.requestPermission) {
           const permission = await DeviceOrientationEvent.requestPermission();
 
-          if (permission === "granted") {
-            console.info('Permission granted')
+          if (permission === 'granted') {
+            console.info('Permission granted');
           } else {
-            console.warn('Permission for device orientation rejected', permission)
+            console.warn('Permission for device orientation rejected', permission);
           }
         }
 
-        window.addEventListener("deviceorientation", onDeviceOrientation);
-      }
+        window.addEventListener('deviceorientation', onDeviceOrientation);
+      };
     </script>
   </body>
 </html>
