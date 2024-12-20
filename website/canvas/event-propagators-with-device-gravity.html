@@ -68,7 +68,7 @@ rotation: from.x"
             // ropes.forEach(rope => { rope.gravity = { x: 0, y: 0} })
       }
 
-      async function enableGravity() {
+      window.enableGravity = async function enableGravity() {
         if (DeviceOrientationEvent.requestPermission) {
           const permission = await DeviceOrientationEvent.requestPermission();
   
