@@ -203,4 +203,8 @@ export class FolkPhysics extends FolkBaseSet {
 
     this.#world.createCollider(RAPIER.ColliderDesc.polyline(vertexArray, indexArray), container);
   }
+
+  get world() {
+    return this.#world;
+  }
 }

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Physics</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        min-height: 100%;
+        position: relative;
+        margin: 0;
+        inset: 0;
+        overscroll-behavior: none;
+      }
+
+      folk-shape {
+        position: absolute;
+        background-color: rgba(100, 100, 100, 0.5);
+        border: 2px solid rgba(0, 0, 0, 0.5);
+      }
+
+      folk-rope {
+        pointer-events: none;
+      }
+
+      button {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 100;
+        padding: 0.5rem 1rem;
+        background: black;
+        color: white;
+        border: none;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <button onclick="enableGravity()">Enable Gravity</button>
+    <folk-physics>
+      <folk-shape id="shape1" x="250" y="50" width="120" height="30" rotation="30"></folk-shape>
+      <folk-shape id="shape2" x="450" y="350" width="40" height="120" rotation="45"></folk-shape>
+      <folk-shape x="150" y="150" width="70" height="70" rotation="15"></folk-shape>
+      <folk-shape x="350" y="300" width="90" height="45" rotation="-20"></folk-shape>
+      <folk-shape x="550" y="200" width="35" height="85" rotation="60"></folk-shape>
+      <folk-shape x="180" y="250" width="65" height="55" rotation="-40"></folk-shape>
+      <folk-shape x="420" y="150" width="110" height="25" rotation="10"></folk-shape>
+      <folk-shape x="280" y="380" width="75" height="95" rotation="-50"></folk-shape>
+      <folk-rope source="#shape1" target="#shape2"></folk-rope>
+    </folk-physics>
+
+    <folk-gizmos></folk-gizmos>
+
+    <script type="module">
+      import { Vector } from '@lib/Vector';
+      import '@labs/standalone/folk-shape.ts';
+      import '@labs/standalone/folk-physics.ts';
+      import '@labs/standalone/folk-rope.ts';
+      import { Gizmos } from '@lib/folk-gizmos';
+
+      const physics = document.querySelector('folk-physics');
+      let orientationEvent;
+      const GRAVITY_SCALE = 100;
+
+      function tick() {
+        requestAnimationFrame(tick);
+        if (!orientationEvent) return;
+
+        const beta = orientationEvent.beta * (Math.PI / 180);
+        const gamma = orientationEvent.gamma * (Math.PI / 180);
+
+        const downwardVector = { x: Math.sin(gamma), y: Math.sin(beta) };
+        const magnitude = Vector.mag(downwardVector);
+        const direction = Vector.normalized(downwardVector);
+        const gravity = Vector.scale(direction, magnitude * GRAVITY_SCALE);
+
+        // Update physics world gravity
+        physics.world.gravity = {
+          x: gravity.x * 0.1,
+          y: gravity.y * 0.1,
+        };
+
+        // Draw gravity vector
+        const center = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        };
+
+        Gizmos.clear();
+        Gizmos.vector(
+          center,
+          {
+            x: center.x + gravity.x / 10,
+            y: center.y + gravity.y / 10,
+          },
+          { color: 'grey', width: 3, size: 15 },
+        );
+      }
+
+      tick();
+
+      window.enableGravity = async function enableGravity() {
+        if (DeviceOrientationEvent.requestPermission) {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') return;
+        }
+        window.addEventListener('deviceorientation', (e) => (orientationEvent = e));
+      };
+    </script>
+  </body>
+</html>
