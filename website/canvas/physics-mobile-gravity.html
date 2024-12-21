@@ -65,7 +65,7 @@
 
       const physics = document.querySelector('folk-physics');
       let orientationEvent;
-      const GRAVITY_SCALE = 100;
+      const GRAVITY_SCALE = 500;
 
       function tick() {
         requestAnimationFrame(tick);
@@ -95,8 +95,8 @@
         Gizmos.vector(
           center,
           {
-            x: center.x + gravity.x / 10,
-            y: center.y + gravity.y / 10,
+            x: center.x + gravity.x,
+            y: center.y + gravity.y,
           },
           { color: 'grey', width: 3, size: 15 },
         );
