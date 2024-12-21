@@ -91,16 +91,16 @@
         });
 
         const center = {
-          x: window.innerWidth / 5,
-          y: window.innerHeight / 5,
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
         };
 
         Gizmos.clear();
         Gizmos.vector(
           center,
           {
-            x: center.x + gravity.x,
-            y: center.y + gravity.y,
+            x: center.x + gravity.x / 2,
+            y: center.y + gravity.y / 2,
           },
           { color: 'grey', width: 3, size: 15 },
         );
