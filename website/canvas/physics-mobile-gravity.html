@@ -64,6 +64,8 @@
       import { Gizmos } from '@lib/folk-gizmos';
 
       const physics = document.querySelector('folk-physics');
+      const ropes = Array.from(document.querySelectorAll('folk-rope'));
+
       let orientationEvent;
       const GRAVITY_SCALE = 500;
 
@@ -79,13 +81,15 @@
         const direction = Vector.normalized(downwardVector);
         const gravity = Vector.scale(direction, magnitude * GRAVITY_SCALE);
 
-        // Update physics world gravity
         physics.world.gravity = {
           x: gravity.x * 0.1,
           y: gravity.y * 0.1,
         };
 
-        // Draw gravity vector
+        ropes.forEach((rope) => {
+          rope.gravity = Vector.scale(gravity, 6);
+        });
+
         const center = {
           x: window.innerWidth / 5,
           y: window.innerHeight / 5,
